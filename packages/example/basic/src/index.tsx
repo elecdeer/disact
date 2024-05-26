@@ -1,3 +1,3 @@
 import { HELLO } from "disact";
 
-console.log(HELLO);
+console.log(<div>{HELLO}</div>);

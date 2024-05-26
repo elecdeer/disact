@@ -2,6 +2,8 @@
 	"extends": "@monorepo/tsconfig/tsconfig.json",
 	"compilerOptions": {
 		"rootDir": ".",
-		"baseUrl": "src"
+		"baseUrl": "src",
+		"jsx": "react-jsxdev",
+		"jsxImportSource": "disact"
 	}
 }
