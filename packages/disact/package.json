@@ -1,0 +1,31 @@
+{
+  "name": "disact",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "biome check ./src"
+  },
+  "devDependencies": {
+    "@monorepo/tsconfig": "workspace:*"
+  },
+  "keywords": [],
+  "author": "elecdeer",
+  "packageManager": "pnpm@9.1.2+sha256.19c17528f9ca20bd442e4ca42f00f1b9808a9cb419383cd04ba32ef19322aba7",
+  "license": "MIT"
+}

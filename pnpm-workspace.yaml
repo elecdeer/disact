@@ -1,0 +1,4 @@
+packages:
+  - "packages/disact"
+  - "packages/example/*"
+  - "packages/tsconfig"
