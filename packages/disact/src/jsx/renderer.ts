@@ -6,14 +6,6 @@ export type RendererConfig = {
 	foo?: unknown;
 };
 
-// TODO: 共通化
-const toArray = <T>(value: T | T[]): T[] => {
-	if (Array.isArray(value)) {
-		return value;
-	}
-	return [value];
-};
-
 export const createRenderer = (config: RendererConfig) => {
 	const traverseElementAndRender = async (obj: object): Promise<object> => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>

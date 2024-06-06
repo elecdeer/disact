@@ -67,6 +67,11 @@ export type DisactJSXElement = {
 	[key: string]: unknown;
 };
 
+// TODO: この辺の型を整える
+// Reactに寄せた方がよい？
+// jsx-slackも参考に
+export type DisactNode = DisactJSXElementNode | DisactObjectElement;
+
 export type DisactJSXElementNode =
 	| DisactJSXElement
 	| string
@@ -112,17 +117,7 @@ export const jsx = (
 		};
 	}
 
-	const children = props.children
-		? toArray(props.children).map((child) => {
-				if (typeof child === "string") {
-					return {
-						type: "text",
-						value: child,
-					};
-				}
-				return child;
-			})
-		: [];
+	const children = props.children ? toArray(props.children) : [];
 
 	return {
 		_jsxType: type,
