@@ -1,28 +1,28 @@
 export namespace DisactJSX {
-	export type Element = DisactJSXElement | DisactObjectElement;
+	export type Element = DisactElement;
 
 	export interface IntrinsicElements {
-		h1: { children?: DisactJSXElementNode };
-		h2: { children?: DisactJSXElementNode };
-		h3: { children?: DisactJSXElementNode };
+		h1: { children?: DisactChildElements };
+		h2: { children?: DisactChildElements };
+		h3: { children?: DisactChildElements };
 
-		p: { children?: DisactJSXElementNode };
+		p: { children?: DisactChildElements };
 		br: { children?: never };
-		a: { href: string; children?: DisactJSXElementNode };
+		a: { href: string; children?: DisactChildElements };
 
-		i: { children?: DisactJSXElementNode };
-		b: { children?: DisactJSXElementNode };
-		s: { children?: DisactJSXElementNode };
-		u: { children?: DisactJSXElementNode };
+		i: { children?: DisactChildElements };
+		b: { children?: DisactChildElements };
+		s: { children?: DisactChildElements };
+		u: { children?: DisactChildElements };
 
-		code: { children: DisactJSXElementNode };
-		pre: { lang?: string; children: DisactJSXElementNode };
+		code: { children: DisactChildElements };
+		pre: { lang?: string; children: DisactChildElements };
 
-		ul: { children?: DisactJSXElementNode };
-		ol: { children?: DisactJSXElementNode; start?: number };
-		li: { children?: DisactJSXElementNode };
+		ul: { children?: DisactChildElements };
+		ol: { children?: DisactChildElements; start?: number };
+		li: { children?: DisactChildElements };
 
-		blockquote: { children?: DisactJSXElementNode };
+		blockquote: { children?: DisactChildElements };
 
 		// time: {
 		//   unixtime: number;
@@ -67,22 +67,33 @@ export type DisactJSXElement = {
 	[key: string]: unknown;
 };
 
-// TODO: この辺の型を整える
-// Reactに寄せた方がよい？
-// jsx-slackも参考に
-export type DisactNode = DisactJSXElementNode | DisactObjectElement;
+export type DisactObjectElement = object;
 
-export type DisactJSXElementNode =
-	| DisactJSXElement
+export type DisactElement = DisactJSXElement | DisactObjectElement;
+
+export type StringLike = {
+	toString(): string;
+};
+
+export type DisactChildElement =
+	| DisactElement
+	| DisactFragment
 	| string
+	| StringLike
 	| number
 	| boolean
 	| null
 	| undefined;
 
-export type DisactObjectElement = object | null | undefined;
+export type DisactFragment = DisactChildElement[];
 
-export type PropType = Record<string | number | symbol, unknown>;
+export type DisactChildElements = DisactChildElement | DisactChildElement[];
+
+export type DisactChildNode = DisactElement | boolean | null | undefined;
+
+export type DisactChildNodes = DisactChildNode | DisactChildNode[];
+
+export type PropType = Record<PropertyKey, unknown>;
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type FunctionComponent<P extends PropType = any> = (
 	props: P,

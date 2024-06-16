@@ -1,10 +1,6 @@
 /** @jsxImportSource ../../ */
 
-import type {
-	DisactElement,
-	DisactJSXElementNode,
-	DisactNode,
-} from "jsx/jsx-internal";
+import type { DisactChildElement, DisactChildElements } from "jsx/jsx-internal";
 import type { JSX } from "../..//jsx-runtime";
 import { createRenderer } from "../renderer";
 import { describe, expect, test } from "vitest";
@@ -47,11 +43,11 @@ describe("renderer", () => {
 	});
 
 	test("Nested Function component", async () => {
-		const ListItem = (props: { children: DisactJSXElementNode }) => {
+		const ListItem = (props: { children: DisactChildElements }) => {
 			return <li>{props.children}</li>;
 		};
 
-		const List = (props: { children: DisactJSXElementNode }) => {
+		const List = (props: { children: DisactChildElements }) => {
 			return <ul>{props.children}</ul>;
 		};
 
@@ -78,7 +74,7 @@ describe("renderer", () => {
 
 	test("Nested function component returns not jsx element", async () => {
 		const FooBar = async (props: {
-			slot: DisactNode;
+			slot: DisactChildElement;
 		}) => {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 			return {
