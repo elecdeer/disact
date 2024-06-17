@@ -1,7 +1,7 @@
 {
 	"editor.defaultFormatter": "biomejs.biome",
 	"biome.rename": true,
-	"cSpell.words": ["disact"],
+	"cSpell.words": ["disact", "Mdast"],
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
