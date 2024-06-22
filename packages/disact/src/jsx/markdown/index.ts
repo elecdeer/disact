@@ -1,14 +1,25 @@
-import type {
-	DisactChildElement,
-	DisactChildElements,
-	DisactChildNodes,
-	DisactJSXElement,
-	FunctionComponent,
-} from "./jsx-internal";
+import type { DisactChildElements } from "../jsx-internal";
 
 import { toMarkdown } from "mdast-util-to-markdown";
 import { gfmStrikethroughToMarkdown } from "mdast-util-gfm-strikethrough";
 import type * as mdast from "mdast";
+import { transformHeadingNode } from "./heading";
+import { transformBlockquoteNode } from "./blockquote";
+import { transformBreakNode } from "./break";
+import { transformLinkNode } from "./link";
+import { transformParagraphNode } from "./paragraph";
+
+import {
+	transformEmphasisNode,
+	transformStrongNode,
+	transformDeleteNode,
+} from "./modifications";
+import { transformInlineCodeNode, transformCodeBlockNode } from "./code";
+import {
+	transformOrderedListNode,
+	transformUnorderedListNode,
+	transformListItemNode,
+} from "./list";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
 	return toMarkdown(root, {
@@ -16,7 +27,7 @@ export const mdastToMarkdown = (root: mdast.Root): string => {
 	});
 };
 
-const toArray = <T>(value: T | T[]): T[] => {
+export const toArray = <T>(value: T | T[]): T[] => {
 	if (Array.isArray(value)) {
 		return value;
 	}
@@ -158,7 +169,7 @@ export type ElementTypeToMdastNodeMap = {
 	blockquote: mdast.Blockquote;
 };
 
-const rootContentTypes = [
+export const rootContentTypes = [
 	"blockquote", // blockquote
 	"br", // break
 	"pre", // code
@@ -176,7 +187,7 @@ const rootContentTypes = [
 	"text", // text
 ] as const satisfies ElementType[];
 
-const phrasingContentTypes = [
+export const phrasingContentTypes = [
 	"br", // break
 	"s", // delete
 	"i", // emphasis
@@ -186,7 +197,7 @@ const phrasingContentTypes = [
 	"text", // text
 ] as const satisfies ElementType[];
 
-const blockContentTypes = [
+export const blockContentTypes = [
 	"blockquote", // blockquote
 	"pre", // code
 	"h1", // heading
@@ -197,30 +208,30 @@ const blockContentTypes = [
 	"p", // paragraph
 ] as const satisfies ElementType[];
 
-class MdastSemanticError extends Error {
+export class MdastSemanticError extends Error {
 	constructor(message: string) {
 		super(message);
 		this.name = "MdastSemanticError";
 	}
 }
 
-const transformNode = <T extends keyof ElementTypeToMdastNodeMap>(
+const transformNode = (
 	element: IntrinsicsNode | string,
-	allowedNodeType: T[],
-): (ElementTypeToMdastNodeMap[T] | null)[] => {
+	allowedNodeType: readonly string[],
+): (mdast.Nodes | null)[] => {
 	if (typeof element === "string") {
 		return [
 			{
 				type: "text",
 				value: element,
-			} satisfies mdast.Text as ElementTypeToMdastNodeMap[T],
+			} satisfies mdast.Text,
 		];
 	}
 
 	const { type, props } = element;
 	const children = toArray(props?.children ?? []);
 
-	if (!(allowedNodeType as string[]).includes(type)) {
+	if (!(allowedNodeType as readonly string[]).includes(type)) {
 		throw new MdastSemanticError(`Invalid node type: ${type}`);
 	}
 
@@ -230,154 +241,53 @@ const transformNode = <T extends keyof ElementTypeToMdastNodeMap>(
 				{
 					type: "root",
 					children: mapChildren(children, rootContentTypes),
-				} satisfies mdast.Root as ElementTypeToMdastNodeMap[T],
+				} satisfies mdast.Root,
 			];
 		case "h1":
-			return [
-				{
-					type: "heading",
-					depth: 1,
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Heading as ElementTypeToMdastNodeMap[T],
-			];
 		case "h2":
-			return [
-				{
-					type: "heading",
-					depth: 2,
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Heading as ElementTypeToMdastNodeMap[T],
-			];
 		case "h3":
-			return [
-				{
-					type: "heading",
-					depth: 3,
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Heading as ElementTypeToMdastNodeMap[T],
-			];
+			return transformHeadingNode(element);
 		case "p":
-			return [
-				{
-					type: "paragraph",
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Paragraph as ElementTypeToMdastNodeMap[T],
-			];
+			return transformParagraphNode(element);
 		case "br":
-			return [
-				{
-					type: "break",
-				} satisfies mdast.Break as ElementTypeToMdastNodeMap[T],
-			];
+			return transformBreakNode(element);
 		case "a":
-			return [
-				{
-					type: "link",
-					url: (props as IntrinsicsNode<"a">["props"]).href,
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Link as ElementTypeToMdastNodeMap[T],
-			];
+			return transformLinkNode(element as IntrinsicsNode<"a">);
 		case "i":
-			return [
-				{
-					type: "emphasis",
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Emphasis as ElementTypeToMdastNodeMap[T],
-			];
+			return transformEmphasisNode(element);
 		case "b":
-			return [
-				{
-					type: "strong",
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Strong as ElementTypeToMdastNodeMap[T],
-			];
+			return transformStrongNode(element);
 		case "s":
-			return [
-				{
-					type: "delete",
-					children: mapChildren(children, phrasingContentTypes),
-				} satisfies mdast.Delete as ElementTypeToMdastNodeMap[T],
-			];
+			return transformDeleteNode(element);
 		// case "u":
 		//   return {
 		//     type: "underline",
 		//     children,
 		//   } as mdast.Underline;
 		case "code":
-			return [
-				{
-					type: "inlineCode",
-					value: mapChildren(children, ["text"])
-						.map((child) => child?.value ?? "")
-						.join(""),
-				} satisfies mdast.InlineCode as ElementTypeToMdastNodeMap[T],
-			];
+			return transformInlineCodeNode(element);
 		case "pre":
-			return [
-				{
-					type: "code",
-					lang: (props as IntrinsicsNode<"pre">["props"]).lang,
-					value: mapChildren(children, ["text"])
-						.map((child) => child?.value ?? "")
-						.join(""),
-				} satisfies mdast.Code as ElementTypeToMdastNodeMap[T],
-			];
+			return transformCodeBlockNode(element);
 		case "ul":
-			return [
-				{
-					type: "list",
-					ordered: false,
-					spread: false,
-					children: mapChildren(children, ["li"]),
-				} satisfies mdast.List as ElementTypeToMdastNodeMap[T],
-			];
+			return transformOrderedListNode(element);
 		case "ol":
-			return [
-				{
-					type: "list",
-					ordered: true,
-					spread: false,
-					start: (props as IntrinsicsNode<"ol">["props"]).start,
-					children: mapChildren(children, ["li"]),
-				} satisfies mdast.List as ElementTypeToMdastNodeMap[T],
-			];
+			return transformUnorderedListNode(element);
 		case "li":
-			return [
-				{
-					type: "listItem",
-					spread: false,
-					children: mapChildren(children, [...blockContentTypes, "text"]).map(
-						(child) => {
-							if (child?.type === "text") {
-								return {
-									type: "paragraph",
-									children: [child],
-								} satisfies mdast.Paragraph;
-							}
-							return child;
-						},
-					),
-				} satisfies mdast.ListItem as ElementTypeToMdastNodeMap[T],
-			];
+			return transformListItemNode(element);
 
 		case "blockquote":
-			return [
-				{
-					type: "blockquote",
-					children: mapChildren(children, blockContentTypes),
-				} satisfies mdast.Blockquote as ElementTypeToMdastNodeMap[T],
-			];
+			return transformBlockquoteNode(element);
 
 		default:
 			throw new Error(`Unknown type: ${type}`);
 	}
 };
 
-const mapChildren = <T extends keyof ElementTypeToMdastNodeMap>(
+export const mapChildren = <T extends keyof ElementTypeToMdastNodeMap>(
 	children: IntrinsicsNode[],
-	allowedNodeType: T[],
+	allowedNodeType: readonly T[],
 ): ElementTypeToMdastNodeMap[T][] => {
 	return children
 		.flatMap((child) => transformNode(child, allowedNodeType))
-		.filter(excludeNullish);
+		.filter(excludeNullish) as ElementTypeToMdastNodeMap[T][];
 };
