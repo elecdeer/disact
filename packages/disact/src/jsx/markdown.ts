@@ -23,7 +23,38 @@ const toArray = <T>(value: T | T[]): T[] => {
 	return [value];
 };
 
-// TODO: オブジェクトをトラバースしてtype="markdown"を見つけ、transformToMdastを呼び出す関数を実装
+/**
+ * 再帰的にelementを探索し、type: markdownのelementをmdastに変換する
+ * @param element
+ * @param transform
+ * @returns
+ */
+export const traverseMarkdown = (
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	element: Record<PropertyKey, any>,
+	transform: (value: object) => object,
+): object => {
+	if (typeof element !== "object" || element == null) {
+		return element;
+	}
+
+	if ("type" in element && element.type === "markdown") {
+		return transform(element);
+	}
+
+	for (const key in element) {
+		if (!Object.prototype.hasOwnProperty.call(element, key)) continue;
+
+		const value = element[key];
+		if (Array.isArray(value)) {
+			element[key] = value.map((child) => traverseMarkdown(child, transform));
+		} else {
+			element[key] = traverseMarkdown(value, transform);
+		}
+	}
+
+	return element;
+};
 
 export const transformToMdast = (element: object): mdast.Root => {
 	if ("type" in element && element.type === "markdown") {
@@ -63,6 +94,7 @@ export interface IntrinsicElements {
 
 	blockquote: { children?: DisactChildElements };
 
+	// TODO: markdown内で使う要素はIntrinsicとして提供する
 	// time: {
 	//   unixtime: number;
 	//   children: never;
