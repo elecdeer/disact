@@ -1,10 +1,7 @@
-import {
-	mapChildren,
-	phrasingContentTypes,
-	toArray,
-	type IntrinsicsNode,
-} from ".";
+import { mapChildren } from "./index";
+import { toArray } from "../../util/toArray";
 import type * as mdast from "mdast";
+import { phrasingContentTypes, type IntrinsicsNode } from "./types";
 
 export const transformLinkNode = (
 	element: IntrinsicsNode<"a">,

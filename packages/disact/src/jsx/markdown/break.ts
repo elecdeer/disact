@@ -1,5 +1,5 @@
-import type { IntrinsicsNode } from "./index";
 import type * as mdast from "mdast";
+import type { IntrinsicsNode } from "./types";
 
 export const transformBreakNode = (
 	element: IntrinsicsNode<"br">,

@@ -1,10 +1,7 @@
-import {
-	mapChildren,
-	phrasingContentTypes,
-	toArray,
-	type IntrinsicsNode,
-} from ".";
+import { mapChildren } from "./index";
+import { toArray } from "../../util/toArray";
 import type * as mdast from "mdast";
+import { type IntrinsicsNode, phrasingContentTypes } from "./types";
 
 export const transformEmphasisNode = (
 	element: IntrinsicsNode<"i">,

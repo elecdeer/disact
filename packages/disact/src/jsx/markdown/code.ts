@@ -1,5 +1,7 @@
-import { mapChildren, toArray, type IntrinsicsNode } from ".";
+import { mapChildren } from "./index";
+import { toArray } from "../../util/toArray";
 import type * as mdast from "mdast";
+import type { IntrinsicsNode } from "./types";
 
 export const transformInlineCodeNode = (
 	element: IntrinsicsNode<"code">,

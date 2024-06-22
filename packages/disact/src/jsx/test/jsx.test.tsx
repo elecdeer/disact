@@ -8,13 +8,17 @@ describe("jsx", () => {
 		expect(<h1>heading</h1>).toEqual({
 			_jsxType: "h1",
 			type: "h1",
-			children: ["heading"],
+			props: {
+				children: "heading",
+			},
 		});
 
 		expect(<h2>Hello!</h2>).toEqual({
 			_jsxType: "h2",
 			type: "h2",
-			children: ["Hello!"],
+			props: {
+				children: "Hello!",
+			},
 		});
 	});
 
@@ -62,11 +66,13 @@ describe("jsx", () => {
 		).toEqual({
 			_jsxType: "ul",
 			type: "ul",
-			children: [
-				{ _jsxType: "li", type: "li", children: ["one"] },
-				{ _jsxType: "li", type: "li", children: ["two"] },
-				{ _jsxType: "li", type: "li", children: ["three"] },
-			],
+			props: {
+				children: [
+					{ _jsxType: "li", type: "li", props: { children: "one" } },
+					{ _jsxType: "li", type: "li", props: { children: "two" } },
+					{ _jsxType: "li", type: "li", props: { children: "three" } },
+				],
+			},
 		});
 	});
 });

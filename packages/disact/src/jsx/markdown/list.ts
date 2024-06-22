@@ -1,10 +1,7 @@
-import {
-	blockContentTypes,
-	mapChildren,
-	toArray,
-	type IntrinsicsNode,
-} from ".";
+import { mapChildren } from "./index";
+import { toArray } from "../../util/toArray";
 import type * as mdast from "mdast";
+import { blockContentTypes, type IntrinsicsNode } from "./types";
 
 export const transformOrderedListNode = (
 	element: IntrinsicsNode<"ol">,

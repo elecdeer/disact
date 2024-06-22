@@ -11,7 +11,9 @@ describe("renderer", () => {
 
 		expect(await render(<h1>Heading</h1>)).toEqual({
 			type: "h1",
-			children: ["Heading"],
+			props: {
+				children: "Heading",
+			},
 		});
 	});
 
@@ -24,7 +26,9 @@ describe("renderer", () => {
 
 		expect(await render(<Component name="Hello" />)).toEqual({
 			type: "h1",
-			children: ["Hello"],
+			props: {
+				children: "Hello",
+			},
 		});
 	});
 
@@ -38,7 +42,7 @@ describe("renderer", () => {
 
 		expect(await render(<Component name="Hello" />)).toEqual({
 			type: "h1",
-			children: ["Hello"],
+			props: { children: "Hello" },
 		});
 	});
 
@@ -64,11 +68,13 @@ describe("renderer", () => {
 			),
 		).toEqual({
 			type: "ul",
-			children: [
-				{ type: "li", children: ["one"] },
-				{ type: "li", children: ["two"] },
-				{ type: "li", children: ["three"] },
-			],
+			props: {
+				children: [
+					{ type: "li", props: { children: "one" } },
+					{ type: "li", props: { children: "two" } },
+					{ type: "li", props: { children: "three" } },
+				],
+			},
 		});
 	});
 

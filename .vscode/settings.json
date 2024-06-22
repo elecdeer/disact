@@ -7,5 +7,7 @@
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "biomejs.biome"
-	}
+	},
+	"typescript.preferences.importModuleSpecifier": "project-relative",
+	"javascript.preferences.importModuleSpecifier": "project-relative"
 }
