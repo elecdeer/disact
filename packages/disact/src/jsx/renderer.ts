@@ -17,6 +17,14 @@ export const createRenderer = (config: RendererConfig) => {
 		const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
 		const promises: Promise<void>[] = [];
 
+		if (isDisactElement(obj) && typeof obj._jsxType === "function") {
+			const resolved = await obj._jsxType(obj._props);
+			if (resolved === null || resolved === undefined) {
+				return resolved;
+			}
+			return traverseElementAndRender(resolved);
+		}
+
 		for (const key in obj) {
 			if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
 
@@ -63,16 +71,7 @@ export const createRenderer = (config: RendererConfig) => {
 	const render = async (
 		element: JSX.Element,
 	): Promise<object | string | undefined | null> => {
-		const rendered =
-			isDisactElement(element) && typeof element._jsxType === "function"
-				? await element._jsxType(element._props)
-				: element;
-
-		if (rendered === null || rendered === undefined) {
-			return rendered;
-		}
-
-		const result = await traverseElementAndRender(rendered);
+		const result = await traverseElementAndRender(element);
 		console.dir(result, { depth: null });
 		return traverseMarkdown(result, (node) => {
 			const mdast = transformToMdast(node);

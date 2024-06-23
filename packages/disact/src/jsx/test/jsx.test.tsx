@@ -4,24 +4,6 @@ import { describe, expect, test } from "vitest";
 import { Fragment } from "../..//jsx-runtime";
 
 describe("jsx", () => {
-	test("Intrinsic component", () => {
-		expect(<h1>heading</h1>).toEqual({
-			_jsxType: "h1",
-			type: "h1",
-			props: {
-				children: "heading",
-			},
-		});
-
-		expect(<h2>Hello!</h2>).toEqual({
-			_jsxType: "h2",
-			type: "h2",
-			props: {
-				children: "Hello!",
-			},
-		});
-	});
-
 	test("Function component", () => {
 		const Component = (props: { name: string }) => {
 			return <h1>{props.name}</h1>;

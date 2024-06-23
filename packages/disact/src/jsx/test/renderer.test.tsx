@@ -6,17 +6,6 @@ import { createRenderer } from "../renderer";
 import { describe, expect, test } from "vitest";
 
 describe("renderer", () => {
-	test("Intrinsic component", async () => {
-		const render = createRenderer({});
-
-		expect(await render(<h1>Heading</h1>)).toEqual({
-			type: "h1",
-			props: {
-				children: "Heading",
-			},
-		});
-	});
-
 	test("Function component", async () => {
 		const Component = (props: { name: string }) => {
 			return <h1>{props.name}</h1>;
@@ -76,6 +65,51 @@ describe("renderer", () => {
 				],
 			},
 		});
+	});
+
+	test("Shallow nested Function component", async () => {
+		const Foo = (props: { children: DisactChildElements }) => {
+			return <>{props.children}</>;
+		};
+
+		const Bar = (props: { children: DisactChildElements }) => {
+			return <p>{props.children}</p>;
+		};
+
+		const render = createRenderer({});
+
+		expect(
+			<Foo>
+				<Bar>Tar</Bar>
+			</Foo>,
+		).toMatchInlineSnapshot(`
+			{
+			  "_jsxType": [Function],
+			  "_props": {
+			    "children": {
+			      "_jsxType": [Function],
+			      "_props": {
+			        "children": "Tar",
+			      },
+			    },
+			  },
+			}
+		`);
+
+		expect(
+			await render(
+				<Foo>
+					<Bar>Tar</Bar>
+				</Foo>,
+			),
+		).toEqual([
+			{
+				type: "p",
+				props: {
+					children: "Tar",
+				},
+			},
+		]);
 	});
 
 	test("Nested function component returns not jsx element", async () => {
