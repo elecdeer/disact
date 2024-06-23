@@ -72,7 +72,7 @@ export const createRenderer = (config: RendererConfig) => {
 		element: JSX.Element,
 	): Promise<object | string | undefined | null> => {
 		const result = await traverseElementAndRender(element);
-		console.dir(result, { depth: null });
+
 		return traverseMarkdown(result, (node) => {
 			const mdast = transformToMdast(node);
 			return mdastToMarkdown(mdast);

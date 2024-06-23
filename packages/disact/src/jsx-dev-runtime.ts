@@ -1,4 +1,8 @@
-import type { DisactJSX, FunctionComponent } from "./jsx/jsx-internal";
+import type {
+	DisactJSX,
+	FunctionComponent,
+	JsxDevSource,
+} from "./jsx/jsx-internal";
 
 import { FragmentInternal, jsx, jsxs } from "./jsx/jsx-internal";
 
@@ -7,8 +11,10 @@ export const jsxDEV = (
 	props: Record<string, unknown>,
 	_key: unknown,
 	__isStaticChildren: boolean,
+	source: Record<string, unknown>,
 ): DisactJSX.Element => {
 	return jsx(type, props, _key, __isStaticChildren, undefined);
+	// return jsx(type, props, _key, __isStaticChildren, source as JsxDevSource);
 };
 
 export const jsxsDEV = (
@@ -16,8 +22,10 @@ export const jsxsDEV = (
 	props: Record<string, unknown>,
 	_key: unknown,
 	__isStaticChildren: boolean,
+	source: Record<string, unknown>,
 ): DisactJSX.Element => {
-	return jsxs(type, props, _key, __isStaticChildren, undefined);
+	return jsx(type, props, _key, __isStaticChildren, undefined);
+	// return jsxs(type, props, _key, __isStaticChildren, source as JsxDevSource);
 };
 
 export const Fragment = FragmentInternal;

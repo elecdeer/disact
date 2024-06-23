@@ -49,7 +49,7 @@ export type FunctionComponent<P extends PropType = any> = (
 	props: P,
 ) => DisactJSX.Element | Promise<DisactJSX.Element>;
 
-type JsxDevSource = {
+export type JsxDevSource = {
 	fileName: string;
 	lineNumber: number;
 	columnNumber: number;
@@ -75,11 +75,13 @@ export const jsx = (
 		return {
 			_jsxType: type,
 			_props: props,
+			_source: source,
 		};
 	}
 
 	return {
 		_jsxType: type,
+		_source: source,
 		type,
 		props,
 	};

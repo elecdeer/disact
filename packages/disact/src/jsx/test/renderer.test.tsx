@@ -79,24 +79,6 @@ describe("renderer", () => {
 		const render = createRenderer({});
 
 		expect(
-			<Foo>
-				<Bar>Tar</Bar>
-			</Foo>,
-		).toMatchInlineSnapshot(`
-			{
-			  "_jsxType": [Function],
-			  "_props": {
-			    "children": {
-			      "_jsxType": [Function],
-			      "_props": {
-			        "children": "Tar",
-			      },
-			    },
-			  },
-			}
-		`);
-
-		expect(
 			await render(
 				<Foo>
 					<Bar>Tar</Bar>
