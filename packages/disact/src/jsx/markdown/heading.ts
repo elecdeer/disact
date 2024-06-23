@@ -1,4 +1,4 @@
-import { mapChildren, MdastSemanticError } from "./index";
+import { mapChildren, MdastSemanticError } from "./markdown";
 import { toArray } from "../../util/toArray";
 
 import type * as mdast from "mdast";

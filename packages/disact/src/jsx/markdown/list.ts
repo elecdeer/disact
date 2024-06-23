@@ -1,4 +1,4 @@
-import { mapChildren } from "./index";
+import { mapChildren } from "./markdown";
 import { toArray } from "../../util/toArray";
 import type * as mdast from "mdast";
 import { blockContentTypes, type IntrinsicsNode } from "./types";

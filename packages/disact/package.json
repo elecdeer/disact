@@ -43,7 +43,8 @@
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
-    "@types/mdast": "^4.0.4"
+    "@types/mdast": "^4.0.4",
+    "ts-dedent": "^2.2.0"
   },
   "keywords": [],
   "author": "elecdeer",

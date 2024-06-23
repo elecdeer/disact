@@ -1,5 +1,10 @@
 import type { JSX } from "../jsx-runtime";
 import { isDisactElement } from "./jsx-internal";
+import {
+	mdastToMarkdown,
+	transformToMdast,
+	traverseMarkdown,
+} from "./markdown";
 
 export type RendererConfig = {
 	// TODO:
@@ -57,7 +62,7 @@ export const createRenderer = (config: RendererConfig) => {
 
 	const render = async (
 		element: JSX.Element,
-	): Promise<object | undefined | null> => {
+	): Promise<object | string | undefined | null> => {
 		const rendered =
 			isDisactElement(element) && typeof element._jsxType === "function"
 				? await element._jsxType(element._props)
@@ -66,10 +71,14 @@ export const createRenderer = (config: RendererConfig) => {
 		if (rendered === null || rendered === undefined) {
 			return rendered;
 		}
-		return traverseElementAndRender(rendered);
+
+		const result = await traverseElementAndRender(rendered);
+		console.dir(result, { depth: null });
+		return traverseMarkdown(result, (node) => {
+			const mdast = transformToMdast(node);
+			return mdastToMarkdown(mdast);
+		});
 	};
 
 	return render;
 };
-
-const renderIntrinsicElement = async () => {};
