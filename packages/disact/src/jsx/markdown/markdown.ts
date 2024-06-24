@@ -25,6 +25,11 @@ import {
 
 import type * as mdast from "mdast";
 import { transformTimeNode } from "./time";
+import {
+	transformChannelNode,
+	transformRoleNode,
+	transformUserNode,
+} from "./mention";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
 	return toMarkdown(root, {
@@ -104,8 +109,6 @@ const transformNode = (
 
 	switch (type) {
 		case "markdown": {
-			const renderedChildren = mapChildren(children, rootContentTypes);
-
 			return [
 				{
 					type: "root",
@@ -151,6 +154,13 @@ const transformNode = (
 
 		case "time":
 			return transformTimeNode(element as IntrinsicsNode<"time">);
+
+		case "user":
+			return transformUserNode(element as IntrinsicsNode<"user">);
+		case "channel":
+			return transformChannelNode(element as IntrinsicsNode<"channel">);
+		case "role":
+			return transformRoleNode(element as IntrinsicsNode<"role">);
 
 		default:
 			throw new Error(`Unknown type: ${type}`);

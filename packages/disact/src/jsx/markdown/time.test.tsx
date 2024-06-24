@@ -39,11 +39,20 @@ describe("time", () => {
 					<time unixtime={1234567890} format="f" />
 				</p>,
 			).toEqual({
-				_jsxType: "time",
-				type: "time",
+				_jsxType: "p",
+				type: "p",
 				props: {
-					unixtime: 1234567890,
-					format: "f",
+					children: [
+						"Departure:",
+						{
+							_jsxType: "time",
+							type: "time",
+							props: {
+								unixtime: 1234567890,
+								format: "f",
+							},
+						},
+					],
 				},
 			});
 		});

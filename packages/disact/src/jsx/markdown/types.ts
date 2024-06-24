@@ -33,9 +33,9 @@ export interface IntrinsicElements {
 		format?: "f" | "F" | "d" | "t" | "D" | "T" | "R" | undefined;
 	};
 
-	// user: { id: string; children: never };
-	// channel: { id: string; children: never };
-	// role: { id: string; children: never };
+	user: { id: string; children?: never };
+	channel: { id: string; children?: never };
+	role: { id: string; children?: never };
 
 	// guildNav: {
 	//   type: "customize" | "browse" | "guide";
@@ -90,6 +90,9 @@ export type ElementTypeToMdastNodeMap = {
 	blockquote: mdast.Blockquote;
 
 	time: mdast.Html;
+	user: mdast.Html;
+	channel: mdast.Html;
+	role: mdast.Html;
 };
 
 export const rootContentTypes = [
@@ -108,7 +111,10 @@ export const rootContentTypes = [
 	"p", // paragraph
 	"b", // strong
 	"text", // text
-	"time", // text
+	"time", // html
+	"user", // html
+	"channel", // html
+	"role", // html
 ] as const satisfies ElementType[];
 
 export const phrasingContentTypes = [
@@ -120,6 +126,9 @@ export const phrasingContentTypes = [
 	"b", // strong
 	"text", // text
 	"time", // text
+	"user", // html
+	"channel", // html
+	"role", // html
 ] as const satisfies ElementType[];
 
 export const blockContentTypes = [
