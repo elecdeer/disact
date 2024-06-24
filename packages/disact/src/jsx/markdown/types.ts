@@ -48,12 +48,12 @@ export interface IntrinsicElements {
 	//   children: never;
 	// };
 
-	// emoji: {
-	//   name: string;
-	//   id: string;
-	//   animated?: boolean;
-	//   children: never;
-	// };
+	emoji: {
+		name: string;
+		id: string;
+		animated?: boolean;
+		children?: never;
+	};
 
 	// spoiler: AnyObject;
 }
@@ -93,6 +93,7 @@ export type ElementTypeToMdastNodeMap = {
 	user: mdast.Html;
 	channel: mdast.Html;
 	role: mdast.Html;
+	emoji: mdast.Html;
 };
 
 export const rootContentTypes = [
@@ -115,6 +116,7 @@ export const rootContentTypes = [
 	"user", // html
 	"channel", // html
 	"role", // html
+	"emoji", // html
 ] as const satisfies ElementType[];
 
 export const phrasingContentTypes = [
@@ -129,6 +131,7 @@ export const phrasingContentTypes = [
 	"user", // html
 	"channel", // html
 	"role", // html
+	"emoji", // html
 ] as const satisfies ElementType[];
 
 export const blockContentTypes = [

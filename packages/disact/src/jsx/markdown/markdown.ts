@@ -30,6 +30,7 @@ import {
 	transformRoleNode,
 	transformUserNode,
 } from "./mention";
+import { transformEmojiNode } from "./emoji";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
 	return toMarkdown(root, {
@@ -161,6 +162,9 @@ const transformNode = (
 			return transformChannelNode(element as IntrinsicsNode<"channel">);
 		case "role":
 			return transformRoleNode(element as IntrinsicsNode<"role">);
+
+		case "emoji":
+			return transformEmojiNode(element as IntrinsicsNode<"emoji">);
 
 		default:
 			throw new Error(`Unknown type: ${type}`);
