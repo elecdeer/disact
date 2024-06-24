@@ -27,11 +27,11 @@ export interface IntrinsicElements {
 	blockquote: { children?: DisactChildElements };
 
 	// TODO: markdown内で使う要素はIntrinsicとして提供する
-	// time: {
-	//   unixtime: number;
-	//   children: never;
-	//   format?: "f" | "F" | "d" | "t" | "D" | "T" | "R";
-	// };
+	time: {
+		unixtime: number;
+		children?: never;
+		format?: "f" | "F" | "d" | "t" | "D" | "T" | "R" | undefined;
+	};
 
 	// user: { id: string; children: never };
 	// channel: { id: string; children: never };
@@ -88,6 +88,8 @@ export type ElementTypeToMdastNodeMap = {
 	ol: mdast.List;
 	li: mdast.ListItem;
 	blockquote: mdast.Blockquote;
+
+	time: mdast.Html;
 };
 
 export const rootContentTypes = [
@@ -106,6 +108,7 @@ export const rootContentTypes = [
 	"p", // paragraph
 	"b", // strong
 	"text", // text
+	"time", // text
 ] as const satisfies ElementType[];
 
 export const phrasingContentTypes = [
@@ -116,6 +119,7 @@ export const phrasingContentTypes = [
 	"a", // link
 	"b", // strong
 	"text", // text
+	"time", // text
 ] as const satisfies ElementType[];
 
 export const blockContentTypes = [

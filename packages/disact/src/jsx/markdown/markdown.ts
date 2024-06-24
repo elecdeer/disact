@@ -24,6 +24,7 @@ import {
 } from "./types";
 
 import type * as mdast from "mdast";
+import { transformTimeNode } from "./time";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
 	return toMarkdown(root, {
@@ -105,11 +106,6 @@ const transformNode = (
 		case "markdown": {
 			const renderedChildren = mapChildren(children, rootContentTypes);
 
-			const mdast = {
-				type: "root",
-				children: renderedChildren,
-			} as mdast.Root;
-
 			return [
 				{
 					type: "root",
@@ -152,6 +148,9 @@ const transformNode = (
 
 		case "blockquote":
 			return transformBlockquoteNode(element);
+
+		case "time":
+			return transformTimeNode(element as IntrinsicsNode<"time">);
 
 		default:
 			throw new Error(`Unknown type: ${type}`);
