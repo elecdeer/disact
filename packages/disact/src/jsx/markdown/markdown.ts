@@ -28,8 +28,9 @@ import { transformTimeNode } from "./time";
 import {
 	transformChannelNode,
 	transformRoleNode,
+	transformSlashCommandNode,
 	transformUserNode,
-} from "./mention";
+} from "./mentions";
 import { transformEmojiNode } from "./emoji";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
@@ -162,6 +163,10 @@ const transformNode = (
 			return transformChannelNode(element as IntrinsicsNode<"channel">);
 		case "role":
 			return transformRoleNode(element as IntrinsicsNode<"role">);
+		case "slashCommand":
+			return transformSlashCommandNode(
+				element as IntrinsicsNode<"slashCommand">,
+			);
 
 		case "emoji":
 			return transformEmojiNode(element as IntrinsicsNode<"emoji">);

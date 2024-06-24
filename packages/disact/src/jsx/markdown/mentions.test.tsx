@@ -83,3 +83,31 @@ describe("role", () => {
     `);
 	});
 });
+
+describe("slash command", () => {
+	test("jsx", () => {
+		expect(<slashCommand name="airhorn" id="816437322781949972" />).toEqual({
+			_jsxType: "slashCommand",
+			type: "slashCommand",
+			props: {
+				name: "airhorn",
+				id: "816437322781949972",
+			},
+		});
+	});
+
+	test("rendered", async () => {
+		const render = createRenderer({});
+
+		expect(
+			await render(
+				<markdown>
+					<slashCommand name="airhorn" id="816437322781949972" />
+				</markdown>,
+			),
+		).toMatchInlineSnapshot(`
+			"</airhorn:816437322781949972>
+			"
+		`);
+	});
+});

@@ -37,3 +37,14 @@ export const transformRoleNode = (
 		} satisfies mdast.Html,
 	];
 };
+
+export const transformSlashCommandNode = (
+	element: IntrinsicsNode<"slashCommand">,
+): [mdast.Html] => {
+	return [
+		{
+			type: "html",
+			value: `</${element.props.name}:${element.props.id}>`,
+		} satisfies mdast.Html,
+	];
+};
