@@ -1,6 +1,10 @@
 /** @jsxImportSource ../../ */
 
-import type { DisactChildElement, DisactChildElements } from "jsx/jsx-internal";
+import type {
+	DisactChildElement,
+	DisactChildElements,
+	FunctionComponent,
+} from "jsx/jsx-internal";
 import type { JSX } from "../..//jsx-runtime";
 import { createRenderer } from "../renderer";
 import { describe, expect, test } from "vitest";
@@ -145,5 +149,37 @@ describe("renderer", () => {
 		const render = createRenderer({});
 
 		expect(await render(<Component />)).toEqual(null);
+	});
+
+	test("Components are rendered in order from parent to child", async () => {
+		const render = createRenderer({});
+
+		const result: string[] = [];
+
+		const Component: FunctionComponent<{
+			children?: DisactChildElements;
+			id: string;
+		}> = ({ children, id }) => {
+			result.push(id);
+			return <>{children}</>;
+		};
+
+		await render(
+			<Component id="1">
+				<Component id="2" />
+				<Component id="3">
+					<Component id="5" />
+					<Component id="6">
+						<Component id="9" />
+					</Component>
+				</Component>
+				<Component id="4">
+					<Component id="7" />
+					<Component id="8" />
+				</Component>
+			</Component>,
+		);
+
+		expect(result).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
 	});
 });
