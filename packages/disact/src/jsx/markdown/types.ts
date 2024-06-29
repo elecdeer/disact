@@ -38,10 +38,10 @@ export interface IntrinsicElements {
 	role: { id: string; children?: never };
 	slashCommand: { name: string; id: string; children?: never };
 
-	// guildNav: {
-	//   type: "customize" | "browse" | "guide";
-	//   children: never;
-	// };
+	guildNav: {
+		type: "customize" | "browse" | "guide";
+		children?: never;
+	};
 
 	emoji: {
 		name: string;
@@ -89,6 +89,7 @@ export type ElementTypeToMdastNodeMap = {
 	channel: mdast.Html;
 	role: mdast.Html;
 	slashCommand: mdast.Html;
+	guildNav: mdast.Html;
 	emoji: mdast.Html;
 };
 
@@ -114,6 +115,7 @@ export const rootContentTypes = [
 	"role", // html
 	"emoji", // html
 	"slashCommand", // html
+	"guildNav", // html
 ] as const satisfies ElementType[];
 
 export const phrasingContentTypes = [
@@ -130,6 +132,7 @@ export const phrasingContentTypes = [
 	"role", // html
 	"emoji", // html
 	"slashCommand", // html
+	"guildNav", // html
 ] as const satisfies ElementType[];
 
 export const blockContentTypes = [

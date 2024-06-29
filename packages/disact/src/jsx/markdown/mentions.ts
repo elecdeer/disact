@@ -48,3 +48,14 @@ export const transformSlashCommandNode = (
 		} satisfies mdast.Html,
 	];
 };
+
+export const transformGuildNavigationNode = (
+	element: IntrinsicsNode<"guildNav">,
+): [mdast.Html] => {
+	return [
+		{
+			type: "html",
+			value: `<id:${element.props.type}>`,
+		} satisfies mdast.Html,
+	];
+};

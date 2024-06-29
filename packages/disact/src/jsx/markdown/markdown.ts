@@ -27,6 +27,7 @@ import type * as mdast from "mdast";
 import { transformTimeNode } from "./time";
 import {
 	transformChannelNode,
+	transformGuildNavigationNode,
 	transformRoleNode,
 	transformSlashCommandNode,
 	transformUserNode,
@@ -166,6 +167,10 @@ const transformNode = (
 		case "slashCommand":
 			return transformSlashCommandNode(
 				element as IntrinsicsNode<"slashCommand">,
+			);
+		case "guildNav":
+			return transformGuildNavigationNode(
+				element as IntrinsicsNode<"guildNav">,
 			);
 
 		case "emoji":

@@ -111,3 +111,30 @@ describe("slash command", () => {
 		`);
 	});
 });
+
+describe("guild navigation", () => {
+	test("jsx", () => {
+		expect(<guildNav type="customize" />).toEqual({
+			_jsxType: "guildNav",
+			type: "guildNav",
+			props: {
+				type: "customize",
+			},
+		});
+	});
+
+	test("rendered", async () => {
+		const render = createRenderer({});
+
+		expect(
+			await render(
+				<markdown>
+					<guildNav type="customize" />
+				</markdown>,
+			),
+		).toMatchInlineSnapshot(`
+			"<id:customize>
+			"
+		`);
+	});
+});
