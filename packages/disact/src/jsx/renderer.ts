@@ -1,5 +1,10 @@
 import type { JSX } from "../jsx-runtime";
-import { isDisactElement } from "./jsx-internal";
+import {
+	isDisactElement,
+	type DisactJSXElement,
+	type FunctionComponent,
+	type PropType,
+} from "./jsx-internal";
 import {
 	mdastToMarkdown,
 	transformToMdast,
@@ -20,10 +25,12 @@ export const createRenderer = (config: RendererConfig) => {
 		const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
 		const promises: Promise<void>[] = [];
 
-		if (isDisactElement(obj) && typeof obj._jsxType === "function") {
-			const componentFunc = obj._jsxType;
+		const renderChildElement = async (
+			componentFunc: FunctionComponent,
+			props: PropType,
+		) => {
 			const resolved = await combinedContextRunner(async () => {
-				return await componentFunc(obj._props);
+				return await componentFunc(props);
 			});
 
 			if (resolved === null || resolved === undefined) {
@@ -37,6 +44,10 @@ export const createRenderer = (config: RendererConfig) => {
 					}
 				: combinedContextRunner;
 			return traverseElementAndRender(resolved, contextRunner);
+		};
+
+		if (isDisactElement(obj) && typeof obj._jsxType === "function") {
+			return renderChildElement(obj._jsxType, obj._props);
 		}
 
 		for (const key in obj) {
@@ -44,30 +55,14 @@ export const createRenderer = (config: RendererConfig) => {
 
 			const value = obj[key as keyof typeof obj] as unknown;
 			if (isDisactElement(value) && typeof value._jsxType === "function") {
-				const componentFunc = value._jsxType;
 				promises.push(
 					Promise.resolve(
-						combinedContextRunner(() => componentFunc(value._props)),
-					)
-						.then((resolved) => {
-							if (resolved === null || resolved === undefined) {
-								return resolved;
-							}
-
-							const context =
-								"_context" in resolved ? resolved._context : undefined;
-							const contextRunner = context
-								? <T>(cb: () => T) => {
-										return combinedContextRunner<T>(() => context(cb));
-									}
-								: combinedContextRunner;
-							return traverseElementAndRender(resolved, contextRunner);
-						})
-						.then((resolved) => {
-							if (resolved !== undefined) {
-								result[key] = resolved;
-							}
-						}),
+						renderChildElement(value._jsxType, value._props),
+					).then((resolved) => {
+						if (resolved !== undefined) {
+							result[key] = resolved;
+						}
+					}),
 				);
 			} else if (typeof value === "object" && value !== null) {
 				promises.push(
