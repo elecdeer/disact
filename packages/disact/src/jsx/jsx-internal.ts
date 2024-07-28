@@ -13,6 +13,7 @@ export namespace DisactJSX {
 export type DisactJSXElement = {
 	_jsxType: FunctionComponent | string;
 	_props: PropType;
+	_context?: (<T>(cb: () => T) => T) | undefined;
 
 	[key: string]: unknown;
 };

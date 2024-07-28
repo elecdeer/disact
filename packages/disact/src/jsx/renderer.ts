@@ -12,17 +12,31 @@ export type RendererConfig = {
 };
 
 export const createRenderer = (config: RendererConfig) => {
-	const traverseElementAndRender = async (obj: object): Promise<object> => {
+	const traverseElementAndRender = async (
+		obj: object,
+		combinedContextRunner: <T>(cb: () => T) => T = (cb) => cb(),
+	): Promise<object> => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
 		const promises: Promise<void>[] = [];
 
 		if (isDisactElement(obj) && typeof obj._jsxType === "function") {
-			const resolved = await obj._jsxType(obj._props);
+			const componentFunc = obj._jsxType;
+			const resolved = await combinedContextRunner(async () => {
+				return await componentFunc(obj._props);
+			});
+
 			if (resolved === null || resolved === undefined) {
 				return resolved;
 			}
-			return traverseElementAndRender(resolved);
+
+			const context = "_context" in resolved ? resolved._context : undefined;
+			const contextRunner = context
+				? <T>(cb: () => T) => {
+						return combinedContextRunner<T>(() => context(cb));
+					}
+				: combinedContextRunner;
+			return traverseElementAndRender(resolved, contextRunner);
 		}
 
 		for (const key in obj) {
@@ -30,13 +44,24 @@ export const createRenderer = (config: RendererConfig) => {
 
 			const value = obj[key as keyof typeof obj] as unknown;
 			if (isDisactElement(value) && typeof value._jsxType === "function") {
+				const componentFunc = value._jsxType;
 				promises.push(
-					Promise.resolve(value._jsxType(value._props))
+					Promise.resolve(
+						combinedContextRunner(() => componentFunc(value._props)),
+					)
 						.then((resolved) => {
 							if (resolved === null || resolved === undefined) {
 								return resolved;
 							}
-							return traverseElementAndRender(resolved);
+
+							const context =
+								"_context" in resolved ? resolved._context : undefined;
+							const contextRunner = context
+								? <T>(cb: () => T) => {
+										return combinedContextRunner<T>(() => context(cb));
+									}
+								: combinedContextRunner;
+							return traverseElementAndRender(resolved, contextRunner);
 						})
 						.then((resolved) => {
 							if (resolved !== undefined) {
@@ -46,7 +71,9 @@ export const createRenderer = (config: RendererConfig) => {
 				);
 			} else if (typeof value === "object" && value !== null) {
 				promises.push(
-					Promise.resolve(traverseElementAndRender(value)).then((resolved) => {
+					Promise.resolve(
+						traverseElementAndRender(value, combinedContextRunner),
+					).then((resolved) => {
 						if (resolved !== undefined) {
 							result[key] = resolved;
 						}
