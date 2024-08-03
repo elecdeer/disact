@@ -6,7 +6,7 @@ import { createRenderer } from "./renderer";
 import type { FunctionComponent } from "./jsx-internal";
 
 describe("context", () => {
-	test("defaultValue", async () => {
+	test("renders initial context value", async () => {
 		const Context = createContext("initial");
 
 		const Component = () => {
@@ -24,7 +24,7 @@ describe("context", () => {
 		});
 	});
 
-	test("wrapped", async () => {
+	test("renders wrapped context value", async () => {
 		const Context = createContext("initial");
 
 		const Component = () => {
@@ -49,7 +49,7 @@ describe("context", () => {
 		});
 	});
 
-	test("separated", async () => {
+	test("renders multiple nested context values", async () => {
 		const Context = createContext("initial");
 
 		const Component = () => {
@@ -92,7 +92,7 @@ describe("context", () => {
 		]);
 	});
 
-	test("separated2", async () => {
+	test("renders context values with async components", async () => {
 		const Context = createContext("initial");
 
 		const contextReferenceOrder: string[] = [];
@@ -134,5 +134,38 @@ describe("context", () => {
 		]);
 
 		expect(contextReferenceOrder).toEqual(["C", "B", "A"]);
+	});
+
+	test("use multiple contexts", async () => {
+		const ContextA = createContext("A");
+		const ContextB = createContext("B");
+
+		const Component = () => {
+			const valueA = useContext<string>(ContextA);
+			const valueB = useContext<string>(ContextB);
+			return (
+				<>
+					<h1>{valueA}</h1>
+					<h2>{valueB}</h2>
+				</>
+			);
+		};
+
+		const Wrapper = () => {
+			return (
+				<ContextA value="AAA">
+					<ContextB value="BBB">
+						<Component />
+					</ContextB>
+				</ContextA>
+			);
+		};
+
+		const render = createRenderer({});
+
+		expect(await render(<Wrapper />)).toEqual([
+			{ props: { children: "AAA" }, type: "h1" },
+			{ props: { children: "BBB" }, type: "h2" },
+		]);
 	});
 });
