@@ -1,4 +1,5 @@
 packages:
   - "packages/disact"
+  - "packages/disact-engine"
   - "packages/example/*"
   - "packages/tsconfig"
