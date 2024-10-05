@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
 	createElementInternal,
+	createFragmentInternal,
 	type DisactElement,
 	type FunctionComponent,
 } from "./element";
@@ -145,5 +146,162 @@ describe("render()", () => {
 			type: "p",
 			children: "Tar",
 		});
+	});
+
+	test("Fragment", async () => {
+		const element: DisactElement = createElementInternal({
+			type: "div",
+			children: createFragmentInternal({
+				children: ["one", "two", "three"],
+			}),
+		});
+
+		expect(await render(element)).toMatchObject({
+			type: "div",
+			children: ["one", "two", "three"],
+		});
+	});
+
+	test("Fragment 2", async () => {
+		const element = createElementInternal({
+			type: "root",
+			children: createFragmentInternal({
+				children: [
+					createElementInternal({
+						type: "div",
+						children: "oneNested",
+					}),
+					"two",
+					createFragmentInternal({
+						children: ["threeInsideFragment"],
+					}),
+				],
+			}),
+		});
+
+		expect(await render(element)).toMatchObject({
+			type: "root",
+			children: [
+				{
+					type: "div",
+					children: "oneNested",
+				},
+				"two",
+				"threeInsideFragment",
+			],
+		});
+	});
+
+	test("Component can return null", async () => {
+		const Component: FunctionComponent = () => null;
+
+		const element: DisactElement = createElementInternal({
+			type: Component,
+		});
+
+		expect(await render(element)).toBeNull();
+	});
+
+	test("Component can return undefined", async () => {
+		const Component: FunctionComponent = () => undefined;
+
+		const element: DisactElement = createElementInternal({
+			type: Component,
+		});
+
+		expect(await render(element)).toBeUndefined();
+	});
+
+	test("Components are rendered in order from parent to child", async () => {
+		const result: string[] = [];
+
+		const Component: FunctionComponent<{
+			children: DisactElement[];
+			id: string;
+		}> = ({ children, id }) => {
+			result.push(id);
+			return createFragmentInternal({
+				children,
+			});
+		};
+
+		const element: DisactElement = createElementInternal({
+			type: "root",
+			children: createElementInternal({
+				type: Component,
+				props: {
+					id: "parent",
+				},
+				children: [
+					createElementInternal({
+						type: Component,
+						props: {
+							id: "child1",
+						},
+						children: [
+							createElementInternal({
+								type: Component,
+								props: {
+									id: "child3",
+								},
+							}),
+							createElementInternal({
+								type: Component,
+								props: {
+									id: "child4",
+								},
+								children: createElementInternal({
+									type: Component,
+									props: {
+										id: "child8",
+									},
+								}),
+							}),
+							createElementInternal({
+								type: Component,
+								props: {
+									id: "child5",
+								},
+							}),
+						],
+					}),
+
+					createElementInternal({
+						type: Component,
+						props: {
+							id: "child2",
+						},
+						children: [
+							createElementInternal({
+								type: Component,
+								props: {
+									id: "child6",
+								},
+							}),
+							createElementInternal({
+								type: Component,
+								props: {
+									id: "child7",
+								},
+							}),
+						],
+					}),
+				],
+			}),
+		});
+
+		await render(element);
+
+		expect(result).toEqual([
+			"parent",
+			"child1",
+			"child2",
+			"child3",
+			"child4",
+			"child5",
+			"child6",
+			"child7",
+			"child8",
+		]);
 	});
 });

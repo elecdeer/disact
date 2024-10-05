@@ -25,9 +25,14 @@ export type IntrinsicElementDisactElement = {
 	type: IntrinsicElementsKey;
 } & DisactElementBase;
 
+export type FragmentDisactElement = {
+	type: "Fragment";
+} & DisactElementBase;
+
 export type DisactElement =
 	| FunctionComponentDisactElement
-	| IntrinsicElementDisactElement;
+	| IntrinsicElementDisactElement
+	| FragmentDisactElement;
 
 export type DisactNode = DisactElement | string | undefined | null;
 
@@ -65,6 +70,17 @@ export const createElementInternal = ({
 	};
 };
 
+export const createFragmentInternal = ({
+	children,
+}: {
+	children: DisactNode | DisactNode[];
+}): DisactElement => {
+	return createElementInternal({
+		type: "Fragment",
+		children,
+	});
+};
+
 export const isDisactElement = (value: unknown): value is DisactElement => {
 	return typeof value === "object" && value !== null && "type" in value;
 };
@@ -73,4 +89,10 @@ export const isFunctionComponentElement = (
 	value: DisactElement,
 ): value is FunctionComponentDisactElement => {
 	return typeof value.type === "function";
+};
+
+export const isFragmentElement = (
+	value: DisactElement,
+): value is FragmentDisactElement => {
+	return value.type === "Fragment";
 };
