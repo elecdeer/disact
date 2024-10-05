@@ -1,6 +1,5 @@
 {
 	"editor.defaultFormatter": "biomejs.biome",
-	"biome.rename": true,
 	"cSpell.words": ["disact", "Mdast"],
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome"
@@ -9,5 +8,11 @@
 		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"typescript.preferences.importModuleSpecifier": "project-relative",
-	"javascript.preferences.importModuleSpecifier": "project-relative"
+	"javascript.preferences.importModuleSpecifier": "project-relative",
+	"biome.lsp.bin": {
+		"linux-x64": "./node_modules/bin/biome",
+		"linux-arm64-musl": "./node_modules/bin/biome",
+		"darwin-arm64": "./node_modules/bin/biome",
+		"win32-x64": "./node_modules/bin/biome"
+	}
 }
