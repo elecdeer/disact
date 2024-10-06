@@ -65,10 +65,19 @@ const renderChildren = async (
 	combinedContextRunner: <T>(cb: () => T) => T = (cb) => cb(),
 ) => {
 	if (Array.isArray(children)) {
-		return await Promise.all(
+		const renderedChildren = await Promise.all(
 			children.map((child) => renderElement(child, combinedContextRunner)),
-		).then((children) => children.flat());
+		);
+
+		const validChildren = renderedChildren
+			.flat()
+			.filter((child) => child !== null && child !== undefined);
+
+		if (validChildren.length === 0) {
+			return undefined;
+		}
+		return validChildren;
 	}
 
-	return await renderElement(children, combinedContextRunner);
+	return (await renderElement(children, combinedContextRunner)) ?? undefined;
 };

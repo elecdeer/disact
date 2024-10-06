@@ -99,18 +99,71 @@ describe("render()", () => {
 		expect(await render(element)).toMatchObject({
 			type: "ul",
 			children: [
-				{
-					type: "li",
-					children: "one",
-				},
-				{
-					type: "li",
-					children: "two",
-				},
-				{
-					type: "li",
-					children: "three",
-				},
+				{ type: "li", children: "one" },
+				{ type: "li", children: "two" },
+				{ type: "li", children: "three" },
+			],
+		});
+	});
+
+	test("Any nullish children are removed", async () => {
+		const ListItem: FunctionComponent<{
+			children: string;
+		}> = (props) => {
+			return createElementInternal({
+				type: "li",
+				children: props.children,
+			});
+		};
+
+		const List: FunctionComponent<{
+			children: DisactElement[];
+		}> = (props) => {
+			return createElementInternal({
+				type: "ul",
+				children: props.children,
+			});
+		};
+
+		const NullComponent: FunctionComponent = () => null;
+
+		const element: DisactElement = createElementInternal({
+			type: List,
+			children: [
+				createElementInternal({ type: ListItem, children: "one" }),
+				null,
+				createElementInternal({ type: ListItem, children: "two" }),
+				undefined,
+				createElementInternal({ type: ListItem, children: null }),
+				createElementInternal({ type: ListItem, children: undefined }),
+				createElementInternal({
+					type: ListItem,
+					children: ["nested", null, undefined, "nested2"],
+				}),
+				createElementInternal({
+					type: ListItem,
+					children: ["nested3", undefined],
+				}),
+				createElementInternal({
+					type: ListItem,
+					children: [null, undefined],
+				}),
+				createElementInternal({ type: ListItem, children: "three" }),
+				createElementInternal({ type: NullComponent }),
+			],
+		});
+
+		expect(await render(element)).toMatchObject({
+			type: "ul",
+			children: [
+				{ type: "li", children: "one" },
+				{ type: "li", children: "two" },
+				{ type: "li", children: undefined },
+				{ type: "li", children: undefined },
+				{ type: "li", children: ["nested", "nested2"] },
+				{ type: "li", children: ["nested3"] },
+				{ type: "li", children: undefined },
+				{ type: "li", children: "three" },
 			],
 		});
 	});
@@ -167,14 +220,9 @@ describe("render()", () => {
 			type: "root",
 			children: createFragmentInternal({
 				children: [
-					createElementInternal({
-						type: "div",
-						children: "oneNested",
-					}),
+					createElementInternal({ type: "div", children: "oneNested" }),
 					"two",
-					createFragmentInternal({
-						children: ["threeInsideFragment"],
-					}),
+					createFragmentInternal({ children: ["threeInsideFragment"] }),
 				],
 			}),
 		});
@@ -235,54 +283,38 @@ describe("render()", () => {
 				children: [
 					createElementInternal({
 						type: Component,
-						props: {
-							id: "child1",
-						},
+						props: { id: "child1" },
 						children: [
 							createElementInternal({
 								type: Component,
-								props: {
-									id: "child3",
-								},
+								props: { id: "child3" },
 							}),
 							createElementInternal({
 								type: Component,
-								props: {
-									id: "child4",
-								},
+								props: { id: "child4" },
 								children: createElementInternal({
 									type: Component,
-									props: {
-										id: "child8",
-									},
+									props: { id: "child8" },
 								}),
 							}),
 							createElementInternal({
 								type: Component,
-								props: {
-									id: "child5",
-								},
+								props: { id: "child5" },
 							}),
 						],
 					}),
 
 					createElementInternal({
 						type: Component,
-						props: {
-							id: "child2",
-						},
+						props: { id: "child2" },
 						children: [
 							createElementInternal({
 								type: Component,
-								props: {
-									id: "child6",
-								},
+								props: { id: "child6" },
 							}),
 							createElementInternal({
 								type: Component,
-								props: {
-									id: "child7",
-								},
+								props: { id: "child7" },
 							}),
 						],
 					}),
