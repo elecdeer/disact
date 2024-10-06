@@ -32,10 +32,6 @@ const renderElement = async (
 		return node;
 	}
 
-	if (node.type === "Fragment") {
-		return await renderChildren(node.children);
-	}
-
 	const context = contextSymbol in node ? node[contextSymbol] : undefined;
 
 	const contextRunner = context
@@ -43,6 +39,10 @@ const renderElement = async (
 				return combinedContextRunner<T>(() => context(cb));
 			}
 		: combinedContextRunner;
+
+	if (isFragmentElement(node)) {
+		return await renderChildren(node.children, contextRunner);
+	}
 
 	if (isFunctionComponentElement(node)) {
 		const resolved = await contextRunner(async () =>
@@ -56,7 +56,7 @@ const renderElement = async (
 
 	return {
 		...node,
-		children: await renderChildren(node.children),
+		children: await renderChildren(node.children, combinedContextRunner),
 	};
 };
 
