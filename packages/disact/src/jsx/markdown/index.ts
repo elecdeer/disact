@@ -1,7 +1,6 @@
-export type { IntrinsicsNode, IntrinsicElements } from "./types";
-
 export {
-	traverseMarkdown,
-	transformToMdast,
-	mdastToMarkdown,
+  mdastToMarkdown,
+  transformToMdast,
+  traverseMarkdown,
 } from "./markdown";
+export type { IntrinsicElements, IntrinsicsNode } from "./types";
