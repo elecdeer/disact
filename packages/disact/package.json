@@ -44,14 +44,14 @@
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
     "@types/mdast": "^4.0.4",
-    "ts-dedent": "^2.2.0",
-    "@types/node": "^20.14.12"
+    "@types/node": "~22.18.6",
+    "ts-dedent": "^2.2.0"
   },
   "keywords": [],
   "author": "elecdeer",
   "license": "MIT",
   "dependencies": {
     "mdast-util-gfm-strikethrough": "^2.0.0",
-    "mdast-util-to-markdown": "^2.1.0"
+    "mdast-util-to-markdown": "^2.1.2"
   }
 }
