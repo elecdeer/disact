@@ -4,46 +4,82 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@biomejs/biome':
+      specifier: 2.2.4
+      version: 2.2.4
+    '@types/mdast':
+      specifier: ^4.0.4
+      version: 4.0.4
+    '@types/node':
+      specifier: ~22.18.6
+      version: 22.18.6
+    mdast-util-gfm-strikethrough:
+      specifier: ^2.0.0
+      version: 2.0.0
+    mdast-util-to-markdown:
+      specifier: ^2.1.2
+      version: 2.1.2
+    ts-dedent:
+      specifier: ^2.2.0
+      version: 2.2.0
+    tsup:
+      specifier: ^8.5.0
+      version: 8.5.0
+    turbo:
+      specifier: ^2.5.6
+      version: 2.5.6
+    typescript:
+      specifier: ^5.9.2
+      version: 5.9.2
+    vite-node:
+      specifier: ^3.2.4
+      version: 3.2.4
+    vitest:
+      specifier: ^3.2.4
+      version: 3.2.4
+
 importers:
 
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.2.4
+        specifier: 'catalog:'
         version: 2.2.4
       tsup:
-        specifier: ^8.5.0
+        specifier: 'catalog:'
         version: 8.5.0(postcss@8.5.6)(typescript@5.9.2)
       turbo:
-        specifier: ^2.5.6
+        specifier: 'catalog:'
         version: 2.5.6
       typescript:
-        specifier: ^5.9.2
+        specifier: 'catalog:'
         version: 5.9.2
       vitest:
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.5.2)
 
   packages/disact:
     dependencies:
       mdast-util-gfm-strikethrough:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       mdast-util-to-markdown:
-        specifier: ^2.1.2
+        specifier: 'catalog:'
         version: 2.1.2
     devDependencies:
       '@monorepo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/mdast':
-        specifier: ^4.0.4
+        specifier: 'catalog:'
         version: 4.0.4
       '@types/node':
-        specifier: ~22.18.6
+        specifier: 'catalog:'
         version: 22.18.6
       ts-dedent:
-        specifier: ^2.2.0
+        specifier: 'catalog:'
         version: 2.2.0
 
   packages/disact-engine:
@@ -52,10 +88,10 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
-        specifier: ~22.18.6
+        specifier: 'catalog:'
         version: 22.18.6
       ts-dedent:
-        specifier: ^2.2.0
+        specifier: 'catalog:'
         version: 2.2.0
 
   packages/example/basic:
@@ -68,7 +104,7 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vite-node:
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(@types/node@24.5.2)
 
   packages/tsconfig: {}
