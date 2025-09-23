@@ -1,82 +1,61 @@
-import {
-  contextSymbol,
-  type DisactElement,
-  type DisactNode,
-  type IntrinsicElementDisactElement,
-  isFragmentElement,
-  isFunctionComponentElement,
-} from "./element";
+import type { DisactElement, DisactNode, RenderedElement } from "./element";
 
-export type RenderedDisactElement =
-  | IntrinsicElementDisactElement
-  | string
-  | undefined
-  | null;
-
-export const render = async (
+export const renderRoot = <Context>(
   element: DisactElement,
-): Promise<RenderedDisactElement> => {
-  const result = await renderElement(element);
+  context: Context,
+): RenderedElement => {
+  const result = render(element, context);
+  if (result === null) {
+    throw new Error("Root element cannot be null");
+  }
   if (Array.isArray(result)) {
-    throw new Error("Top level element must not be Fragment");
+    throw new Error("Root element cannot be an array");
   }
   return result;
 };
 
-const renderElement = async (
-  node: DisactElement | string | undefined | null,
-  combinedContextRunner: <T>(cb: () => T) => T = (cb) => cb(),
-): Promise<RenderedDisactElement | RenderedDisactElement[]> => {
-  if (node === null || node === undefined || typeof node === "string") {
-    return node;
+const render = <Context>(
+  element: DisactNode,
+  context: Context,
+): RenderedElement | RenderedElement[] | null => {
+  if (Array.isArray(element)) {
+    return element
+      .flatMap((child) => render(child, context))
+      .filter((child): child is RenderedElement => child !== null);
   }
 
-  const context = contextSymbol in node ? node[contextSymbol] : undefined;
-
-  const contextRunner = context
-    ? <T>(cb: () => T) => {
-        return combinedContextRunner<T>(() => context(cb));
-      }
-    : combinedContextRunner;
-
-  if (isFragmentElement(node)) {
-    return await renderChildren(node.children, contextRunner);
+  if (element === null || element === undefined) {
+    return null;
   }
 
-  if (isFunctionComponentElement(node)) {
-    const resolved = await contextRunner(async () =>
-      node.type({
-        ...node.props,
-        children: node.children,
-      }),
-    );
-    return await renderElement(resolved, contextRunner);
+  if (typeof element === "string") {
+    return element === "" ? null : { type: "text", content: element };
   }
 
-  return {
-    ...node,
-    children: await renderChildren(node.children, combinedContextRunner),
-  };
+  if (element.type === "function") {
+    const children = element.fc(element.props);
+    return render(children, context);
+  }
+
+  if (element.type === "intrinsic") {
+    const { children, ...rest } = element.props;
+
+    const renderedChildren = render(children as DisactNode, context);
+
+    return {
+      type: "intrinsic",
+      name: element.name,
+      props: rest,
+      children: renderedChildren && toArray(renderedChildren),
+    };
+  }
+
+  throw new Error("Unknown element type");
 };
 
-const renderChildren = async (
-  children: DisactNode | DisactNode[],
-  combinedContextRunner: <T>(cb: () => T) => T = (cb) => cb(),
-) => {
-  if (Array.isArray(children)) {
-    const renderedChildren = await Promise.all(
-      children.map((child) => renderElement(child, combinedContextRunner)),
-    );
-
-    const validChildren = renderedChildren
-      .flat()
-      .filter((child) => child !== null && child !== undefined);
-
-    if (validChildren.length === 0) {
-      return undefined;
-    }
-    return validChildren;
+const toArray = <T>(value: T | T[]): T[] => {
+  if (Array.isArray(value)) {
+    return value;
   }
-
-  return (await renderElement(children, combinedContextRunner)) ?? undefined;
+  return [value];
 };
