@@ -5,24 +5,48 @@ import type {
   FunctionComponent,
   IntrinsicElement,
   PropsBase,
+  RenderedElement,
 } from "./element";
 import { use } from "./jsx";
-import { renderRoot, renderToReadableStream } from "./render";
+import { renderToReadableStream } from "./render";
 
-describe("renderRoot", () => {
+describe("renderToReadableStream", () => {
   const mockContext = { theme: "dark" };
 
+  // ストリームから結果を読み取るヘルパー関数
+  const readStreamToCompletion = async (
+    stream: ReadableStream,
+  ): Promise<RenderedElement[]> => {
+    const reader = stream.getReader();
+    const chunks: RenderedElement[] = [];
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return chunks;
+  };
+
+
   describe("Basic Element Processing", () => {
-    it("should render a text element", () => {
+    it("should render a text element", async () => {
       const element: DisactElement = {
         type: "intrinsic",
         name: "div",
         props: { children: "Hello World" },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: {},
@@ -30,7 +54,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should render an intrinsic element with props", () => {
+    it("should render an intrinsic element with props", async () => {
       const element: IntrinsicElement = {
         type: "intrinsic",
         name: "button",
@@ -41,9 +65,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "button",
         props: {
@@ -54,7 +80,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should render nested elements", () => {
+    it("should render nested elements", async () => {
       const element: IntrinsicElement = {
         type: "intrinsic",
         name: "div",
@@ -67,9 +93,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: {},
@@ -84,7 +112,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle multiple children", () => {
+    it("should handle multiple children", async () => {
       const element: IntrinsicElement = {
         type: "intrinsic",
         name: "div",
@@ -101,9 +129,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: {},
@@ -120,7 +150,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should filter out null and undefined children", () => {
+    it("should filter out null and undefined children", async () => {
       const element: IntrinsicElement = {
         type: "intrinsic",
         name: "div",
@@ -129,9 +159,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: {},
@@ -144,7 +176,7 @@ describe("renderRoot", () => {
   });
 
   describe("Function Component", () => {
-    it("should render a basic function component", () => {
+    it("should render a basic function component", async () => {
       const TestComponent: FunctionComponent<{ name: string }> = ({
         name,
       }) => ({
@@ -159,9 +191,11 @@ describe("renderRoot", () => {
         props: { name: "World" },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "span",
         props: {},
@@ -169,7 +203,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle nested function components", () => {
+    it("should handle nested function components", async () => {
       const InnerComponent: FunctionComponent<{ text: string }> = ({
         text,
       }) => ({
@@ -198,9 +232,11 @@ describe("renderRoot", () => {
         props: { message: "Hello from nested component" },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: {},
@@ -217,7 +253,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle FC returning another FC", () => {
+    it("should handle FC returning another FC", async () => {
       const Button: FunctionComponent<{ text: string; variant?: string }> = ({
         text,
         variant = "primary",
@@ -245,9 +281,11 @@ describe("renderRoot", () => {
         props: { label: "Submit", type: "primary" },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "button",
         props: {
@@ -257,7 +295,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle FC returning conditional FC based on props", () => {
+    it("should handle FC returning conditional FC based on props", async () => {
       const PrimaryButton: FunctionComponent<{ children: string }> = ({
         children,
       }) => ({
@@ -296,9 +334,11 @@ describe("renderRoot", () => {
         props: { isPrimary: true, text: "Primary Action" },
       };
 
-      const primaryResult = renderRoot(primaryElement, mockContext);
+      const stream = renderToReadableStream(primaryElement, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(primaryResult).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "button",
         props: {
@@ -310,7 +350,7 @@ describe("renderRoot", () => {
   });
 
   describe("Conditional Rendering and Dynamic Behavior", () => {
-    it("should handle component with conditional rendering based on props", () => {
+    it("should handle component with conditional rendering based on props", async () => {
       const ConditionalComponent: FunctionComponent<{
         type: "button" | "link";
         text: string;
@@ -337,7 +377,10 @@ describe("renderRoot", () => {
         props: { type: "button", text: "Click me" },
       };
 
-      const buttonResult = renderRoot(buttonElement, mockContext);
+      const stream1 = renderToReadableStream(buttonElement, mockContext);
+      const chunks1 = await readStreamToCompletion(stream1);
+      expect(chunks1).toHaveLength(1);
+      const buttonResult = chunks1[0];
 
       expect(buttonResult).toEqual({
         type: "intrinsic",
@@ -353,7 +396,10 @@ describe("renderRoot", () => {
         props: { type: "link", text: "Go to page", href: "/page" },
       };
 
-      const linkResult = renderRoot(linkElement, mockContext);
+      const stream2 = renderToReadableStream(linkElement, mockContext);
+      const chunks2 = await readStreamToCompletion(stream2);
+      expect(chunks2).toHaveLength(1);
+      const linkResult = chunks2[0];
 
       expect(linkResult).toEqual({
         type: "intrinsic",
@@ -363,7 +409,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle component with different structures based on props", () => {
+    it("should handle component with different structures based on props", async () => {
       const StatusComponent: FunctionComponent<{
         status: "loading" | "success" | "error";
         message?: string;
@@ -417,7 +463,10 @@ describe("renderRoot", () => {
         props: { status: "success", message: "Data saved" },
       };
 
-      const successResult = renderRoot(successElement, mockContext);
+      const stream = renderToReadableStream(successElement, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+      expect(chunks).toHaveLength(1);
+      const successResult = chunks[0];
 
       expect(successResult).toEqual({
         type: "intrinsic",
@@ -435,7 +484,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle component with array children manipulation", () => {
+    it("should handle component with array children manipulation", async () => {
       const ListComponent: FunctionComponent<{
         items: string[];
         ordered?: boolean;
@@ -457,9 +506,11 @@ describe("renderRoot", () => {
         props: { items: ["Item 1", "Item 2", "Item 3"] },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "ul",
         props: {},
@@ -488,7 +539,7 @@ describe("renderRoot", () => {
   });
 
   describe("Render Functions and DisactElement Props", () => {
-    it("should handle component with renderContent-like function props", () => {
+    it("should handle component with renderContent-like function props", async () => {
       const Modal: FunctionComponent<{
         title: string;
         renderContent: () => DisactNode;
@@ -534,9 +585,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: { className: "modal" },
@@ -572,7 +625,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle component with DisactElement as props", () => {
+    it("should handle component with DisactElement as props", async () => {
       const Wrapper: FunctionComponent<{
         prefix: DisactElement;
         suffix: DisactElement;
@@ -614,9 +667,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: { className: "wrapper" },
@@ -638,7 +693,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle component with function component as props", () => {
+    it("should handle component with function component as props", async () => {
       const IconComponent: FunctionComponent<{ name: string }> = ({
         name,
       }) => ({
@@ -679,9 +734,11 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "button",
         props: { className: "btn btn-primary" },
@@ -700,7 +757,7 @@ describe("renderRoot", () => {
   });
 
   describe("Fragment Pattern", () => {
-    it("should handle Fragment as children in intrinsic element", () => {
+    it("should handle Fragment as children in intrinsic element", async () => {
       const Fragment = ({
         children,
       }: {
@@ -738,7 +795,10 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(containerElement, mockContext);
+      const stream = renderToReadableStream(containerElement, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+      expect(chunks).toHaveLength(1);
+      const result = chunks[0];
 
       expect(result).toEqual({
         type: "intrinsic",
@@ -767,7 +827,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle nested Fragment pattern", () => {
+    it("should handle nested Fragment pattern", async () => {
       const Fragment = ({
         children,
       }: {
@@ -818,7 +878,10 @@ describe("renderRoot", () => {
         },
       };
 
-      const result = renderRoot(containerElement, mockContext);
+      const stream = renderToReadableStream(containerElement, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+      expect(chunks).toHaveLength(1);
+      const result = chunks[0];
 
       expect(result).toEqual({
         type: "intrinsic",
@@ -856,7 +919,7 @@ describe("renderRoot", () => {
   });
 
   describe("HOC (Higher-Order Component) Pattern", () => {
-    it("should handle HOC with styling and container wrapping", () => {
+    it("should handle HOC with styling and container wrapping", async () => {
       // Base component
       const Button: FunctionComponent<{
         children: string;
@@ -913,9 +976,11 @@ describe("renderRoot", () => {
         props: { children: "Click me" },
       };
 
-      const result = renderRoot(element, mockContext);
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
 
-      expect(result).toEqual({
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
         type: "intrinsic",
         name: "div",
         props: { className: "container" },
@@ -930,7 +995,7 @@ describe("renderRoot", () => {
       });
     });
 
-    it("should handle HOC with props transformation and validation", () => {
+    it("should handle HOC with props transformation and validation", async () => {
       // Base input component
       const Input: FunctionComponent<{
         value: string;
@@ -986,7 +1051,10 @@ describe("renderRoot", () => {
         },
       };
 
-      const errorResult = renderRoot(errorElement, mockContext);
+      const stream = renderToReadableStream(errorElement, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+      expect(chunks).toHaveLength(1);
+      const errorResult = chunks[0];
 
       expect(errorResult).toEqual({
         type: "intrinsic",
@@ -1011,7 +1079,7 @@ describe("renderRoot", () => {
   });
 
   describe("Error Handling", () => {
-    it("should handle function component returning null", () => {
+    it("should handle function component returning null", async () => {
       const NullComponent: FunctionComponent = () => null;
 
       const element: DisactElement = {
@@ -1020,12 +1088,14 @@ describe("renderRoot", () => {
         props: {},
       };
 
-      expect(() => renderRoot(element, mockContext)).toThrow(
+      const stream = renderToReadableStream(element, mockContext);
+
+      await expect(readStreamToCompletion(stream)).rejects.toThrow(
         "Root element cannot be null",
       );
     });
 
-    it("should handle function component returning array", () => {
+    it("should handle function component returning array", async () => {
       const ArrayComponent: FunctionComponent = () => ["item1", "item2"];
 
       const element: DisactElement = {
@@ -1034,12 +1104,14 @@ describe("renderRoot", () => {
         props: {},
       };
 
-      expect(() => renderRoot(element, mockContext)).toThrow(
+      const stream = renderToReadableStream(element, mockContext);
+
+      await expect(readStreamToCompletion(stream)).rejects.toThrow(
         "Root element cannot be an array",
       );
     });
 
-    it("should handle Fragment pattern at root level", () => {
+    it("should handle Fragment pattern at root level", async () => {
       const Fragment = ({
         children,
       }: {
@@ -1065,36 +1137,14 @@ describe("renderRoot", () => {
         },
       };
 
-      // Fragment returns array, so renderRoot should throw
-      expect(() => renderRoot(fragmentElement, mockContext)).toThrow(
+      // Fragment returns array, so stream should throw
+      const stream = renderToReadableStream(fragmentElement, mockContext);
+
+      await expect(readStreamToCompletion(stream)).rejects.toThrow(
         "Root element cannot be an array",
       );
     });
   });
-});
-
-describe("renderToReadableStream", () => {
-  const mockContext = { theme: "dark" };
-
-  // ストリームから結果を読み取るヘルパー関数
-  const readStreamToCompletion = async (
-    stream: ReadableStream,
-  ): Promise<any[]> => {
-    const reader = stream.getReader();
-    const chunks: any[] = [];
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    return chunks;
-  };
 
   describe("同期レンダリング", () => {
     it("should render a simple text element and stream the result", async () => {
