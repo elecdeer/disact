@@ -30,49 +30,48 @@ const renderWithSuspenseSupport = async <Context>(
   controller: ReadableStreamDefaultController<RenderedElement>,
 ): Promise<RenderedElement | null> => {
   const promises: Promise<unknown>[] = [];
+  const promiseTracker = createPromiseTracker();
 
   // 最初にfallbackを使ってレンダリング
   const initialResult = validateRootElement(render(element, context, promises));
 
   if (promises.length > 0) {
+    // Promiseの追跡を開始
+    promises.forEach(promise => promiseTracker.trackPromise(promise));
+
     // Promiseが収集された場合、microtaskキューの実行を待つ
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // microtask実行後に再度チェック - 即座に解決されたPromiseがあるかもしれない
-    const secondPromises: Promise<unknown>[] = [];
-    const secondResult = render(element, context, secondPromises);
-
-    if (secondPromises.length === 0) {
-      // すべてのPromiseが解決済みの場合、fallbackなしで直接結果を返す
-      return validateRootElement(secondResult);
+    // Promiseの解決状況をチェック
+    if (promiseTracker.areAllResolved(promises)) {
+      // すべてのPromiseが解決済みの場合、再レンダリングして結果を返す
+      const finalResult = render(element, context);
+      return validateRootElement(finalResult);
     } else {
       // まだ未解決のPromiseがある場合は、fallbackを先に送信
       controller.enqueue(initialResult);
 
       // 各Promiseが個別に解決されるたびに中間結果を送信
-      let remainingPromises = [...secondPromises];
+      let remainingPromises = promiseTracker.getPendingPromises(promises);
 
       const handleIndividualPromiseResolution = async () => {
         while (remainingPromises.length > 0) {
           // いずれかのPromiseが解決されるのを待つ
           await Promise.race(remainingPromises);
 
-          // 現在の状態で再レンダリングを試行
-          const currentPromises: Promise<unknown>[] = [];
-          const currentResult = render(
-            element,
-            context,
-            currentPromises,
-          );
+          // 現在のPromiseの解決状況をチェック
+          const currentPendingPromises = promiseTracker.getPendingPromises(remainingPromises);
 
-          // 解決されたPromiseがある場合（currentPromisesが減った場合）
-          if (currentPromises.length < remainingPromises.length) {
+          // 解決されたPromiseがある場合
+          if (currentPendingPromises.length < remainingPromises.length) {
+            // 再レンダリングして現在の結果を送信
+            const currentResult = render(element, context);
             if (currentResult !== null && !Array.isArray(currentResult)) {
               controller.enqueue(currentResult);
             }
 
             // 残っているPromiseを更新
-            remainingPromises = currentPromises;
+            remainingPromises = currentPendingPromises;
           } else {
             // まだ解決されていない場合、少し待ってから再試行
             await new Promise((resolve) => setTimeout(resolve, 1));
@@ -155,6 +154,28 @@ const isPromise = (value: unknown): value is Promise<unknown> => {
     "then" in value &&
     typeof value.then === "function"
   );
+};
+
+// よりシンプルなアプローチ：Promiseの状態をキャッシュして管理
+const createPromiseTracker = () => {
+  const resolvedPromises = new Set<Promise<unknown>>();
+
+  const trackPromise = (promise: Promise<unknown>) => {
+    promise.then(
+      () => resolvedPromises.add(promise),
+      () => resolvedPromises.add(promise)
+    );
+  };
+
+  const areAllResolved = (promises: Promise<unknown>[]): boolean => {
+    return promises.every(promise => resolvedPromises.has(promise));
+  };
+
+  const getPendingPromises = (promises: Promise<unknown>[]): Promise<unknown>[] => {
+    return promises.filter(promise => !resolvedPromises.has(promise));
+  };
+
+  return { trackPromise, areAllResolved, getPendingPromises };
 };
 
 
