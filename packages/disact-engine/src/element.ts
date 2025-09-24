@@ -17,7 +17,10 @@ export type DevSource = {
 /**
  * createElementの返り値となる要素の型
  */
-export type DisactElement = FunctionComponentElement | IntrinsicElement;
+export type DisactElement =
+  | FunctionComponentElement
+  | IntrinsicElement
+  | SuspenseElement;
 
 /**
  * レンダリング可能な要素の型
@@ -45,6 +48,14 @@ export type IntrinsicElement = {
   type: "intrinsic";
   name: IntrinsicElementName;
   props: PropsBase;
+} & DisactElementBase;
+
+export type SuspenseElement = {
+  type: "suspense";
+  props: {
+    fallback: DisactNode;
+    children: DisactNode;
+  };
 } & DisactElementBase;
 
 export type RenderedElement =
