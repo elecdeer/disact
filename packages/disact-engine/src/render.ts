@@ -37,7 +37,7 @@ const renderWithSuspenseSupport = async <Context>(
 
   if (promises.length > 0) {
     // Promiseの追跡を開始
-    promises.forEach(promise => promiseTracker.trackPromise(promise));
+    promises.forEach((promise) => promiseTracker.trackPromise(promise));
 
     // Promiseが収集された場合、microtaskキューの実行を待つ
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -53,6 +53,7 @@ const renderWithSuspenseSupport = async <Context>(
 
       // 各Promiseが個別に解決されるたびに中間結果を送信
       let remainingPromises = promiseTracker.getPendingPromises(promises);
+      let hasEnqueuedFinal = false;
 
       const handleIndividualPromiseResolution = async () => {
         while (remainingPromises.length > 0) {
@@ -60,18 +61,32 @@ const renderWithSuspenseSupport = async <Context>(
           await Promise.race(remainingPromises);
 
           // 現在のPromiseの解決状況をチェック
-          const currentPendingPromises = promiseTracker.getPendingPromises(remainingPromises);
+          const currentPendingPromises =
+            promiseTracker.getPendingPromises(remainingPromises);
 
           // 解決されたPromiseがある場合
           if (currentPendingPromises.length < remainingPromises.length) {
-            // 再レンダリングして現在の結果を送信
-            const currentResult = render(element, context);
-            if (currentResult !== null && !Array.isArray(currentResult)) {
-              controller.enqueue(currentResult);
+            // 再レンダリングして現在の結果を送信（新しいPromiseも収集）
+            const newPromises: Promise<unknown>[] = [];
+            const currentResult = render(element, context, newPromises);
+
+            // 新しいPromiseが発生した場合（ネストしたSuspenseなど）は追跡に追加
+            if (newPromises.length > 0) {
+              newPromises.forEach((promise) => {
+                if (!promises.includes(promise)) {
+                  promises.push(promise);
+                  promiseTracker.trackPromise(promise);
+                }
+              });
+              remainingPromises = promiseTracker.getPendingPromises(promises);
+            } else {
+              remainingPromises = currentPendingPromises;
             }
 
-            // 残っているPromiseを更新
-            remainingPromises = currentPendingPromises;
+            if (currentResult !== null && !Array.isArray(currentResult)) {
+              controller.enqueue(currentResult);
+              hasEnqueuedFinal = true;
+            }
           } else {
             // まだ解決されていない場合、少し待ってから再試行
             await new Promise((resolve) => setTimeout(resolve, 1));
@@ -81,8 +96,15 @@ const renderWithSuspenseSupport = async <Context>(
 
       await handleIndividualPromiseResolution();
 
-      // すべてのPromiseが解決済みの場合、最終結果は既に送信されているため
-      // nullを返してストリームを終了
+      // ループ終了後、まだ最終結果が送信されていない場合のみ送信
+      if (remainingPromises.length === 0 && !hasEnqueuedFinal) {
+        const finalResult = render(element, context);
+        if (finalResult !== null && !Array.isArray(finalResult)) {
+          controller.enqueue(finalResult);
+        }
+      }
+
+      // すべてのPromiseが解決済みの場合はnullを返してストリームを終了
       return null;
     }
   } else {
@@ -115,11 +137,7 @@ const render = <Context>(
 
   if (element.type === "intrinsic") {
     const { children, ...rest } = element.props;
-    const renderedChildren = render(
-      children as DisactNode,
-      context,
-      promises,
-    );
+    const renderedChildren = render(children as DisactNode, context, promises);
 
     return {
       type: "intrinsic",
@@ -131,8 +149,16 @@ const render = <Context>(
 
   if (element.type === "suspense") {
     try {
-      // 子をレンダリングしてみる
-      return render(element.props.children, context, promises);
+      // 子をレンダリングしてみる（独立したPromise配列を使用）
+      const childPromises: Promise<unknown>[] = [];
+      const result = render(element.props.children, context, childPromises);
+
+      // 子で発生したPromiseがある場合、それらを親のPromise配列に追加
+      if (childPromises.length > 0) {
+        promises.push(...childPromises);
+      }
+
+      return result;
     } catch (thrown) {
       // Promiseが投げられた場合、Suspense処理を開始
       if (isPromise(thrown)) {
@@ -163,21 +189,22 @@ const createPromiseTracker = () => {
   const trackPromise = (promise: Promise<unknown>) => {
     promise.then(
       () => resolvedPromises.add(promise),
-      () => resolvedPromises.add(promise)
+      () => resolvedPromises.add(promise),
     );
   };
 
   const areAllResolved = (promises: Promise<unknown>[]): boolean => {
-    return promises.every(promise => resolvedPromises.has(promise));
+    return promises.every((promise) => resolvedPromises.has(promise));
   };
 
-  const getPendingPromises = (promises: Promise<unknown>[]): Promise<unknown>[] => {
-    return promises.filter(promise => !resolvedPromises.has(promise));
+  const getPendingPromises = (
+    promises: Promise<unknown>[],
+  ): Promise<unknown>[] => {
+    return promises.filter((promise) => !resolvedPromises.has(promise));
   };
 
   return { trackPromise, areAllResolved, getPendingPromises };
 };
-
 
 const validateRootElement = (
   result: RenderedElement | RenderedElement[] | null,
@@ -194,7 +221,11 @@ const validateRootElement = (
 const renderChildrenArray = <Context>(
   elements: DisactNode[],
   context: Context,
-  renderFn: (element: DisactNode, context: Context, promises?: Promise<unknown>[]) => RenderedElement | RenderedElement[] | null,
+  renderFn: (
+    element: DisactNode,
+    context: Context,
+    promises?: Promise<unknown>[],
+  ) => RenderedElement | RenderedElement[] | null,
   promises: Promise<unknown>[] = [],
 ): RenderedElement[] => {
   return elements

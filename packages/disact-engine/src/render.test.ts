@@ -1792,4 +1792,215 @@ describe("renderToReadableStream", () => {
       reader.releaseLock();
     });
   });
+
+  describe("ネストしたSuspense機能", () => {
+    it("should handle basic nested Suspense with inner component being async", async () => {
+      const { promise: innerPromise, resolve: resolveInner } =
+        Promise.withResolvers<string>();
+
+      const InnerAsyncComponent: FunctionComponent = () => {
+        const result = use(innerPromise);
+        return result;
+      };
+
+      const MiddleComponent: FunctionComponent = () =>
+        h("div", { className: "middle" }, [
+          "Middle start - ",
+          Suspense({
+            fallback: "Inner loading...",
+            children: h(InnerAsyncComponent, {}),
+          }),
+          " - Middle end",
+        ]);
+
+      const element = Suspense({
+        fallback: "Outer loading...",
+        children: h(MiddleComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク: 外側は同期なので、内側のfallbackが表示される
+      const firstChunk = await reader.read();
+      expect(firstChunk.done).toBe(false);
+      expect(firstChunk.value).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: { className: "middle" },
+        children: [
+          { type: "text", content: "Middle start - " },
+          { type: "text", content: "Inner loading..." },
+          { type: "text", content: " - Middle end" },
+        ],
+      });
+
+      // 内側のPromiseを解決
+      resolveInner("Inner content loaded!");
+
+      // 次のチャンク: 内側の内容が解決される
+      const secondChunk = await reader.read();
+      expect(secondChunk.done).toBe(false);
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: { className: "middle" },
+        children: [
+          { type: "text", content: "Middle start - " },
+          { type: "text", content: "Inner content loaded!" },
+          { type: "text", content: " - Middle end" },
+        ],
+      });
+
+      // ストリームが完了していることを確認
+      const endChunk = await reader.read();
+      expect(endChunk.done).toBe(true);
+
+      reader.releaseLock();
+    });
+
+    it("should handle nested Suspense with outer component being async", async () => {
+      const { promise: outerPromise, resolve: resolveOuter } =
+        Promise.withResolvers<string>();
+
+      const OuterAsyncComponent: FunctionComponent = () => {
+        const result = use(outerPromise);
+        return h("section", { className: "outer" }, [
+          "Outer content: ",
+          result,
+          " - ",
+          Suspense({
+            fallback: "Inner loading...",
+            children: h("span", null, "Inner sync content"),
+          }),
+        ]);
+      };
+
+      const element = Suspense({
+        fallback: "Outer loading...",
+        children: h(OuterAsyncComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク: 外側のfallback
+      const firstChunk = await reader.read();
+      expect(firstChunk.done).toBe(false);
+      expect(firstChunk.value).toEqual({
+        type: "text",
+        content: "Outer loading...",
+      });
+
+      // 外側のPromiseを解決
+      resolveOuter("Async data");
+
+      // 次のチャンク: 外側が解決され、内側は同期なのですぐに表示
+      const secondChunk = await reader.read();
+      expect(secondChunk.done).toBe(false);
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "section",
+        props: { className: "outer" },
+        children: [
+          { type: "text", content: "Outer content: " },
+          { type: "text", content: "Async data" },
+          { type: "text", content: " - " },
+          {
+            type: "intrinsic",
+            name: "span",
+            props: {},
+            children: [{ type: "text", content: "Inner sync content" }],
+          },
+        ],
+      });
+
+      // ストリームが完了していることを確認
+      const endChunk = await reader.read();
+      expect(endChunk.done).toBe(true);
+
+      reader.releaseLock();
+    });
+
+    it("should handle nested Suspense with both components being async", async () => {
+      const { promise: outerPromise, resolve: resolveOuter } =
+        Promise.withResolvers<string>();
+      const { promise: innerPromise, resolve: resolveInner } =
+        Promise.withResolvers<string>();
+
+      const InnerAsyncComponent: FunctionComponent = () => {
+        const result = use(innerPromise);
+        return `Inner: ${result}`;
+      };
+
+      const OuterAsyncComponent: FunctionComponent = () => {
+        const result = use(outerPromise);
+        return h("article", { className: "outer-async" }, [
+          `Outer: ${result}`,
+          " | ",
+          Suspense({
+            fallback: "Inner loading...",
+            children: h(InnerAsyncComponent, {}),
+          }),
+        ]);
+      };
+
+      const element = Suspense({
+        fallback: "Outer loading...",
+        children: h(OuterAsyncComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク: 外側のfallback
+      const firstChunk = await reader.read();
+      expect(firstChunk.done).toBe(false);
+      expect(firstChunk.value).toEqual({
+        type: "text",
+        content: "Outer loading...",
+      });
+
+      // 外側のPromiseを解決
+      resolveOuter("Outer data");
+
+      // 次のチャンク: 外側が解決され、内側のfallbackが表示
+      const secondChunk = await reader.read();
+      expect(secondChunk.done).toBe(false);
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "article",
+        props: { className: "outer-async" },
+        children: [
+          { type: "text", content: "Outer: Outer data" },
+          { type: "text", content: " | " },
+          { type: "text", content: "Inner loading..." },
+        ],
+      });
+
+      // 内側のPromiseを解決
+      resolveInner("Inner data");
+
+      // 最後のチャンク: 両方が解決
+      const thirdChunk = await reader.read();
+
+      expect(thirdChunk.done).toBe(false);
+      expect(thirdChunk.value).toEqual({
+        type: "intrinsic",
+        name: "article",
+        props: { className: "outer-async" },
+        children: [
+          { type: "text", content: "Outer: Outer data" },
+          { type: "text", content: " | " },
+          { type: "text", content: "Inner: Inner data" },
+        ],
+      });
+
+      // ストリームが完了していることを確認
+      const endChunk = await reader.read();
+      expect(endChunk.done).toBe(true);
+
+      reader.releaseLock();
+    });
+  });
 });
