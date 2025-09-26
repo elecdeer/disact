@@ -2002,5 +2002,79 @@ describe("renderToReadableStream", () => {
 
       reader.releaseLock();
     });
+
+    it("should handle nested Suspense with inner component resolving first", async () => {
+      const { promise: outerPromise, resolve: resolveOuter } =
+        Promise.withResolvers<string>();
+      const { promise: innerPromise, resolve: resolveInner } =
+        Promise.withResolvers<string>();
+
+      const InnerAsyncComponent: FunctionComponent = () => {
+        const result = use(innerPromise);
+        return `Inner: ${result}`;
+      };
+
+      const OuterAsyncComponent: FunctionComponent = () => {
+        const result = use(outerPromise);
+        return h("section", { className: "outer-resolved" }, [
+          `Outer: ${result}`,
+          " | ",
+          Suspense({
+            fallback: "Inner loading...",
+            children: h(InnerAsyncComponent, {}),
+          }),
+        ]);
+      };
+
+      const element = Suspense({
+        fallback: "Outer loading...",
+        children: h(OuterAsyncComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク: 外側のfallback
+      const firstChunk = await reader.read();
+      expect(firstChunk.done).toBe(false);
+      expect(firstChunk.value).toEqual({
+        type: "text",
+        content: "Outer loading...",
+      });
+
+      // 内側のPromiseを先に解決
+      resolveInner("Inner data first");
+
+      // 内側だけが解決されても、外側がまだ未解決なのでチャンクは送信されない
+      // Promise.raceでタイムアウトを使って確認
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve("timeout"), 50));
+      const secondChunkPromise = reader.read().then(chunk => ({ type: "chunk", chunk }));
+
+      const raceResult = await Promise.race([timeoutPromise, secondChunkPromise]);
+      expect(raceResult).toBe("timeout"); // チャンクではなくタイムアウトが先に発生
+
+      // 外側のPromiseを解決
+      resolveOuter("Outer data second");
+
+      // 次のチャンク: 両方が一度に解決される（内側のPromiseは既に解決済み）
+      const secondChunk = await reader.read();
+      expect(secondChunk.done).toBe(false);
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "section",
+        props: { className: "outer-resolved" },
+        children: [
+          { type: "text", content: "Outer: Outer data second" },
+          { type: "text", content: " | " },
+          { type: "text", content: "Inner: Inner data first" },
+        ],
+      });
+
+      // ストリームが完了していることを確認
+      const endChunk = await reader.read();
+      expect(endChunk.done).toBe(true);
+
+      reader.releaseLock();
+    });
   });
 });
