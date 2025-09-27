@@ -1,4 +1,5 @@
 import type { DisactElement, DisactNode, RenderedElement } from "./element";
+import { setCurrentContext, clearCurrentContext } from "./context-manager";
 
 export const renderToReadableStream = <Context>(
   element: DisactElement,
@@ -7,6 +8,9 @@ export const renderToReadableStream = <Context>(
   return new ReadableStream<RenderedElement>({
     async start(controller) {
       try {
+        // レンダリング開始時にcontextを設定
+        setCurrentContext(context);
+
         const promises: Promise<unknown>[] = [];
         const promiseTracker = createPromiseTracker();
 
@@ -71,6 +75,9 @@ export const renderToReadableStream = <Context>(
         controller.close();
       } catch (error) {
         controller.error(error);
+      } finally {
+        // レンダリング終了時にcontextをクリア
+        clearCurrentContext();
       }
     },
   });

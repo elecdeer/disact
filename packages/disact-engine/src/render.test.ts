@@ -2077,4 +2077,138 @@ describe("renderToReadableStream", () => {
       reader.releaseLock();
     });
   });
+
+  describe("Context参照機能", () => {
+    it("should provide access to context during component rendering", async () => {
+      const { getCurrentContext } = await import("./context-manager");
+
+      interface TestContext {
+        theme: string;
+        userId: number;
+      }
+
+      const testContext: TestContext = { theme: "dark", userId: 123 };
+
+      const ContextAwareComponent: FunctionComponent = () => {
+        const ctx = getCurrentContext<TestContext>();
+        return h("div", null, `Theme: ${ctx.theme}, User: ${ctx.userId}`);
+      };
+
+      const element = h(ContextAwareComponent, {});
+
+      const stream = renderToReadableStream(element, testContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: {},
+        children: [{ type: "text", content: "Theme: dark, User: 123" }],
+      });
+    });
+
+    it("should provide context access in nested components", async () => {
+      const { getCurrentContext } = await import("./context-manager");
+
+      const testContext = { message: "Hello from context!" };
+
+      const NestedComponent: FunctionComponent = () => {
+        const ctx = getCurrentContext<typeof testContext>();
+        return h("span", null, ctx.message);
+      };
+
+      const WrapperComponent: FunctionComponent = () =>
+        h("div", null, [
+          "Wrapper start - ",
+          h(NestedComponent, {}),
+          " - Wrapper end",
+        ]);
+
+      const element = h(WrapperComponent, {});
+
+      const stream = renderToReadableStream(element, testContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: {},
+        children: [
+          { type: "text", content: "Wrapper start - " },
+          {
+            type: "intrinsic",
+            name: "span",
+            props: {},
+            children: [{ type: "text", content: "Hello from context!" }],
+          },
+          { type: "text", content: " - Wrapper end" },
+        ],
+      });
+    });
+
+    it("should maintain context during async rendering with Suspense", async () => {
+      const { getCurrentContext } = await import("./context-manager");
+      const { promise, resolve } = Promise.withResolvers<string>();
+
+      const testContext = { prefix: "Context:" };
+
+      const AsyncComponent: FunctionComponent = () => {
+        const ctx = getCurrentContext<typeof testContext>();
+        const result = use(promise);
+        return h("span", null, `${ctx.prefix} ${result}`);
+      };
+
+      const element = Suspense({
+        fallback: "Loading...",
+        children: h(AsyncComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, testContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク（fallback）
+      const firstChunk = await reader.read();
+      expect(firstChunk.value).toEqual({
+        type: "text",
+        content: "Loading...",
+      });
+
+      // Promiseを解決
+      resolve("Async data");
+
+      // 次のチャンク（contextが保持されている）
+      const secondChunk = await reader.read();
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "span",
+        props: {},
+        children: [{ type: "text", content: "Context: Async data" }],
+      });
+
+      reader.releaseLock();
+    });
+
+    it("should clear context after rendering completes", async () => {
+      const { getCurrentContext } = await import("./context-manager");
+
+      const testContext = { value: "test" };
+
+      const TestComponent: FunctionComponent = () => {
+        const ctx = getCurrentContext<typeof testContext>();
+        return h("div", null, ctx.value);
+      };
+
+      const element = h(TestComponent, {});
+
+      const stream = renderToReadableStream(element, testContext);
+      await readStreamToCompletion(stream);
+
+      // レンダリング完了後はcontextにアクセスできない
+      expect(() => getCurrentContext()).toThrow(
+        "getCurrentContext can only be called during rendering"
+      );
+    });
+  });
 });
