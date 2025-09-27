@@ -20,16 +20,38 @@ export const getCurrentContext = <T = unknown>(): T => {
 
 /**
  * レンダリングコンテキストを設定する（内部用）
- * renderToReadableStreamの実行開始時に呼び出される
+ * runInContextの実行開始時に呼び出される
  */
-export const setCurrentContext = <T>(context: T): void => {
+const setCurrentContext = <T>(context: T): void => {
   currentRenderingContext = context;
 };
 
 /**
  * レンダリングコンテキストをクリアする（内部用）
- * renderToReadableStreamの実行終了時に呼び出される
+ * runInContextの実行終了時に呼び出される
  */
-export const clearCurrentContext = (): void => {
+const clearCurrentContext = (): void => {
   currentRenderingContext = null;
+};
+
+/**
+ * コンテキスト内でコールバックを実行する
+ * コールバック実行中のみcontextが利用可能で、完了後は自動的にクリアされる
+ * ネストした呼び出しはエラーになる
+ */
+export const runInContext = <T, R>(
+  context: T,
+  callback: () => R
+): R => {
+  // ネストチェック
+  if (currentRenderingContext !== null) {
+    throw new Error("runInContext cannot be nested");
+  }
+
+  setCurrentContext(context);
+  try {
+    return callback();
+  } finally {
+    clearCurrentContext();
+  }
 };

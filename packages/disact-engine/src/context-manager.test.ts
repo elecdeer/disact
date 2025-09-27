@@ -1,15 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  clearCurrentContext,
   getCurrentContext,
-  setCurrentContext,
+  runInContext,
 } from "./context-manager";
 
 describe("context-manager", () => {
-  beforeEach(() => {
-    // 各テスト前にcontextをクリア
-    clearCurrentContext();
-  });
 
   describe("getCurrentContext", () => {
     it("should throw error when called outside of rendering", () => {
@@ -17,89 +12,104 @@ describe("context-manager", () => {
         "getCurrentContext can only be called during rendering",
       );
     });
+  });
 
-    it("should return the current context when called during rendering", () => {
-      const testContext = { theme: "dark", user: "test" };
-      setCurrentContext(testContext);
+  describe("runInContext", () => {
+    it("should provide context during callback execution", () => {
+      const testContext = { value: "test", id: 42 };
+      let capturedContext: unknown;
 
-      const result = getCurrentContext();
-      expect(result).toBe(testContext);
+      runInContext(testContext, () => {
+        capturedContext = getCurrentContext();
+      });
+
+      expect(capturedContext).toBe(testContext);
     });
 
-    it("should return typed context with generic", () => {
-      interface TestContext {
+    it("should return the result of the callback", () => {
+      const testContext = { data: "test" };
+
+      const result = runInContext(testContext, () => {
+        return "callback result";
+      });
+
+      expect(result).toBe("callback result");
+    });
+
+    it("should clear context after callback completes", () => {
+      const testContext = { value: "test" };
+
+      runInContext(testContext, () => {
+        // callback内ではアクセス可能
+        expect(getCurrentContext()).toBe(testContext);
+      });
+
+      // callback完了後はアクセス不可
+      expect(() => getCurrentContext()).toThrow(
+        "getCurrentContext can only be called during rendering"
+      );
+    });
+
+    it("should clear context even when callback throws error", () => {
+      const testContext = { value: "test" };
+
+      expect(() => {
+        runInContext(testContext, () => {
+          throw new Error("Test error");
+        });
+      }).toThrow("Test error");
+
+      // エラー後もcontextはクリアされている
+      expect(() => getCurrentContext()).toThrow(
+        "getCurrentContext can only be called during rendering"
+      );
+    });
+
+    it("should throw error on nested runInContext calls", () => {
+      const outerContext = { level: "outer" };
+      const innerContext = { level: "inner" };
+
+      expect(() => {
+        runInContext(outerContext, () => {
+          expect(getCurrentContext()).toBe(outerContext);
+
+          // ネストしたrunInContextはエラーになる
+          runInContext(innerContext, () => {
+            // ここには到達しない
+          });
+        });
+      }).toThrow("runInContext cannot be nested");
+    });
+
+    it("should support async callbacks", async () => {
+      const testContext = { async: true };
+
+      const result = await runInContext(testContext, async () => {
+        const ctx = getCurrentContext<typeof testContext>();
+        // 非同期処理をシミュレート
+        await new Promise(resolve => setTimeout(resolve, 1));
+        return `async result: ${ctx.async}`;
+      });
+
+      expect(result).toBe("async result: true");
+
+      // 非同期callback完了後もcontextはクリア
+      expect(() => getCurrentContext()).toThrow();
+    });
+
+    it("should support typed context", () => {
+      interface TypedContext {
         theme: string;
         userId: number;
       }
 
-      const testContext: TestContext = { theme: "light", userId: 123 };
-      setCurrentContext(testContext);
+      const testContext: TypedContext = { theme: "dark", userId: 123 };
 
-      const result = getCurrentContext<TestContext>();
-      expect(result.theme).toBe("light");
-      expect(result.userId).toBe(123);
-    });
-
-    it("should throw error after context is cleared", () => {
-      const testContext = { test: "value" };
-      setCurrentContext(testContext);
-      clearCurrentContext();
-
-      expect(() => getCurrentContext()).toThrow(
-        "getCurrentContext can only be called during rendering",
-      );
-    });
-  });
-
-  describe("setCurrentContext", () => {
-    it("should set the context for getCurrentContext", () => {
-      const testContext = { foo: "bar" };
-      setCurrentContext(testContext);
-
-      expect(getCurrentContext()).toBe(testContext);
-    });
-
-    it("should overwrite previous context", () => {
-      const firstContext = { value: 1 };
-      const secondContext = { value: 2 };
-
-      setCurrentContext(firstContext);
-      setCurrentContext(secondContext);
-
-      expect(getCurrentContext()).toBe(secondContext);
-    });
-  });
-
-  describe("clearCurrentContext", () => {
-    it("should make getCurrentContext throw error", () => {
-      const testContext = { test: "value" };
-      setCurrentContext(testContext);
-      clearCurrentContext();
-
-      expect(() => getCurrentContext()).toThrow();
-    });
-
-    it("should be safe to call multiple times", () => {
-      clearCurrentContext();
-      clearCurrentContext();
-
-      expect(() => getCurrentContext()).toThrow();
-    });
-  });
-
-  describe("nested context usage", () => {
-    it("should handle nested context setting correctly", () => {
-      const outerContext = { level: "outer" };
-      const innerContext = { level: "inner" };
-
-      setCurrentContext(outerContext);
-      expect(getCurrentContext()).toBe(outerContext);
-
-      setCurrentContext(innerContext);
-      expect(getCurrentContext()).toBe(innerContext);
-
-      clearCurrentContext();
-      expect(() => getCurrentContext()).toThrow();
+      runInContext(testContext, () => {
+        const ctx = getCurrentContext<TypedContext>();
+        expect(ctx.theme).toBe("dark");
+        expect(ctx.userId).toBe(123);
+      });
     });
   });
 });

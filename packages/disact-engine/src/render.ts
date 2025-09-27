@@ -1,5 +1,5 @@
+import { runInContext } from "./context-manager";
 import type { DisactElement, DisactNode, RenderedElement } from "./element";
-import { setCurrentContext, clearCurrentContext } from "./context-manager";
 
 export const renderToReadableStream = <Context>(
   element: DisactElement,
@@ -8,14 +8,13 @@ export const renderToReadableStream = <Context>(
   return new ReadableStream<RenderedElement>({
     async start(controller) {
       try {
-        // レンダリング開始時にcontextを設定
-        setCurrentContext(context);
-
         const promises: Promise<unknown>[] = [];
         const promiseTracker = createPromiseTracker();
 
         // 最初にfallbackを使ってレンダリング
-        const initialResult = validateRootElement(render(element, context, promises));
+        const initialResult = validateRootElement(
+          runInContext(context, () => render(element, context, promises)),
+        );
 
         if (promises.length > 0) {
           // Promiseの追跡を開始
@@ -27,7 +26,9 @@ export const renderToReadableStream = <Context>(
           // Promiseの解決状況をチェック
           if (promiseTracker.areAllResolved()) {
             // すべてのPromiseが解決済みの場合、再レンダリングして結果を返す
-            const finalResult = render(element, context);
+            const finalResult = runInContext(context, () =>
+              render(element, context),
+            );
             controller.enqueue(validateRootElement(finalResult));
           } else {
             // まだ未解決のPromiseがある場合は、fallbackを先に送信
@@ -43,7 +44,9 @@ export const renderToReadableStream = <Context>(
 
                 // 再レンダリングして現在の結果を送信（新しいPromiseも収集）
                 const newPromises: Promise<unknown>[] = [];
-                const currentResult = render(element, context, newPromises);
+                const currentResult = runInContext(context, () =>
+                  render(element, context, newPromises),
+                );
 
                 // 新しいPromiseが発生した場合（ネストしたSuspenseなど）は追跡に追加
                 if (newPromises.length > 0) {
@@ -61,7 +64,9 @@ export const renderToReadableStream = <Context>(
 
             // ループ終了後、まだ最終結果が送信されていない場合のみ送信
             if (!promiseTracker.hasPendingPromises() && !hasEnqueuedFinal) {
-              const finalResult = render(element, context);
+              const finalResult = runInContext(context, () =>
+                render(element, context),
+              );
               if (finalResult !== null && !Array.isArray(finalResult)) {
                 controller.enqueue(finalResult);
               }
@@ -75,9 +80,6 @@ export const renderToReadableStream = <Context>(
         controller.close();
       } catch (error) {
         controller.error(error);
-      } finally {
-        // レンダリング終了時にcontextをクリア
-        clearCurrentContext();
       }
     },
   });
