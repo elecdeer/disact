@@ -1,11 +1,11 @@
-import { runInContext } from "./context-manager";
+import { runInContext } from "./context";
 import type {
   DisactElement,
   DisactNode,
   RenderedElement,
   RenderResult,
 } from "./element";
-import { createPromiseTracker } from "./promise-state";
+import { createPromiseTracker } from "./promiseTracker";
 
 export const renderToReadableStream = <Context>(
   element: DisactElement,

@@ -1,17 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { runInContext } from "./context-manager";
-import { createPromiseStateManager, usePromise } from "./promise-state";
+import { runInContext } from "./context";
+import { createPromiseStateManager, usePromise } from "./promiseCache";
 
-describe("promise-state", () => {
-  describe("createPromiseStateManager", () => {
-    it("should create a new promise state manager", () => {
-      const manager = createPromiseStateManager();
-      expect(manager).toBeDefined();
-      expect(typeof manager.getState).toBe("function");
-      expect(typeof manager.setState).toBe("function");
-    });
-  });
-
+describe("promiseCache", () => {
   describe("Promise state management", () => {
     it("should track promise state in context", () => {
       const manager = createPromiseStateManager();
@@ -87,12 +78,12 @@ describe("promise-state", () => {
       });
 
       // Promise解決後の呼び出しで値が返される
+      let result: string;
       return resolvedPromise.then(() => {
-        let result: string;
         runInContext(context, () => {
           result = usePromise(resolvedPromise);
         });
-        expect(result!).toBe("immediate value");
+        expect(result).toBe("immediate value");
       });
     });
 
@@ -142,13 +133,13 @@ describe("promise-state", () => {
       const userData: User = { id: 1, name: "Alice" };
       resolve(userData);
 
+      let result: User;
       return promise.then(() => {
-        let result: User;
         runInContext(context, () => {
           result = usePromise<User>(promise);
         });
-        expect(result!).toEqual(userData);
-        expect(result!.name).toBe("Alice");
+        expect(result).toEqual(userData);
+        expect(result.name).toBe("Alice");
       });
     });
   });

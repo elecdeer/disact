@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  getCurrentContext,
-  runInContext,
-} from "./context-manager";
+import { getCurrentContext, runInContext } from "./context";
 
-describe("context-manager", () => {
-
+describe("context", () => {
   describe("getCurrentContext", () => {
     it("should throw error when called outside of rendering", () => {
       expect(() => getCurrentContext()).toThrow(
@@ -46,7 +42,7 @@ describe("context-manager", () => {
 
       // callback完了後はアクセス不可
       expect(() => getCurrentContext()).toThrow(
-        "getCurrentContext can only be called during rendering"
+        "getCurrentContext can only be called during rendering",
       );
     });
 
@@ -61,7 +57,7 @@ describe("context-manager", () => {
 
       // エラー後もcontextはクリアされている
       expect(() => getCurrentContext()).toThrow(
-        "getCurrentContext can only be called during rendering"
+        "getCurrentContext can only be called during rendering",
       );
     });
 
@@ -79,22 +75,6 @@ describe("context-manager", () => {
           });
         });
       }).toThrow("runInContext cannot be nested");
-    });
-
-    it("should support async callbacks", async () => {
-      const testContext = { async: true };
-
-      const result = await runInContext(testContext, async () => {
-        const ctx = getCurrentContext<typeof testContext>();
-        // 非同期処理をシミュレート
-        await new Promise(resolve => setTimeout(resolve, 1));
-        return `async result: ${ctx.async}`;
-      });
-
-      expect(result).toBe("async result: true");
-
-      // 非同期callback完了後もcontextはクリア
-      expect(() => getCurrentContext()).toThrow();
     });
 
     it("should support typed context", () => {

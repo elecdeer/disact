@@ -8,7 +8,7 @@ import type {
   RenderedElement,
 } from "./element";
 import { use } from "./jsx";
-import { createPromiseStateManager } from "./promise-state";
+import { createPromiseStateManager } from "./promiseCache";
 import { renderToReadableStream } from "./render";
 
 /**
@@ -75,7 +75,7 @@ function Fragment(props: { children: DisactNode }): DisactNode {
 describe("renderToReadableStream", () => {
   const mockContext = {
     theme: "dark",
-    promiseStateManager: createPromiseStateManager()
+    promiseStateManager: createPromiseStateManager(),
   };
 
   // ストリームから結果を読み取るヘルパー関数
@@ -969,10 +969,12 @@ describe("renderToReadableStream", () => {
       const stream = renderToReadableStream(element, mockContext);
 
       const results = await readStreamToCompletion(stream);
-      expect(results).toEqual([[
-        { type: "text", content: "item1" },
-        { type: "text", content: "item2" }
-      ]]);
+      expect(results).toEqual([
+        [
+          { type: "text", content: "item1" },
+          { type: "text", content: "item2" },
+        ],
+      ]);
     });
 
     it("should handle Fragment pattern at root level", async () => {
@@ -985,20 +987,22 @@ describe("renderToReadableStream", () => {
       const stream = renderToReadableStream(fragmentElement, mockContext);
 
       const results = await readStreamToCompletion(stream);
-      expect(results).toEqual([[
-        {
-          type: "intrinsic",
-          name: "p",
-          props: {},
-          children: [{ type: "text", content: "First paragraph" }]
-        },
-        {
-          type: "intrinsic",
-          name: "p",
-          props: {},
-          children: [{ type: "text", content: "Second paragraph" }]
-        }
-      ]]);
+      expect(results).toEqual([
+        [
+          {
+            type: "intrinsic",
+            name: "p",
+            props: {},
+            children: [{ type: "text", content: "First paragraph" }],
+          },
+          {
+            type: "intrinsic",
+            name: "p",
+            props: {},
+            children: [{ type: "text", content: "Second paragraph" }],
+          },
+        ],
+      ]);
     });
   });
 
@@ -2064,10 +2068,17 @@ describe("renderToReadableStream", () => {
 
       // 内側だけが解決されても、外側がまだ未解決なのでチャンクは送信されない
       // Promise.raceでタイムアウトを使って確認
-      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve("timeout"), 50));
-      const secondChunkPromise = reader.read().then(chunk => ({ type: "chunk", chunk }));
+      const timeoutPromise = new Promise((resolve) =>
+        setTimeout(() => resolve("timeout"), 50),
+      );
+      const secondChunkPromise = reader
+        .read()
+        .then((chunk) => ({ type: "chunk", chunk }));
 
-      const raceResult = await Promise.race([timeoutPromise, secondChunkPromise]);
+      const raceResult = await Promise.race([
+        timeoutPromise,
+        secondChunkPromise,
+      ]);
       expect(raceResult).toBe("timeout"); // チャンクではなくタイムアウトが先に発生
 
       // 外側のPromiseを解決
@@ -2097,7 +2108,7 @@ describe("renderToReadableStream", () => {
 
   describe("Context参照機能", () => {
     it("should provide access to context during component rendering", async () => {
-      const { getCurrentContext } = await import("./context-manager");
+      const { getCurrentContext } = await import("./context");
 
       interface TestContext {
         theme: string;
@@ -2126,7 +2137,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should provide context access in nested components", async () => {
-      const { getCurrentContext } = await import("./context-manager");
+      const { getCurrentContext } = await import("./context");
 
       const testContext = { message: "Hello from context!" };
 
@@ -2166,12 +2177,12 @@ describe("renderToReadableStream", () => {
     });
 
     it("should maintain context during async rendering with Suspense", async () => {
-      const { getCurrentContext } = await import("./context-manager");
+      const { getCurrentContext } = await import("./context");
       const { promise, resolve } = Promise.withResolvers<string>();
 
       const testContext = {
         prefix: "Context:",
-        promiseStateManager: createPromiseStateManager()
+        promiseStateManager: createPromiseStateManager(),
       };
 
       const AsyncComponent: FunctionComponent = () => {
@@ -2211,7 +2222,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should clear context after rendering completes", async () => {
-      const { getCurrentContext } = await import("./context-manager");
+      const { getCurrentContext } = await import("./context");
 
       const testContext = { value: "test" };
 
@@ -2227,7 +2238,7 @@ describe("renderToReadableStream", () => {
 
       // レンダリング完了後はcontextにアクセスできない
       expect(() => getCurrentContext()).toThrow(
-        "getCurrentContext can only be called during rendering"
+        "getCurrentContext can only be called during rendering",
       );
     });
   });

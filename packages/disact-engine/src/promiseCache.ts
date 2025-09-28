@@ -1,4 +1,4 @@
-import { getCurrentContext } from "./context-manager";
+import { getCurrentContext } from "./context";
 
 /**
  * Promise の状態を表す型
@@ -61,31 +61,6 @@ const getPromiseStateManager = (): PromiseStateManager => {
 };
 
 /**
- * Context から Promise Tracker を取得する
- */
-const getPromiseTracker = (): PromiseTracker => {
-  let context: { __promiseTracker?: PromiseTracker } | undefined;
-
-  try {
-    context = getCurrentContext<{
-      __promiseTracker?: PromiseTracker;
-    }>();
-  } catch {
-    throw new Error(
-      "Promise tracking can only be used during rendering with a context that has __promiseTracker",
-    );
-  }
-
-  if (!context || !context.__promiseTracker) {
-    throw new Error(
-      "Promise tracking can only be used during rendering with a context that has __promiseTracker",
-    );
-  }
-
-  return context.__promiseTracker;
-};
-
-/**
  * Context ベースの Promise 状態管理を使用する use フック
  * Promise が解決されていない場合はそのPromise を投げ、
  * 解決されている場合は結果を返す
@@ -126,67 +101,4 @@ export const usePromise = <T>(promise: Promise<T>): T => {
 
   // Suspense バウンダリにキャッチされるように Promise を投げる
   throw promise;
-};
-
-/**
- * レンダリング中のPromise追跡機能
- */
-export interface PromiseTracker {
-  trackPromises(promises: Promise<unknown>[]): void;
-  areAllResolved(): boolean;
-  getPendingPromises(): Promise<unknown>[];
-  waitForAnyResolution(): Promise<void>;
-  hasPendingPromises(): boolean;
-}
-
-/**
- * Promise の追跡機能を作成する
- * レンダリング中に投げられたPromiseの解決状況を管理
- */
-export const createPromiseTracker = (): PromiseTracker => {
-  const settledPromises = new Set<Promise<unknown>>();
-  const allPromises: Promise<unknown>[] = [];
-
-  const trackPromise = (promise: Promise<unknown>) => {
-    if (!allPromises.includes(promise)) {
-      allPromises.push(promise);
-    }
-    promise.then(
-      () => settledPromises.add(promise),
-      () => settledPromises.add(promise),
-    );
-  };
-
-  const trackPromises = (promises: Promise<unknown>[]) => {
-    for (const promise of promises) {
-      trackPromise(promise);
-    }
-  };
-
-  const areAllResolved = (): boolean => {
-    return allPromises.every((promise) => settledPromises.has(promise));
-  };
-
-  const getPendingPromises = (): Promise<unknown>[] => {
-    return allPromises.filter((promise) => !settledPromises.has(promise));
-  };
-
-  const waitForAnyResolution = async (): Promise<void> => {
-    const pendingPromises = getPendingPromises();
-    if (pendingPromises.length > 0) {
-      await Promise.race(pendingPromises);
-    }
-  };
-
-  const hasPendingPromises = (): boolean => {
-    return getPendingPromises().length > 0;
-  };
-
-  return {
-    trackPromises,
-    areAllResolved,
-    getPendingPromises,
-    waitForAnyResolution,
-    hasPendingPromises,
-  };
 };
