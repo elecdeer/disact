@@ -8,6 +8,7 @@ import type {
   RenderedElement,
 } from "./element";
 import { use } from "./jsx";
+import { createPromiseStateManager } from "./promise-state";
 import { renderToReadableStream } from "./render";
 
 /**
@@ -72,7 +73,10 @@ function Fragment(props: { children: DisactNode }): DisactNode {
 }
 
 describe("renderToReadableStream", () => {
-  const mockContext = { theme: "dark" };
+  const mockContext = {
+    theme: "dark",
+    promiseStateManager: createPromiseStateManager()
+  };
 
   // ストリームから結果を読み取るヘルパー関数
   const readStreamToCompletion = async (
@@ -2152,7 +2156,10 @@ describe("renderToReadableStream", () => {
       const { getCurrentContext } = await import("./context-manager");
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const testContext = { prefix: "Context:" };
+      const testContext = {
+        prefix: "Context:",
+        promiseStateManager: createPromiseStateManager()
+      };
 
       const AsyncComponent: FunctionComponent = () => {
         const ctx = getCurrentContext<typeof testContext>();

@@ -1,5 +1,6 @@
 import { runInContext } from "./context-manager";
 import type { DisactElement, DisactNode, RenderedElement } from "./element";
+import { createPromiseTracker } from "./promise-state";
 
 export const renderToReadableStream = <Context>(
   element: DisactElement,
@@ -152,56 +153,6 @@ const isPromise = (value: unknown): value is Promise<unknown> => {
     "then" in value &&
     typeof value.then === "function"
   );
-};
-
-// よりシンプルなアプローチ：Promiseの状態をキャッシュして管理
-const createPromiseTracker = () => {
-  const resolvedPromises = new Set<Promise<unknown>>();
-  const allPromises: Promise<unknown>[] = [];
-
-  const trackPromise = (promise: Promise<unknown>) => {
-    if (!allPromises.includes(promise)) {
-      allPromises.push(promise);
-    }
-    promise.then(
-      () => resolvedPromises.add(promise),
-      () => resolvedPromises.add(promise),
-    );
-  };
-
-  const trackPromises = (promises: Promise<unknown>[]) => {
-    for (const promise of promises) {
-      trackPromise(promise);
-    }
-  };
-
-  const areAllResolved = (): boolean => {
-    return allPromises.every((promise) => resolvedPromises.has(promise));
-  };
-
-  const getPendingPromises = (): Promise<unknown>[] => {
-    return allPromises.filter((promise) => !resolvedPromises.has(promise));
-  };
-
-  const waitForAnyResolution = async (): Promise<void> => {
-    const pendingPromises = getPendingPromises();
-    if (pendingPromises.length > 0) {
-      await Promise.race(pendingPromises);
-    }
-  };
-
-  const hasPendingPromises = (): boolean => {
-    return getPendingPromises().length > 0;
-  };
-
-  return {
-    trackPromise,
-    trackPromises,
-    areAllResolved,
-    getPendingPromises,
-    waitForAnyResolution,
-    hasPendingPromises,
-  };
 };
 
 const validateRootElement = (

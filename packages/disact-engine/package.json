@@ -20,7 +20,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "biome check ./src"
+    "lint": "biome check ./src",
+    "test": "vitest"
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
