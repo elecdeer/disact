@@ -1,81 +1,76 @@
 import { runInContext } from "./context-manager";
-import type { DisactElement, DisactNode, RenderedElement } from "./element";
+import type {
+  DisactElement,
+  DisactNode,
+  RenderedElement,
+  RenderResult,
+} from "./element";
 import { createPromiseTracker } from "./promise-state";
 
 export const renderToReadableStream = <Context>(
   element: DisactElement,
   context: Context,
-): ReadableStream<RenderedElement> => {
-  return new ReadableStream<RenderedElement>({
+): ReadableStream<RenderResult> => {
+  return new ReadableStream<RenderResult>({
     async start(controller) {
       try {
         const promises: Promise<unknown>[] = [];
         const promiseTracker = createPromiseTracker();
 
-        // 最初にfallbackを使ってレンダリング
-        const initialResult = validateRootElement(
-          runInContext(context, () => render(element, context, promises)),
+        // PromiseTrackerを組み込みContextとして追加
+        const contextWithTracker: Context & {
+          __promiseTracker: ReturnType<typeof createPromiseTracker>;
+        } = {
+          ...context,
+          __promiseTracker: promiseTracker,
+        };
+
+        const initialResult = runInContext(contextWithTracker, () =>
+          render(element, contextWithTracker, promises),
         );
 
-        if (promises.length > 0) {
-          // Promiseの追跡を開始
-          promiseTracker.trackPromises(promises);
-
-          // Promiseが収集された場合、microtaskキューの実行を待つ
-          await new Promise((resolve) => setTimeout(resolve, 0));
-
-          // Promiseの解決状況をチェック
-          if (promiseTracker.areAllResolved()) {
-            // すべてのPromiseが解決済みの場合、再レンダリングして結果を返す
-            const finalResult = runInContext(context, () =>
-              render(element, context),
-            );
-            controller.enqueue(validateRootElement(finalResult));
-          } else {
-            // まだ未解決のPromiseがある場合は、fallbackを先に送信
-            controller.enqueue(initialResult);
-
-            // 各Promiseが個別に解決されるたびに中間結果を送信
-            let hasEnqueuedFinal = false;
-
-            const handleIndividualPromiseResolution = async () => {
-              while (promiseTracker.hasPendingPromises()) {
-                // いずれかのPromiseが解決されるのを待つ
-                await promiseTracker.waitForAnyResolution();
-
-                // 再レンダリングして現在の結果を送信（新しいPromiseも収集）
-                const newPromises: Promise<unknown>[] = [];
-                const currentResult = runInContext(context, () =>
-                  render(element, context, newPromises),
-                );
-
-                // 新しいPromiseが発生した場合（ネストしたSuspenseなど）は追跡に追加
-                if (newPromises.length > 0) {
-                  promiseTracker.trackPromises(newPromises);
-                }
-
-                if (currentResult !== null && !Array.isArray(currentResult)) {
-                  controller.enqueue(currentResult);
-                  hasEnqueuedFinal = true;
-                }
-              }
-            };
-
-            await handleIndividualPromiseResolution();
-
-            // ループ終了後、まだ最終結果が送信されていない場合のみ送信
-            if (!promiseTracker.hasPendingPromises() && !hasEnqueuedFinal) {
-              const finalResult = runInContext(context, () =>
-                render(element, context),
-              );
-              if (finalResult !== null && !Array.isArray(finalResult)) {
-                controller.enqueue(finalResult);
-              }
-            }
-          }
-        } else {
-          // Suspenseなしの場合
+        // Suspenseがない場合は即座に結果を返す
+        if (promises.length === 0) {
           controller.enqueue(initialResult);
+          controller.close();
+          return;
+        }
+
+        // Promiseの追跡を開始
+        promiseTracker.trackPromises(promises);
+        // Promiseが収集された場合、microtaskキューの実行を待つ
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        if (promiseTracker.areAllResolved()) {
+          // すべてのPromiseがすでに解決されている場合、再レンダリングして結果を返す
+          const finalResult = runInContext(contextWithTracker, () =>
+            render(element, contextWithTracker),
+          );
+          controller.enqueue(finalResult);
+          controller.close();
+          return;
+        }
+
+        // まだ未解決のPromiseがある場合は、fallbackを先に送信
+        controller.enqueue(initialResult);
+
+        // 各Promiseが個別に解決されるたびに中間結果を送信
+        while (promiseTracker.hasPendingPromises()) {
+          // いずれかのPromiseが解決されるのを待つ
+          await promiseTracker.waitForAnyResolution();
+
+          // 再レンダリングして現在の結果を送信（新しいPromiseも収集）
+          const newPromises: Promise<unknown>[] = [];
+          const currentResult = runInContext(contextWithTracker, () =>
+            render(element, contextWithTracker, newPromises),
+          );
+
+          // 新しいPromiseが発生した場合（ネストしたSuspenseなど）は追跡に追加
+          if (newPromises.length > 0) {
+            promiseTracker.trackPromises(newPromises);
+          }
+
+          controller.enqueue(currentResult);
         }
 
         controller.close();
@@ -90,7 +85,7 @@ const render = <Context>(
   element: DisactNode,
   context: Context,
   promises: Promise<unknown>[] = [],
-): RenderedElement | RenderedElement[] | null => {
+): RenderResult => {
   if (Array.isArray(element)) {
     return renderChildrenArray(element, context, render, promises);
   }
@@ -155,18 +150,6 @@ const isPromise = (value: unknown): value is Promise<unknown> => {
   );
 };
 
-const validateRootElement = (
-  result: RenderedElement | RenderedElement[] | null,
-): RenderedElement => {
-  if (result === null) {
-    throw new Error("Root element cannot be null");
-  }
-  if (Array.isArray(result)) {
-    throw new Error("Root element cannot be an array");
-  }
-  return result;
-};
-
 const renderChildrenArray = <Context>(
   elements: DisactNode[],
   context: Context,
@@ -174,7 +157,7 @@ const renderChildrenArray = <Context>(
     element: DisactNode,
     context: Context,
     promises?: Promise<unknown>[],
-  ) => RenderedElement | RenderedElement[] | null,
+  ) => RenderResult,
   promises: Promise<unknown>[] = [],
 ): RenderedElement[] => {
   return elements

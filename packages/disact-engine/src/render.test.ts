@@ -957,9 +957,8 @@ describe("renderToReadableStream", () => {
 
       const stream = renderToReadableStream(element, mockContext);
 
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Root element cannot be null",
-      );
+      const results = await readStreamToCompletion(stream);
+      expect(results).toEqual([null]);
     });
 
     it("should handle function component returning array", async () => {
@@ -969,9 +968,11 @@ describe("renderToReadableStream", () => {
 
       const stream = renderToReadableStream(element, mockContext);
 
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Root element cannot be an array",
-      );
+      const results = await readStreamToCompletion(stream);
+      expect(results).toEqual([[
+        { type: "text", content: "item1" },
+        { type: "text", content: "item2" }
+      ]]);
     });
 
     it("should handle Fragment pattern at root level", async () => {
@@ -980,12 +981,24 @@ describe("renderToReadableStream", () => {
         h("p", null, "Second paragraph"),
       ]);
 
-      // Fragment returns array, so stream should throw
+      // Fragment returns array, which is now allowed
       const stream = renderToReadableStream(fragmentElement, mockContext);
 
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Root element cannot be an array",
-      );
+      const results = await readStreamToCompletion(stream);
+      expect(results).toEqual([[
+        {
+          type: "intrinsic",
+          name: "p",
+          props: {},
+          children: [{ type: "text", content: "First paragraph" }]
+        },
+        {
+          type: "intrinsic",
+          name: "p",
+          props: {},
+          children: [{ type: "text", content: "Second paragraph" }]
+        }
+      ]]);
     });
   });
 

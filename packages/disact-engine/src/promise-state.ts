@@ -61,6 +61,31 @@ const getPromiseStateManager = (): PromiseStateManager => {
 };
 
 /**
+ * Context から Promise Tracker を取得する
+ */
+const getPromiseTracker = (): PromiseTracker => {
+  let context: { __promiseTracker?: PromiseTracker } | undefined;
+
+  try {
+    context = getCurrentContext<{
+      __promiseTracker?: PromiseTracker;
+    }>();
+  } catch {
+    throw new Error(
+      "Promise tracking can only be used during rendering with a context that has __promiseTracker",
+    );
+  }
+
+  if (!context || !context.__promiseTracker) {
+    throw new Error(
+      "Promise tracking can only be used during rendering with a context that has __promiseTracker",
+    );
+  }
+
+  return context.__promiseTracker;
+};
+
+/**
  * Context ベースの Promise 状態管理を使用する use フック
  * Promise が解決されていない場合はそのPromise を投げ、
  * 解決されている場合は結果を返す

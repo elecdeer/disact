@@ -66,3 +66,8 @@ export type RenderedElement =
       children: RenderedElement[] | null;
     }
   | { type: "text"; content: string };
+
+/**
+ * レンダリング結果の型（nullや配列も含む）
+ */
+export type RenderResult = RenderedElement | RenderedElement[] | null;
