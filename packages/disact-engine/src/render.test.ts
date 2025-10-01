@@ -2242,4 +2242,498 @@ describe("renderToReadableStream", () => {
       );
     });
   });
+
+  describe("ErrorBoundary機能", () => {
+    it("should catch synchronous errors and render fallback", async () => {
+      const error = new Error("Test error");
+
+      const ErrorComponent: FunctionComponent = () => {
+        throw error;
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => h("div", { className: "error" }, err.message),
+        children: h(ErrorComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: { className: "error" },
+        children: [{ type: "text", content: "Test error" }],
+      });
+    });
+
+    it("should not catch errors when no ErrorBoundary is present", async () => {
+      const error = new Error("Uncaught error");
+
+      const ErrorComponent: FunctionComponent = () => {
+        throw error;
+      };
+
+      const element = h(ErrorComponent, {});
+
+      const stream = renderToReadableStream(element, mockContext);
+
+      await expect(readStreamToCompletion(stream)).rejects.toThrow(
+        "Uncaught error",
+      );
+    });
+
+    it("should handle nested ErrorBoundary with inner error", async () => {
+      const innerError = new Error("Inner error");
+
+      const InnerErrorComponent: FunctionComponent = () => {
+        throw innerError;
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: () => "Outer fallback",
+        children: h("div", null, [
+          "Before error - ",
+          ErrorBoundary({
+            fallback: (err: Error) => `Inner fallback: ${err.message}`,
+            children: h(InnerErrorComponent, {}),
+          }),
+          " - After error",
+        ]),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: {},
+        children: [
+          { type: "text", content: "Before error - " },
+          { type: "text", content: "Inner fallback: Inner error" },
+          { type: "text", content: " - After error" },
+        ],
+      });
+    });
+
+    it("should handle multiple independent ErrorBoundaries", async () => {
+      const error1 = new Error("Error 1");
+      const error2 = new Error("Error 2");
+
+      const ErrorComponent1: FunctionComponent = () => {
+        throw error1;
+      };
+
+      const ErrorComponent2: FunctionComponent = () => {
+        throw error2;
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = h("div", null, [
+        ErrorBoundary({
+          fallback: (err: Error) => `Fallback 1: ${err.message}`,
+          children: h(ErrorComponent1, {}),
+        }),
+        " and ",
+        ErrorBoundary({
+          fallback: (err: Error) => `Fallback 2: ${err.message}`,
+          children: h(ErrorComponent2, {}),
+        }),
+      ]);
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: {},
+        children: [
+          { type: "text", content: "Fallback 1: Error 1" },
+          { type: "text", content: " and " },
+          { type: "text", content: "Fallback 2: Error 2" },
+        ],
+      });
+    });
+
+    it("should not catch errors when child renders successfully", async () => {
+      const NormalComponent: FunctionComponent = () =>
+        h("span", null, "Normal content");
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: () => "Error fallback",
+        children: h(NormalComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "span",
+        props: {},
+        children: [{ type: "text", content: "Normal content" }],
+      });
+    });
+
+    it("should handle ErrorBoundary with Suspense", async () => {
+      const { promise, resolve } = Promise.withResolvers<string>();
+
+      const AsyncComponent: FunctionComponent = () => {
+        const result = use(promise);
+        throw new Error(`Error after async: ${result}`);
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => `Caught: ${err.message}`,
+        children: Suspense({
+          fallback: "Loading...",
+          children: h(AsyncComponent, {}),
+        }),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク（Suspense fallback）
+      const firstChunk = await reader.read();
+      expect(firstChunk.value).toEqual({
+        type: "text",
+        content: "Loading...",
+      });
+
+      // Promiseを解決
+      resolve("data");
+
+      // 次のチャンク（エラーがキャッチされてfallback表示）
+      const secondChunk = await reader.read();
+      expect(secondChunk.value).toEqual({
+        type: "text",
+        content: "Caught: Error after async: data",
+      });
+
+      reader.releaseLock();
+    });
+
+    it("should propagate errors to outer ErrorBoundary when inner has no boundary", async () => {
+      const error = new Error("Deep error");
+
+      const DeepErrorComponent: FunctionComponent = () => {
+        throw error;
+      };
+
+      const MiddleComponent: FunctionComponent = () =>
+        h("div", null, ["Middle - ", h(DeepErrorComponent, {}), " - End"]);
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => `Outer caught: ${err.message}`,
+        children: h(MiddleComponent, {}),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "text",
+        content: "Outer caught: Deep error",
+      });
+    });
+
+    it("should handle nested ErrorBoundaries with both catching errors", async () => {
+      const outerError = new Error("Outer error");
+      const innerError = new Error("Inner error");
+
+      const InnerErrorComponent: FunctionComponent = () => {
+        throw innerError;
+      };
+
+      const OuterErrorComponent: FunctionComponent = () => {
+        throw outerError;
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => `Outer: ${err.message}`,
+        children: h("section", null, [
+          h(OuterErrorComponent, {}),
+          " | ",
+          ErrorBoundary({
+            fallback: (err: Error) => `Inner: ${err.message}`,
+            children: h(InnerErrorComponent, {}),
+          }),
+        ]),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      // 外側のコンポーネントでエラーが発生するため、外側のfallbackが表示される
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "text",
+        content: "Outer: Outer error",
+      });
+    });
+
+    it("should handle deeply nested ErrorBoundaries", async () => {
+      const level3Error = new Error("Level 3 error");
+
+      const Level3ErrorComponent: FunctionComponent = () => {
+        throw level3Error;
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => `L1: ${err.message}`,
+        children: h("div", { className: "level1" }, [
+          "Level 1 start - ",
+          ErrorBoundary({
+            fallback: (err: Error) => `L2: ${err.message}`,
+            children: h("div", { className: "level2" }, [
+              "Level 2 start - ",
+              ErrorBoundary({
+                fallback: (err: Error) => `L3: ${err.message}`,
+                children: h(Level3ErrorComponent, {}),
+              }),
+              " - Level 2 end",
+            ]),
+          }),
+          " - Level 1 end",
+        ]),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "intrinsic",
+        name: "div",
+        props: { className: "level1" },
+        children: [
+          { type: "text", content: "Level 1 start - " },
+          {
+            type: "intrinsic",
+            name: "div",
+            props: { className: "level2" },
+            children: [
+              { type: "text", content: "Level 2 start - " },
+              { type: "text", content: "L3: Level 3 error" },
+              { type: "text", content: " - Level 2 end" },
+            ],
+          },
+          { type: "text", content: " - Level 1 end" },
+        ],
+      });
+    });
+
+    it("should handle ErrorBoundary nested in ErrorBoundary where outer catches error", async () => {
+      const outerError = new Error("Outer component error");
+
+      const OuterErrorComponent: FunctionComponent = () => {
+        throw outerError;
+      };
+
+      const NormalComponent: FunctionComponent = () =>
+        h("span", null, "Inner normal content");
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = ErrorBoundary({
+        fallback: (err: Error) => `Outer fallback: ${err.message}`,
+        children: h("div", null, [
+          h(OuterErrorComponent, {}),
+          ErrorBoundary({
+            fallback: (err: Error) => `Inner fallback: ${err.message}`,
+            children: h(NormalComponent, {}),
+          }),
+        ]),
+      });
+
+      const stream = renderToReadableStream(element, mockContext);
+      const chunks = await readStreamToCompletion(stream);
+
+      // 外側でエラーが発生するため、内側のErrorBoundaryは評価されない
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0]).toEqual({
+        type: "text",
+        content: "Outer fallback: Outer component error",
+      });
+    });
+
+    it("should handle mixed ErrorBoundary and Suspense nesting", async () => {
+      const { promise, resolve } = Promise.withResolvers<string>();
+
+      const AsyncErrorComponent: FunctionComponent = () => {
+        const result = use(promise);
+        throw new Error(`${result} error`);
+      };
+
+      const ErrorBoundary = (props: {
+        fallback: (error: Error) => DisactNode;
+        children: DisactNode;
+      }): DisactElement => {
+        return {
+          type: "errorBoundary",
+          props,
+        };
+      };
+
+      const element = h("container", null, [
+        ErrorBoundary({
+          fallback: (err: Error) => `Outer caught: ${err.message}`,
+          children: h("div", null, [
+            "Outer start - ",
+            Suspense({
+              fallback: "Inner loading...",
+              children: ErrorBoundary({
+                fallback: (err: Error) => `Inner caught: ${err.message}`,
+                children: h(AsyncErrorComponent, {}),
+              }),
+            }),
+            " - Outer end",
+          ]),
+        }),
+      ]);
+
+      const stream = renderToReadableStream(element, mockContext);
+      const reader = stream.getReader();
+
+      // 最初のチャンク（Suspense fallback）
+      const firstChunk = await reader.read();
+      expect(firstChunk.value).toEqual({
+        type: "intrinsic",
+        name: "container",
+        props: {},
+        children: [
+          {
+            type: "intrinsic",
+            name: "div",
+            props: {},
+            children: [
+              { type: "text", content: "Outer start - " },
+              { type: "text", content: "Inner loading..." },
+              { type: "text", content: " - Outer end" },
+            ],
+          },
+        ],
+      });
+
+      // Promiseを解決
+      resolve("Async");
+
+      // 次のチャンク（内側のErrorBoundaryがエラーをキャッチ）
+      const secondChunk = await reader.read();
+      expect(secondChunk.value).toEqual({
+        type: "intrinsic",
+        name: "container",
+        props: {},
+        children: [
+          {
+            type: "intrinsic",
+            name: "div",
+            props: {},
+            children: [
+              { type: "text", content: "Outer start - " },
+              { type: "text", content: "Inner caught: Async error" },
+              { type: "text", content: " - Outer end" },
+            ],
+          },
+        ],
+      });
+
+      reader.releaseLock();
+    });
+  });
 });

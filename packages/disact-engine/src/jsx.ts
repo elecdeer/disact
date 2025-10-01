@@ -48,5 +48,16 @@ export const Suspense = ({
   props: { fallback, children },
 });
 
+export const ErrorBoundary = ({
+  fallback,
+  children,
+}: {
+  fallback: (error: Error) => DisactNode;
+  children: DisactNode;
+}): DisactElement => ({
+  type: "errorBoundary",
+  props: { fallback, children },
+});
+
 // usePromise を re-export して use としても利用可能にする
 export { usePromise as use } from "./promiseCache";

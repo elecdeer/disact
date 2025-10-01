@@ -138,6 +138,28 @@ const render = <Context>(
     }
   }
 
+  if (element.type === "errorBoundary") {
+    try {
+      // 子をレンダリングしてみる
+      return render(element.props.children, context, promises);
+    } catch (thrown) {
+      // Promiseが投げられた場合はSuspenseに任せる（再スロー）
+      if (isPromise(thrown)) {
+        throw thrown;
+      }
+      // Errorの場合はfallbackをレンダリング
+      if (thrown instanceof Error) {
+        return render(element.props.fallback(thrown), context, promises);
+      }
+      // Error以外の例外も一応処理
+      const error =
+        typeof thrown === "object" && thrown !== null
+          ? new Error(String(thrown))
+          : new Error("Unknown error");
+      return render(element.props.fallback(error), context, promises);
+    }
+  }
+
   throw new Error("Unknown element type");
 };
 

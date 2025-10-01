@@ -39,10 +39,7 @@ const clearCurrentContext = (): void => {
  * コールバック実行中のみcontextが利用可能で、完了後は自動的にクリアされる
  * ネストした呼び出しはエラーになる
  */
-export const runInContext = <T, R>(
-  context: T,
-  callback: () => R
-): R => {
+export const runInContext = <T, R>(context: T, callback: () => R): R => {
   // ネストチェック
   if (currentRenderingContext !== null) {
     throw new Error("runInContext cannot be nested");

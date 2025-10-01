@@ -20,7 +20,8 @@ export type DevSource = {
 export type DisactElement =
   | FunctionComponentElement
   | IntrinsicElement
-  | SuspenseElement;
+  | SuspenseElement
+  | ErrorBoundaryElement;
 
 /**
  * レンダリング可能な要素の型
@@ -54,6 +55,14 @@ export type SuspenseElement = {
   type: "suspense";
   props: {
     fallback: DisactNode;
+    children: DisactNode;
+  };
+} & DisactElementBase;
+
+export type ErrorBoundaryElement = {
+  type: "errorBoundary";
+  props: {
+    fallback: (error: Error) => DisactNode;
     children: DisactNode;
   };
 } & DisactElementBase;
