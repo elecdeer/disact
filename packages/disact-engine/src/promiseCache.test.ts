@@ -9,7 +9,11 @@ describe("promiseCache", () => {
       const context = { promiseStateManager: manager };
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      let promiseState: any;
+      let promiseState:
+        | {
+            status: "pending" | "fulfilled" | "rejected";
+          }
+        | undefined;
 
       runInContext(context, () => {
         try {
