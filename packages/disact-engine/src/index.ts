@@ -4,4 +4,5 @@ export type {
   FunctionComponent,
   IntrinsicElementName,
   PropsBase,
-} from "@disact/engine";
+} from "./element";
+export { ErrorBoundary, Fragment, jsx, jsxDEV, Suspense, use } from "./jsx";

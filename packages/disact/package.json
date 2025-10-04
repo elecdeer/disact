@@ -51,6 +51,7 @@
   "author": "elecdeer",
   "license": "MIT",
   "dependencies": {
+    "@disact/engine": "workspace:*",
     "mdast-util-gfm-strikethrough": "catalog:",
     "mdast-util-to-markdown": "catalog:"
   }

@@ -12,24 +12,32 @@ export const jsx = (
   props: PropsBase,
   _key: unknown,
   _isStaticChildren: boolean,
-  source: DevSource,
+  source?: DevSource,
 ): DisactElement => {
   if (typeof tag === "function") {
-    return {
+    const element: DisactElement = {
       type: "function",
       fc: tag,
       props,
-      _devSource: source,
     };
+    if (source !== undefined) {
+      element._devSource = source;
+    }
+    return element;
   } else {
-    return {
+    const element: DisactElement = {
       type: "intrinsic",
       name: tag,
       props,
-      _devSource: source,
     };
+    if (source !== undefined) {
+      element._devSource = source;
+    }
+    return element;
   }
 };
+
+export const jsxDEV = jsx;
 
 export const Fragment = ({
   children,
