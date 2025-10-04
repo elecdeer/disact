@@ -1,3 +1,1 @@
-import { HELLO } from "disact";
-
-console.log(<p>{HELLO}</p>);
+console.log(<p>{"Hello, world!"}</p>);

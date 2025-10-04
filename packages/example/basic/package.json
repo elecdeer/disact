@@ -7,7 +7,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "lint": "biome check ./src",
-    "run-example": "vite-node ./src/index.ts"
+    "run-example": "vite-node ./src/index.tsx"
   },
   "dependencies": {
     "disact": "workspace:*"
