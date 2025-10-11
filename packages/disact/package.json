@@ -39,12 +39,14 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "biome check ./src"
+    "lint": "biome check ./src",
+    "generate:api": "orval"
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
     "@types/mdast": "catalog:",
     "@types/node": "catalog:",
+    "orval": "catalog:",
     "ts-dedent": "catalog:"
   },
   "keywords": [],
@@ -53,6 +55,7 @@
   "dependencies": {
     "@disact/engine": "workspace:*",
     "mdast-util-gfm-strikethrough": "catalog:",
-    "mdast-util-to-markdown": "catalog:"
+    "mdast-util-to-markdown": "catalog:",
+    "zod": "^4.1.12"
   }
 }
