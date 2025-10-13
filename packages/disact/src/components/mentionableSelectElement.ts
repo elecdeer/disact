@@ -4,6 +4,7 @@ import {
   type MentionableSelectComponentForMessageRequest,
   MentionableSelectComponentForMessageRequestType,
 } from "../api/models";
+import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export const mentionableSelectElementSchema = z
   .object({
@@ -15,7 +16,16 @@ export const mentionableSelectElementSchema = z
     maxValues: z.optional(z.number().int().min(1).max(25)),
     disabled: z.optional(z.boolean()),
     required: z.optional(z.boolean()),
-    defaultValues: z.optional(z.array(z.string()).max(25)),
+    defaultValues: z.optional(
+      z
+        .array(
+          z.object({
+            id: snowflakeSchema,
+            type: z.enum(["user", "role"]),
+          }),
+        )
+        .max(25),
+    ),
   })
   .transform(
     (
@@ -29,6 +39,7 @@ export const mentionableSelectElementSchema = z
       max_values: obj.maxValues,
       disabled: obj.disabled,
       required: obj.required,
+      default_values: obj.defaultValues,
     }),
   );
 

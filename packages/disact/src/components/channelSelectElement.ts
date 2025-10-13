@@ -4,6 +4,7 @@ import {
   type ChannelSelectComponentForMessageRequest,
   ChannelSelectComponentForMessageRequestType,
 } from "../api/models";
+import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export const channelSelectElementSchema = z
   .object({
@@ -15,7 +16,16 @@ export const channelSelectElementSchema = z
     maxValues: z.optional(z.number().int().min(1).max(25)),
     disabled: z.optional(z.boolean()),
     required: z.optional(z.boolean()),
-    defaultValues: z.optional(z.array(z.string()).max(25)),
+    defaultValues: z.optional(
+      z
+        .array(
+          z.object({
+            id: snowflakeSchema,
+            type: z.literal("channel"),
+          }),
+        )
+        .max(25),
+    ),
     channelTypes: z.optional(z.array(z.number().int())),
   })
   .transform(
@@ -29,6 +39,8 @@ export const channelSelectElementSchema = z
         max_values: obj.maxValues,
         disabled: obj.disabled,
         required: obj.required,
+        default_values: obj.defaultValues,
+        channel_types: obj.channelTypes,
       };
     },
   );

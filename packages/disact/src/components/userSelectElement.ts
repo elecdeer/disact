@@ -4,6 +4,7 @@ import {
   type UserSelectComponentForMessageRequest,
   UserSelectComponentForMessageRequestType,
 } from "../api/models";
+import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export const userSelectElementSchema = z
   .object({
@@ -19,7 +20,7 @@ export const userSelectElementSchema = z
       z
         .array(
           z.object({
-            id: z.string().regex(/^(0|[1-9][0-9]*)$/),
+            id: snowflakeSchema,
             type: z.literal("user"),
           }),
         )
