@@ -6,6 +6,9 @@ export default defineConfig({
       // 2025-10-04
       target:
         "https://raw.githubusercontent.com/discord/discord-api-spec/47b4923237266c7dbcb30edef561655b47770e51/specs/openapi.json",
+      override: {
+        transformer: "./scripts/orval/fix-status-codes.mjs",
+      },
     },
     output: {
       mode: "split",
