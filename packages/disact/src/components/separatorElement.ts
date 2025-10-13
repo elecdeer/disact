@@ -1,5 +1,9 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
-import { SeparatorComponentForMessageRequestType } from "../api/models";
+import {
+  type SeparatorComponentForMessageRequest,
+  SeparatorComponentForMessageRequestType,
+} from "../api/models";
 
 export const separatorElementSchema = z
   .object({
@@ -8,11 +12,13 @@ export const separatorElementSchema = z
     spacing: z.optional(z.number().nullable()),
     divider: z.optional(z.boolean()),
   })
-  .transform((obj) => ({
-    type: SeparatorComponentForMessageRequestType.NUMBER_14,
-    id: obj.id,
-    spacing: obj.spacing,
-    divider: obj.divider,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<SeparatorComponentForMessageRequest> => ({
+      type: SeparatorComponentForMessageRequestType.NUMBER_14,
+      id: obj.id,
+      spacing: obj.spacing,
+      divider: obj.divider,
+    }),
+  );
 
 export type SeparatorElement = z.input<typeof separatorElementSchema>;

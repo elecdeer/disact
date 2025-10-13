@@ -1,5 +1,9 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
-import { ThumbnailComponentForMessageRequestType } from "../api/models";
+import {
+  type ThumbnailComponentForMessageRequest,
+  ThumbnailComponentForMessageRequestType,
+} from "../api/models";
 
 export const thumbnailElementSchema = z
   .object({
@@ -11,12 +15,14 @@ export const thumbnailElementSchema = z
       url: z.string().max(2048),
     }),
   })
-  .transform((obj) => ({
-    type: ThumbnailComponentForMessageRequestType.NUMBER_11,
-    id: obj.id,
-    description: obj.description,
-    spoiler: obj.spoiler,
-    media: obj.media,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<ThumbnailComponentForMessageRequest> => ({
+      type: ThumbnailComponentForMessageRequestType.NUMBER_11,
+      id: obj.id,
+      description: obj.description,
+      spoiler: obj.spoiler,
+      media: obj.media,
+    }),
+  );
 
 export type ThumbnailElement = z.input<typeof thumbnailElementSchema>;

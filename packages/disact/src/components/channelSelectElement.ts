@@ -1,5 +1,9 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
-import { ChannelSelectComponentForMessageRequestType } from "../api/models";
+import {
+  type ChannelSelectComponentForMessageRequest,
+  ChannelSelectComponentForMessageRequestType,
+} from "../api/models";
 
 export const channelSelectElementSchema = z
   .object({
@@ -14,17 +18,19 @@ export const channelSelectElementSchema = z
     defaultValues: z.optional(z.array(z.string()).max(25)),
     channelTypes: z.optional(z.array(z.number().int())),
   })
-  .transform((obj) => ({
-    type: ChannelSelectComponentForMessageRequestType.NUMBER_8,
-    id: obj.id,
-    custom_id: obj.customId,
-    placeholder: obj.placeholder,
-    min_values: obj.minValues,
-    max_values: obj.maxValues,
-    disabled: obj.disabled,
-    required: obj.required,
-    default_values: obj.defaultValues,
-    channel_types: obj.channelTypes,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<ChannelSelectComponentForMessageRequest> => {
+      return {
+        type: ChannelSelectComponentForMessageRequestType.NUMBER_8,
+        id: obj.id,
+        custom_id: obj.customId,
+        placeholder: obj.placeholder,
+        min_values: obj.minValues,
+        max_values: obj.maxValues,
+        disabled: obj.disabled,
+        required: obj.required,
+      };
+    },
+  );
 
 export type ChannelSelectElement = z.input<typeof channelSelectElementSchema>;

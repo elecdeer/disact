@@ -1,5 +1,9 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
-import { SectionComponentForMessageRequestType } from "../api/models";
+import {
+  type SectionComponentForMessageRequest,
+  SectionComponentForMessageRequestType,
+} from "../api/models";
 import { buttonElementSchema } from "./buttonElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
 import { thumbnailElementSchema } from "./thumbnailElement";
@@ -20,11 +24,13 @@ export const sectionElementSchema = z
     children: z.array(sectionComponentSchema).min(1).max(3),
     accessory: sectionAccessorySchema,
   })
-  .transform((obj) => ({
-    type: SectionComponentForMessageRequestType.NUMBER_9,
-    id: obj.id,
-    components: obj.children,
-    accessory: obj.accessory,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<SectionComponentForMessageRequest> => ({
+      type: SectionComponentForMessageRequestType.NUMBER_9,
+      id: obj.id,
+      components: obj.children,
+      accessory: obj.accessory,
+    }),
+  );
 
 export type SectionElement = z.input<typeof sectionElementSchema>;

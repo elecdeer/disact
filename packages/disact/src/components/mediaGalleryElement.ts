@@ -1,4 +1,6 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
+import type { MediaGalleryComponentForMessageRequest } from "../api/models";
 import { MediaGalleryComponentForMessageRequestType } from "../api/models";
 
 const mediaGalleryItemSchema = z.object({
@@ -15,10 +17,12 @@ export const mediaGalleryElementSchema = z
     id: z.optional(z.number().int().min(0)),
     items: z.array(mediaGalleryItemSchema).min(1).max(10),
   })
-  .transform((obj) => ({
-    type: MediaGalleryComponentForMessageRequestType.NUMBER_12,
-    id: obj.id,
-    items: obj.items,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<MediaGalleryComponentForMessageRequest> => ({
+      type: MediaGalleryComponentForMessageRequestType.NUMBER_12,
+      id: obj.id,
+      items: obj.items,
+    }),
+  );
 
 export type MediaGalleryElement = z.input<typeof mediaGalleryElementSchema>;

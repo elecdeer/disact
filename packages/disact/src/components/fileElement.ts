@@ -1,4 +1,6 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
+import type { FileComponentForMessageRequest } from "../api/models";
 import { FileComponentForMessageRequestType } from "../api/models";
 
 const unfurledMediaSchema = z.object({
@@ -12,11 +14,13 @@ export const fileElementSchema = z
     spoiler: z.optional(z.boolean()),
     file: unfurledMediaSchema,
   })
-  .transform((obj) => ({
-    type: FileComponentForMessageRequestType.NUMBER_13,
-    id: obj.id,
-    spoiler: obj.spoiler,
-    file: obj.file,
-  }));
+  .transform(
+    (obj): UndefinedOnPartialDeep<FileComponentForMessageRequest> => ({
+      type: FileComponentForMessageRequestType.NUMBER_13,
+      id: obj.id,
+      spoiler: obj.spoiler,
+      file: obj.file,
+    }),
+  );
 
 export type FileElement = z.input<typeof fileElementSchema>;

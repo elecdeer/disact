@@ -1,5 +1,9 @@
+import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
-import { MentionableSelectComponentForMessageRequestType } from "../api/models";
+import {
+  type MentionableSelectComponentForMessageRequest,
+  MentionableSelectComponentForMessageRequestType,
+} from "../api/models";
 
 export const mentionableSelectElementSchema = z
   .object({
@@ -13,17 +17,20 @@ export const mentionableSelectElementSchema = z
     required: z.optional(z.boolean()),
     defaultValues: z.optional(z.array(z.string()).max(25)),
   })
-  .transform((obj) => ({
-    type: MentionableSelectComponentForMessageRequestType.NUMBER_7,
-    id: obj.id,
-    custom_id: obj.customId,
-    placeholder: obj.placeholder,
-    min_values: obj.minValues,
-    max_values: obj.maxValues,
-    disabled: obj.disabled,
-    required: obj.required,
-    default_values: obj.defaultValues,
-  }));
+  .transform(
+    (
+      obj,
+    ): UndefinedOnPartialDeep<MentionableSelectComponentForMessageRequest> => ({
+      type: MentionableSelectComponentForMessageRequestType.NUMBER_7,
+      id: obj.id,
+      custom_id: obj.customId,
+      placeholder: obj.placeholder,
+      min_values: obj.minValues,
+      max_values: obj.maxValues,
+      disabled: obj.disabled,
+      required: obj.required,
+    }),
+  );
 
 export type MentionableSelectElement = z.input<
   typeof mentionableSelectElementSchema
