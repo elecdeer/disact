@@ -7,14 +7,25 @@ import {
 
 export const textDisplayElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("textDisplay"),
-    id: z.optional(z.number().int().min(0)),
-    children: z.string().min(1).max(4000),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+    }),
+    children: z
+      .array(
+        z.object({
+          type: z.literal("text"),
+          content: z.string(),
+        }),
+      )
+      .transform((arr) => arr.map((v) => v.content).join(""))
+      .pipe(z.string().min(1).max(4000)),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<TextDisplayComponentForMessageRequest> => ({
       type: TextDisplayComponentForMessageRequestType.NUMBER_10,
-      id: obj.id,
+      id: obj.props.id,
       content: obj.children,
     }),
   );

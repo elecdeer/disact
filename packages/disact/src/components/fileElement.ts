@@ -9,17 +9,21 @@ const unfurledMediaSchema = z.object({
 
 export const fileElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("file"),
-    id: z.optional(z.number().int().min(0)),
-    spoiler: z.optional(z.boolean()),
-    file: unfurledMediaSchema,
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+      spoiler: z.optional(z.boolean()),
+      file: unfurledMediaSchema,
+    }),
+    children: z.null(),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<FileComponentForMessageRequest> => ({
       type: FileComponentForMessageRequestType.NUMBER_13,
-      id: obj.id,
-      spoiler: obj.spoiler,
-      file: obj.file,
+      id: obj.props.id,
+      spoiler: obj.props.spoiler,
+      file: obj.props.file,
     }),
   );
 

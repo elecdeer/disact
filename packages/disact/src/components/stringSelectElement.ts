@@ -21,27 +21,31 @@ export const stringSelectOptionSchema = z.object({
 
 export const stringSelectElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("stringSelect"),
-    id: z.optional(z.number().int().min(0)),
-    customId: z.string().max(100),
-    placeholder: z.optional(z.string().max(150)),
-    minValues: z.optional(z.number().int().min(0).max(25)),
-    maxValues: z.optional(z.number().int().min(1).max(25)),
-    disabled: z.optional(z.boolean()),
-    required: z.optional(z.boolean()),
-    options: z.array(stringSelectOptionSchema).min(1).max(25),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+      customId: z.string().max(100),
+      placeholder: z.optional(z.string().max(150)),
+      minValues: z.optional(z.number().int().min(0).max(25)),
+      maxValues: z.optional(z.number().int().min(1).max(25)),
+      disabled: z.optional(z.boolean()),
+      required: z.optional(z.boolean()),
+      options: z.array(stringSelectOptionSchema).min(1).max(25),
+    }),
+    children: z.null(),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<StringSelectComponentForMessageRequest> => ({
       type: StringSelectComponentForMessageRequestType.NUMBER_3,
-      id: obj.id,
-      custom_id: obj.customId,
-      placeholder: obj.placeholder,
-      min_values: obj.minValues,
-      max_values: obj.maxValues,
-      disabled: obj.disabled,
-      required: obj.required,
-      options: obj.options,
+      id: obj.props.id,
+      custom_id: obj.props.customId,
+      placeholder: obj.props.placeholder,
+      min_values: obj.props.minValues,
+      max_values: obj.props.maxValues,
+      disabled: obj.props.disabled,
+      required: obj.props.required,
+      options: obj.props.options,
     }),
   );
 

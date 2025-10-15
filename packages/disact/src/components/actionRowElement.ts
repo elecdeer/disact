@@ -11,8 +11,11 @@ import { userSelectElementSchema } from "./userSelectElement";
 
 export const actionRowElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("actionRow"),
-    id: z.optional(z.number().int().min(0)),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+    }),
     children: z
       .array(
         z.discriminatedUnion("name", [
@@ -30,7 +33,7 @@ export const actionRowElementSchema = z
   .transform(
     (obj): UndefinedOnPartialDeep<ActionRowComponentForMessageRequest> => ({
       type: ActionRowComponentForMessageRequestType.NUMBER_1,
-      id: obj.id,
+      id: obj.props.id,
       components: obj.children,
     }),
   );

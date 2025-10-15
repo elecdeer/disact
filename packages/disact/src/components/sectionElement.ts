@@ -19,17 +19,20 @@ const sectionAccessorySchema = z.discriminatedUnion("name", [
 
 export const sectionElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("section"),
-    id: z.optional(z.number().int().min(0)),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+      accessory: sectionAccessorySchema,
+    }),
     children: z.array(sectionComponentSchema).min(1).max(3),
-    accessory: sectionAccessorySchema,
   })
   .transform(
     (obj): UndefinedOnPartialDeep<SectionComponentForMessageRequest> => ({
       type: SectionComponentForMessageRequestType.NUMBER_9,
-      id: obj.id,
+      id: obj.props.id,
       components: obj.children,
-      accessory: obj.accessory,
+      accessory: obj.props.accessory,
     }),
   );
 

@@ -13,15 +13,19 @@ const mediaGalleryItemSchema = z.object({
 
 export const mediaGalleryElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("mediaGallery"),
-    id: z.optional(z.number().int().min(0)),
-    items: z.array(mediaGalleryItemSchema).min(1).max(10),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+      items: z.array(mediaGalleryItemSchema).min(1).max(10),
+    }),
+    children: z.null(),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<MediaGalleryComponentForMessageRequest> => ({
       type: MediaGalleryComponentForMessageRequestType.NUMBER_12,
-      id: obj.id,
-      items: obj.items,
+      id: obj.props.id,
+      items: obj.props.items,
     }),
   );
 

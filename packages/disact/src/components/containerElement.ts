@@ -20,19 +20,22 @@ const containerComponentsSchema = z.discriminatedUnion("name", [
 
 export const containerElementSchema = z
   .object({
+    type: z.literal("intrinsic"),
     name: z.literal("container"),
-    id: z.optional(z.number().int().min(0)),
-    accentColor: z.optional(z.number().int().min(0).max(0xffffff)),
+    props: z.object({
+      id: z.optional(z.number().int().min(0)),
+      accentColor: z.optional(z.number().int().min(0).max(0xffffff)),
+      spoiler: z.optional(z.boolean()),
+    }),
     children: z.array(containerComponentsSchema).min(1).max(40),
-    spoiler: z.optional(z.boolean()),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<ContainerComponentForMessageRequest> => ({
       type: ContainerComponentForMessageRequestType.NUMBER_17,
-      id: obj.id,
-      accent_color: obj.accentColor,
+      id: obj.props.id,
+      accent_color: obj.props.accentColor,
       components: obj.children,
-      spoiler: obj.spoiler,
+      spoiler: obj.props.spoiler,
     }),
   );
 
