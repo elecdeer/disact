@@ -9,13 +9,13 @@ export const textDisplayElementSchema = z
   .object({
     name: z.literal("textDisplay"),
     id: z.optional(z.number().int().min(0)),
-    content: z.string().min(1).max(4000),
+    children: z.string().min(1).max(4000),
   })
   .transform(
     (obj): UndefinedOnPartialDeep<TextDisplayComponentForMessageRequest> => ({
       type: TextDisplayComponentForMessageRequestType.NUMBER_10,
       id: obj.id,
-      content: obj.content,
+      content: obj.children,
     }),
   );
 

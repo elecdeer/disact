@@ -5,7 +5,6 @@ export namespace JSX {
   export type ElementChildrenAttribute = {
     children: unknown;
   };
-  export interface IntrinsicElements {
-    [elemName: string]: unknown;
-  }
+  export type IntrinsicElements =
+    import("./components/index.ts").IntrinsicElements;
 }

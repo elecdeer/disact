@@ -67,7 +67,12 @@ export type IntrinsicElements = {
   roleSelect: ElementProps<RoleSelectElement>;
   mentionableSelect: ElementProps<MentionableSelectElement>;
   channelSelect: ElementProps<ChannelSelectElement>;
-  textDisplay: ElementProps<TextDisplayElement>;
+  textDisplay: ElementProps<
+    TextDisplayElement,
+    {
+      children: DisactNode;
+    }
+  >;
   separator: ElementProps<SeparatorElement>;
   file: ElementProps<FileElement>;
   mediaGallery: ElementProps<MediaGalleryElement>;
