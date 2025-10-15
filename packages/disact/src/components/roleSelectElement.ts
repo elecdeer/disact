@@ -6,6 +6,20 @@ import {
 } from "../api/models";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
+export type RoleSelectElement = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: Array<{
+    id: string;
+    type: "role";
+  }>;
+};
+
 export const roleSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -44,5 +58,3 @@ export const roleSelectElementSchema = z
       default_values: obj.props.defaultValues,
     }),
   );
-
-export type RoleSelectElement = z.input<typeof roleSelectElementSchema>;

@@ -1,9 +1,18 @@
+import type { DisactNode } from "@disact/engine";
 import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
 import {
   type ButtonComponentForMessageRequest,
   ButtonComponentForMessageRequestType,
 } from "../api/models";
+
+export type ButtonElement = {
+  id?: number;
+  style: "primary" | "secondary" | "success" | "danger" | "link" | "purchase";
+  children?: DisactNode;
+  customId?: string;
+  disabled?: boolean;
+};
 
 export const buttonElementSchema = z
   .object({
@@ -51,5 +60,3 @@ export const buttonElementSchema = z
       disabled: obj.props.disabled,
     }),
   );
-
-export type ButtonElement = z.input<typeof buttonElementSchema>;

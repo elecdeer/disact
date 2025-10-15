@@ -6,6 +6,21 @@ import {
 } from "../api/models";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
+export type ChannelSelectElement = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: Array<{
+    id: string;
+    type: "channel";
+  }>;
+  channelTypes?: number[];
+};
+
 export const channelSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -48,5 +63,3 @@ export const channelSelectElementSchema = z
       };
     },
   );
-
-export type ChannelSelectElement = z.input<typeof channelSelectElementSchema>;

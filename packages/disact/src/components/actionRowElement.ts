@@ -1,3 +1,4 @@
+import type { DisactNode } from "@disact/engine";
 import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
 import type { ActionRowComponentForMessageRequest } from "../api/models";
@@ -8,6 +9,11 @@ import { mentionableSelectElementSchema } from "./mentionableSelectElement";
 import { roleSelectElementSchema } from "./roleSelectElement";
 import { stringSelectElementSchema } from "./stringSelectElement";
 import { userSelectElementSchema } from "./userSelectElement";
+
+export type ActionRowElement = {
+  id?: number;
+  children: DisactNode;
+};
 
 export const actionRowElementSchema = z
   .object({
@@ -37,5 +43,3 @@ export const actionRowElementSchema = z
       components: obj.children,
     }),
   );
-
-export type ActionRowElement = z.input<typeof actionRowElementSchema>;

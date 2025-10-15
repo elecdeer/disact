@@ -5,6 +5,15 @@ import {
   ThumbnailComponentForMessageRequestType,
 } from "../api/models";
 
+export type ThumbnailElement = {
+  id?: number;
+  description?: string;
+  spoiler?: boolean;
+  media: {
+    url: string;
+  };
+};
+
 export const thumbnailElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -28,5 +37,3 @@ export const thumbnailElementSchema = z
       media: obj.props.media,
     }),
   );
-
-export type ThumbnailElement = z.input<typeof thumbnailElementSchema>;

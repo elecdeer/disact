@@ -3,6 +3,17 @@ import * as z from "zod";
 import type { MediaGalleryComponentForMessageRequest } from "../api/models";
 import { MediaGalleryComponentForMessageRequestType } from "../api/models";
 
+export type MediaGalleryElement = {
+  id?: number;
+  items: Array<{
+    description?: string;
+    spoiler?: boolean;
+    media: {
+      url: string;
+    };
+  }>;
+};
+
 const mediaGalleryItemSchema = z.object({
   description: z.optional(z.string().min(1).max(1024)),
   spoiler: z.optional(z.boolean()),
@@ -28,5 +39,3 @@ export const mediaGalleryElementSchema = z
       items: obj.props.items,
     }),
   );
-
-export type MediaGalleryElement = z.input<typeof mediaGalleryElementSchema>;

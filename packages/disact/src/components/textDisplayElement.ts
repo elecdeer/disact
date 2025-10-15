@@ -1,9 +1,15 @@
+import type { DisactNode } from "@disact/engine";
 import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
 import {
   type TextDisplayComponentForMessageRequest,
   TextDisplayComponentForMessageRequestType,
 } from "../api/models";
+
+export type TextDisplayElement = {
+  id?: number;
+  children: DisactNode;
+};
 
 export const textDisplayElementSchema = z
   .object({
@@ -29,5 +35,3 @@ export const textDisplayElementSchema = z
       content: obj.children,
     }),
   );
-
-export type TextDisplayElement = z.input<typeof textDisplayElementSchema>;

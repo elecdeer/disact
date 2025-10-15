@@ -6,6 +6,20 @@ import {
 } from "../api/models";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
+export type UserSelectElement = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: Array<{
+    id: string;
+    type: "user";
+  }>;
+};
+
 export const userSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -44,5 +58,3 @@ export const userSelectElementSchema = z
       default_values: obj.props.defaultValues,
     }),
   );
-
-export type UserSelectElement = z.input<typeof userSelectElementSchema>;

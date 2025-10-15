@@ -1,4 +1,4 @@
-import type { DisactNode, RenderedElement } from "@disact/engine";
+import type { RenderedElement } from "@disact/engine";
 import * as z from "zod";
 import {
   type ActionRowElement,
@@ -48,40 +48,21 @@ import {
   userSelectElementSchema,
 } from "./userSelectElement";
 
-type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
-
-type ElementProps<
-  T,
-  Override extends Partial<Record<keyof T, unknown>> = Record<never, never>,
-> = Simplify<
-  Omit<T, "name" | keyof Override> & {
-    [key in keyof Override]: Override[key];
-  }
->;
-
 export type IntrinsicElements = {
-  actionRow: ElementProps<ActionRowElement, { children: DisactNode }>;
-  button: ElementProps<ButtonElement>;
-  stringSelect: ElementProps<StringSelectElement>;
-  userSelect: ElementProps<UserSelectElement>;
-  roleSelect: ElementProps<RoleSelectElement>;
-  mentionableSelect: ElementProps<MentionableSelectElement>;
-  channelSelect: ElementProps<ChannelSelectElement>;
-  textDisplay: ElementProps<
-    TextDisplayElement,
-    {
-      children: DisactNode;
-    }
-  >;
-  separator: ElementProps<SeparatorElement>;
-  file: ElementProps<FileElement>;
-  mediaGallery: ElementProps<MediaGalleryElement>;
-  thumbnail: ElementProps<ThumbnailElement>;
-  section: ElementProps<
-    SectionElement,
-    { children: DisactNode; accessory: DisactNode }
-  >;
-  container: ElementProps<ContainerElement, { children: DisactNode }>;
+  actionRow: ActionRowElement;
+  button: ButtonElement;
+  stringSelect: StringSelectElement;
+  userSelect: UserSelectElement;
+  roleSelect: RoleSelectElement;
+  mentionableSelect: MentionableSelectElement;
+  channelSelect: ChannelSelectElement;
+  textDisplay: TextDisplayElement;
+  separator: SeparatorElement;
+  file: FileElement;
+  mediaGallery: MediaGalleryElement;
+  thumbnail: ThumbnailElement;
+  section: SectionElement;
+  container: ContainerElement;
 };
 
 type PayloadElement = object | string;

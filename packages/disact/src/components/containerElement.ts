@@ -1,3 +1,4 @@
+import type { DisactNode } from "@disact/engine";
 import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
 import type { ContainerComponentForMessageRequest } from "../api/models";
@@ -8,6 +9,13 @@ import { mediaGalleryElementSchema } from "./mediaGalleryElement";
 import { sectionElementSchema } from "./sectionElement";
 import { separatorElementSchema } from "./separatorElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
+
+export type ContainerElement = {
+  id?: number;
+  accentColor?: number;
+  spoiler?: boolean;
+  children: DisactNode;
+};
 
 const containerComponentsSchema = z.discriminatedUnion("name", [
   actionRowElementSchema,
@@ -38,5 +46,3 @@ export const containerElementSchema = z
       spoiler: obj.props.spoiler,
     }),
   );
-
-export type ContainerElement = z.input<typeof containerElementSchema>;

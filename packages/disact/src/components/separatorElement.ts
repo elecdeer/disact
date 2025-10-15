@@ -5,6 +5,12 @@ import {
   SeparatorComponentForMessageRequestType,
 } from "../api/models";
 
+export type SeparatorElement = {
+  id?: number;
+  spacing?: number | null;
+  divider?: boolean;
+};
+
 export const separatorElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -24,5 +30,3 @@ export const separatorElementSchema = z
       divider: obj.props.divider,
     }),
   );
-
-export type SeparatorElement = z.input<typeof separatorElementSchema>;

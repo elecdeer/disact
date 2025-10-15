@@ -1,12 +1,21 @@
+import type { DisactNode } from "@disact/engine";
 import type { UndefinedOnPartialDeep } from "type-fest";
 import * as z from "zod";
 import {
   type SectionComponentForMessageRequest,
   SectionComponentForMessageRequestType,
 } from "../api/models";
+import type { ButtonElement } from "./buttonElement";
 import { buttonElementSchema } from "./buttonElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
+import type { ThumbnailElement } from "./thumbnailElement";
 import { thumbnailElementSchema } from "./thumbnailElement";
+
+export type SectionElement = {
+  id?: number;
+  accessory: ButtonElement | ThumbnailElement;
+  children: DisactNode;
+};
 
 const sectionComponentSchema = z.discriminatedUnion("name", [
   textDisplayElementSchema,
@@ -35,5 +44,3 @@ export const sectionElementSchema = z
       accessory: obj.props.accessory,
     }),
   );
-
-export type SectionElement = z.input<typeof sectionElementSchema>;

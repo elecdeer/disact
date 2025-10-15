@@ -6,6 +6,20 @@ import {
 } from "../api/models";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
+export type MentionableSelectElement = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: Array<{
+    id: string;
+    type: "user" | "role";
+  }>;
+};
+
 export const mentionableSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -46,7 +60,3 @@ export const mentionableSelectElementSchema = z
       default_values: obj.props.defaultValues,
     }),
   );
-
-export type MentionableSelectElement = z.input<
-  typeof mentionableSelectElementSchema
->;

@@ -19,6 +19,26 @@ export const stringSelectOptionSchema = z.object({
   ),
 });
 
+export type StringSelectElement = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  options: Array<{
+    label: string;
+    value: string;
+    description?: string;
+    default?: boolean;
+    emoji?: {
+      id?: string;
+      name: string;
+    };
+  }>;
+};
+
 export const stringSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
@@ -48,5 +68,3 @@ export const stringSelectElementSchema = z
       options: obj.props.options,
     }),
   );
-
-export type StringSelectElement = z.input<typeof stringSelectElementSchema>;

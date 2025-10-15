@@ -55,7 +55,7 @@ export const testRender = async <Context = undefined>(
 
   return {
     result: {
-      current: history.length > 0 ? history[history.length - 1] : null,
+      current: history.length > 0 ? history[history.length - 1]! : null,
       history,
     },
   };

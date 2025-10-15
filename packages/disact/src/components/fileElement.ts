@@ -3,6 +3,14 @@ import * as z from "zod";
 import type { FileComponentForMessageRequest } from "../api/models";
 import { FileComponentForMessageRequestType } from "../api/models";
 
+export type FileElement = {
+  id?: number;
+  spoiler?: boolean;
+  file: {
+    url: string;
+  };
+};
+
 const unfurledMediaSchema = z.object({
   url: z.string().max(2048),
 });
@@ -26,5 +34,3 @@ export const fileElementSchema = z
       file: obj.props.file,
     }),
   );
-
-export type FileElement = z.input<typeof fileElementSchema>;
