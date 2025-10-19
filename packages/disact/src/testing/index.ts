@@ -49,38 +49,27 @@ export const testRender = async <Context = undefined>(
   } as Context;
 
   const stream = renderToReadableStream(element, contextWithManager);
-  const reader = stream.getReader();
 
-  // バックグラウンドでストリームを読み続ける
-  (async () => {
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+  return new Promise<TestRenderResult>((resolve) => {
+    let isFirstValue = true;
 
+    (async () => {
+      for await (const value of stream) {
         // RenderResult を PayloadElement[] に変換
         const payloads = removeUndefinedValuesDeep(
           renderResultToPayloads(value),
         );
         history.push(payloads);
         result.current = payloads;
-      }
-    } finally {
-      reader.releaseLock();
-    }
-  })();
 
-  // 初回のレンダリングが完了するまで待機
-  await new Promise<void>((resolve) => {
-    const checkInterval = setInterval(() => {
-      if (history.length > 0) {
-        clearInterval(checkInterval);
-        resolve();
+        // 初回の値が来たらPromiseを解決
+        if (isFirstValue) {
+          isFirstValue = false;
+          resolve({ result });
+        }
       }
-    }, 10);
+    })();
   });
-
-  return { result };
 };
 
 /**
