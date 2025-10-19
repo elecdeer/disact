@@ -37,6 +37,10 @@ export const testRender = async <Context = undefined>(
   context?: Context | undefined,
 ): Promise<TestRenderResult> => {
   const history: PayloadElement[][] = [];
+  const result: TestRenderResult["result"] = {
+    current: null,
+    history,
+  };
 
   // promiseStateManager をコンテキストに追加
   const contextWithManager = {
@@ -48,7 +52,7 @@ export const testRender = async <Context = undefined>(
   const reader = stream.getReader();
 
   // バックグラウンドでストリームを読み続ける
-  const readPromise = (async () => {
+  (async () => {
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -59,6 +63,7 @@ export const testRender = async <Context = undefined>(
           renderResultToPayloads(value),
         );
         history.push(payloads);
+        result.current = payloads;
       }
     } finally {
       reader.releaseLock();
@@ -75,16 +80,7 @@ export const testRender = async <Context = undefined>(
     }, 10);
   });
 
-  return {
-    result: {
-      get current() {
-        return history[history.length - 1] ?? null;
-      },
-      get history() {
-        return history;
-      },
-    },
-  };
+  return { result };
 };
 
 /**
