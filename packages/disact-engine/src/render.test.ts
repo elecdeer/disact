@@ -7,9 +7,8 @@ import type {
   PropsBase,
   RenderedElement,
 } from "./element";
-import { use } from "./jsx";
-import { createPromiseStateManager } from "./promiseCache";
 import { renderToReadableStream } from "./render";
+import { use } from "./thenable";
 
 /**
  * preactのh関数のようなヘルパー関数
@@ -75,7 +74,6 @@ function Fragment(props: { children: DisactNode }): DisactNode {
 describe("renderToReadableStream", () => {
   const mockContext = {
     theme: "dark",
-    promiseStateManager: createPromiseStateManager(),
   };
 
   // ストリームから結果を読み取るヘルパー関数
@@ -2182,7 +2180,6 @@ describe("renderToReadableStream", () => {
 
       const testContext = {
         prefix: "Context:",
-        promiseStateManager: createPromiseStateManager(),
       };
 
       const AsyncComponent: FunctionComponent = () => {

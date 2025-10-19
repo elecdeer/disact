@@ -1,8 +1,5 @@
 import type { DisactElement, RenderResult } from "@disact/engine";
-import {
-  createPromiseStateManager,
-  renderToReadableStream,
-} from "@disact/engine";
+import { renderToReadableStream } from "@disact/engine";
 import { toPayload } from "../components/index";
 
 type PayloadElement = object | string;
@@ -42,13 +39,7 @@ export const testRender = async <Context = undefined>(
     history,
   };
 
-  // promiseStateManager をコンテキストに追加
-  const contextWithManager = {
-    ...context,
-    promiseStateManager: createPromiseStateManager(),
-  } as Context;
-
-  const stream = renderToReadableStream(element, contextWithManager);
+  const stream = renderToReadableStream(element, context as Context);
 
   return new Promise<TestRenderResult>((resolve) => {
     let isFirstValue = true;

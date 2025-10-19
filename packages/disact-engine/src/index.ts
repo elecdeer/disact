@@ -7,6 +7,6 @@ export type {
   RenderedElement,
   RenderResult,
 } from "./element";
-export { ErrorBoundary, Fragment, jsx, jsxDEV, Suspense, use } from "./jsx";
-export { createPromiseStateManager } from "./promiseCache";
+export { ErrorBoundary, Fragment, jsx, jsxDEV, Suspense } from "./jsx";
 export { renderToReadableStream } from "./render";
+export { use } from "./thenable";

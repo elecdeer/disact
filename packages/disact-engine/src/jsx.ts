@@ -66,6 +66,3 @@ export const ErrorBoundary = ({
   type: "errorBoundary",
   props: { fallback, children },
 });
-
-// usePromise を re-export して use としても利用可能にする
-export { usePromise as use } from "./promiseCache";
