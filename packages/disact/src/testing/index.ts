@@ -1,5 +1,8 @@
 import type { DisactElement, RenderResult } from "@disact/engine";
-import { renderToReadableStream } from "@disact/engine";
+import {
+  createPromiseStateManager,
+  renderToReadableStream,
+} from "@disact/engine";
 import { toPayload } from "../components/index";
 
 type PayloadElement = object | string;
@@ -16,10 +19,11 @@ export interface TestRenderResult {
  *
  * renderToReadableStream を使用してレンダリングし、
  * 各チャンクを toPayload で変換して history に記録します。
+ * 初回のレンダリングが完了したらresolveします。
  *
  * @param element レンダリングする要素
  * @param context レンダリングコンテキスト
- * @returns テスト結果オブジェクト
+ * @returns テスト結果オブジェクトのPromise
  *
  * @example
  * ```tsx
@@ -30,33 +34,55 @@ export interface TestRenderResult {
  */
 export const testRender = async <Context = undefined>(
   element: DisactElement,
-  context?: Context,
+  context?: Context | undefined,
 ): Promise<TestRenderResult> => {
   const history: PayloadElement[][] = [];
 
-  const stream = renderToReadableStream(
-    element,
-    context as Context extends undefined ? Record<string, never> : Context,
-  );
+  // promiseStateManager をコンテキストに追加
+  const contextWithManager = {
+    ...context,
+    promiseStateManager: createPromiseStateManager(),
+  } as Context;
+
+  const stream = renderToReadableStream(element, contextWithManager);
   const reader = stream.getReader();
 
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+  // バックグラウンドでストリームを読み続ける
+  const readPromise = (async () => {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      // RenderResult を PayloadElement[] に変換
-      const payloads = renderResultToPayloads(value);
-      history.push(payloads);
+        // RenderResult を PayloadElement[] に変換
+        const payloads = removeUndefinedValuesDeep(
+          renderResultToPayloads(value),
+        );
+        history.push(payloads);
+      }
+    } finally {
+      reader.releaseLock();
     }
-  } finally {
-    reader.releaseLock();
-  }
+  })();
+
+  // 初回のレンダリングが完了するまで待機
+  await new Promise<void>((resolve) => {
+    const checkInterval = setInterval(() => {
+      if (history.length > 0) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 10);
+  });
 
   return {
     result: {
-      current: history.length > 0 ? history[history.length - 1]! : null,
-      history,
+      get current() {
+        return history[history.length - 1] ?? null;
+      },
+      get history() {
+        return history;
+      },
     },
   };
 };
@@ -74,4 +100,62 @@ const renderResultToPayloads = (result: RenderResult): PayloadElement[] => {
   }
 
   return [toPayload(result)];
+};
+
+export const removeUndefinedValuesDeep = <T>(val: T): T => {
+  if (val == null) {
+    return val as T;
+  }
+
+  if (Array.isArray(val)) {
+    return val.map((item) => removeUndefinedValuesDeep(item)) as T;
+  }
+
+  if (typeof val === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(val)) {
+      if (value !== undefined) {
+        result[key] = removeUndefinedValuesDeep(value);
+      }
+    }
+    return result as T;
+  }
+
+  return val;
+};
+
+/**
+ * 条件が満たされるまで待機するユーティリティ
+ *
+ * @param callback 条件をチェックするコールバック関数
+ * @param options タイムアウトとチェック間隔のオプション
+ *
+ * @example
+ * ```tsx
+ * await waitFor(() => {
+ *   expect(result.current).toEqual([...]);
+ * });
+ * ```
+ */
+export const waitFor = async (
+  callback: () => void | Promise<void>,
+  options: {
+    timeout?: number;
+    interval?: number;
+  } = {},
+): Promise<void> => {
+  const { timeout = 1000, interval = 50 } = options;
+  const startTime = Date.now();
+
+  while (true) {
+    try {
+      await callback();
+      return;
+    } catch (error) {
+      if (Date.now() - startTime >= timeout) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
 };
