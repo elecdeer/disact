@@ -10,19 +10,16 @@ import type { Session } from "./session";
 type TestContext = {
   mockSession: Session;
   commitSpy: ReturnType<typeof vi.fn<Session["commit"]>>;
-  currentPayload: { value: PayloadElement };
+  currentPayload: { value: PayloadElement | null };
 };
 
 const test = base.extend<TestContext>({
   currentPayload: async ({}, use) => {
-    // 初期状態は空の container
+    // 初期状態は null (未コミット)
     const payload: {
-      value: PayloadElement;
+      value: PayloadElement | null;
     } = {
-      value: {
-        type: 17,
-        components: [{ type: 10, content: "" }],
-      },
+      value: null,
     };
     await use(payload);
   },
