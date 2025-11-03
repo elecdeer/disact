@@ -65,18 +65,16 @@ export type IntrinsicElements = {
   container: ContainerElement;
 };
 
-type PayloadElement = object | string;
+export type PayloadElement = z.infer<typeof rootElementSchema>;
 
 export const toPayload = (element: RenderedElement): PayloadElement => {
-  if (element.type === "text") {
-    return element.content;
-  }
-
   if (element.type === "intrinsic") {
     return rootElementSchema.parse(element);
   }
 
-  throw new Error(`Unknown rendered element type: ${JSON.stringify(element)}`);
+  throw new Error(
+    `Invalid root element type: ${element.type}. Only intrinsic elements are allowed at root level.`,
+  );
 };
 
 const rootElementSchema = z.discriminatedUnion("name", [
