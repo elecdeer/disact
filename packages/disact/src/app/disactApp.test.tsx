@@ -1,35 +1,52 @@
 /** @jsxImportSource .. */
 
 import { Suspense, use } from "@disact/engine";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { test as base, describe, expect, vi } from "vitest";
 import type { PayloadElement } from "../components";
 import { waitFor } from "../testing";
 import { createDisactApp } from "./disactApp";
 import type { Session } from "./session";
 
-describe("createDisactApp", () => {
-  let mockSession: Session;
-  let commitSpy: ReturnType<typeof vi.fn>;
-  let currentPayload: PayloadElement;
+type TestContext = {
+  mockSession: Session;
+  commitSpy: ReturnType<typeof vi.fn<Session["commit"]>>;
+  currentPayload: { value: PayloadElement };
+};
 
-  beforeEach(() => {
+const test = base.extend<TestContext>({
+  // biome-ignore lint/correctness/noEmptyPattern: vitest requires object destructuring
+  currentPayload: async ({}, use) => {
     // 初期状態は空の container
-    currentPayload = {
-      type: 17,
-      components: [{ type: 10, content: "" }],
+    const payload: {
+      value: PayloadElement;
+    } = {
+      value: {
+        type: 17,
+        components: [{ type: 10, content: "" }],
+      },
     };
-
-    commitSpy = vi.fn(async (payload: PayloadElement) => {
-      currentPayload = payload;
+    await use(payload);
+  },
+  commitSpy: async ({ currentPayload }, use) => {
+    const spy = vi.fn(async (payload: PayloadElement) => {
+      currentPayload.value = payload;
     });
-
-    mockSession = {
+    await use(spy);
+  },
+  mockSession: async ({ commitSpy, currentPayload }, use) => {
+    const session: Session = {
       commit: commitSpy,
-      getCurrent: vi.fn(async () => currentPayload),
+      getCurrent: vi.fn(async () => currentPayload.value),
     };
-  });
+    await use(session);
+  },
+});
 
-  it("初回レンダリング時に commit が呼ばれる", async () => {
+describe("createDisactApp", () => {
+  test("初回レンダリング時に commit が呼ばれる", async ({
+    mockSession,
+    commitSpy,
+  }) => {
     const app = createDisactApp();
 
     const Component = () => (
@@ -55,9 +72,13 @@ describe("createDisactApp", () => {
     });
   });
 
-  it("差分がある場合に commit が呼ばれる", async () => {
+  test("差分がある場合に commit が呼ばれる", async ({
+    mockSession,
+    commitSpy,
+    currentPayload,
+  }) => {
     // 初期状態を設定
-    currentPayload = {
+    currentPayload.value = {
       type: 17,
       components: [{ type: 10, content: "Initial" }],
     };
@@ -87,9 +108,13 @@ describe("createDisactApp", () => {
     });
   });
 
-  it("差分がない場合に commit が呼ばれない", async () => {
+  test("差分がない場合に commit が呼ばれない", async ({
+    mockSession,
+    commitSpy,
+    currentPayload,
+  }) => {
     // toPayload の結果と同じ形式で初期状態を設定（undefined プロパティも含める）
-    currentPayload = {
+    currentPayload.value = {
       type: 17,
       id: undefined,
       accent_color: undefined,
@@ -120,7 +145,10 @@ describe("createDisactApp", () => {
     expect(commitSpy).not.toHaveBeenCalled();
   });
 
-  it("Suspense で複数のチャンクが処理される", async () => {
+  test("Suspense で複数のチャンクが処理される", async ({
+    mockSession,
+    commitSpy,
+  }) => {
     const { promise, resolve } = Promise.withResolvers<string>();
 
     const AsyncData = () => {
@@ -173,7 +201,10 @@ describe("createDisactApp", () => {
     });
   });
 
-  it("複数の更新で差分がある場合のみ commit する", async () => {
+  test("複数の更新で差分がある場合のみ commit する", async ({
+    mockSession,
+    commitSpy,
+  }) => {
     const { promise: promise1, resolve: resolve1 } =
       Promise.withResolvers<string>();
     const { promise: promise2, resolve: resolve2 } =
@@ -229,7 +260,10 @@ describe("createDisactApp", () => {
     });
   });
 
-  it("ボタンとテキストを含む複雑なコンポーネントをレンダリングできる", async () => {
+  test("ボタンとテキストを含む複雑なコンポーネントをレンダリングできる", async ({
+    mockSession,
+    commitSpy,
+  }) => {
     const app = createDisactApp();
 
     const Component = () => (
