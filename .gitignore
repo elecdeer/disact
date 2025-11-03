@@ -133,5 +133,3 @@ dist
 # turbo
 .turbo
 
-# orval generated files
-packages/disact/src/api/
