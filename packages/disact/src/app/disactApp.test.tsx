@@ -14,7 +14,6 @@ type TestContext = {
 };
 
 const test = base.extend<TestContext>({
-  // biome-ignore lint/correctness/noEmptyPattern: vitest requires object destructuring
   currentPayload: async ({}, use) => {
     // 初期状態は空の container
     const payload: {
