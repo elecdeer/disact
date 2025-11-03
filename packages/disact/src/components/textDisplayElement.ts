@@ -1,10 +1,10 @@
 import type { DisactNode } from "@disact/engine";
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type TextDisplayComponentForMessageRequest,
-  TextDisplayComponentForMessageRequestType,
-} from "../api/models";
+  type APITextDisplayComponent,
+  ComponentType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 
 export type TextDisplayElement = {
   id?: number;
@@ -29,9 +29,10 @@ export const textDisplayElementSchema = z
       .pipe(z.string().min(1).max(4000)),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<TextDisplayComponentForMessageRequest> => ({
-      type: TextDisplayComponentForMessageRequestType.NUMBER_10,
-      id: obj.props.id,
-      content: obj.children,
-    }),
+    (obj): APITextDisplayComponent =>
+      removeUndefined({
+        type: ComponentType.TextDisplay as const,
+        id: obj.props.id,
+        content: obj.children,
+      }),
   );

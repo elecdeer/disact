@@ -1,9 +1,9 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type StringSelectComponentForMessageRequest,
-  StringSelectComponentForMessageRequestType,
-} from "../api/models";
+  type APIStringSelectComponent,
+  ComponentType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 
 // StringSelectのオプションスキーマ
 export const stringSelectOptionSchema = z.object({
@@ -56,15 +56,29 @@ export const stringSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<StringSelectComponentForMessageRequest> => ({
-      type: StringSelectComponentForMessageRequestType.NUMBER_3,
-      id: obj.props.id,
-      custom_id: obj.props.customId,
-      placeholder: obj.props.placeholder,
-      min_values: obj.props.minValues,
-      max_values: obj.props.maxValues,
-      disabled: obj.props.disabled,
-      required: obj.props.required,
-      options: obj.props.options,
-    }),
+    (obj): APIStringSelectComponent =>
+      removeUndefined({
+        type: ComponentType.StringSelect as const,
+        id: obj.props.id,
+        custom_id: obj.props.customId,
+        placeholder: obj.props.placeholder,
+        min_values: obj.props.minValues,
+        max_values: obj.props.maxValues,
+        disabled: obj.props.disabled,
+        required: obj.props.required,
+        options: obj.props.options.map((option) =>
+          removeUndefined({
+            label: option.label,
+            value: option.value,
+            description: option.description,
+            default: option.default,
+            emoji: option.emoji
+              ? removeUndefined({
+                  id: option.emoji.id,
+                  name: option.emoji.name,
+                })
+              : undefined,
+          }),
+        ),
+      }),
   );

@@ -1,10 +1,7 @@
 import type { DisactNode } from "@disact/engine";
-import type { UndefinedOnPartialDeep } from "type-fest";
+import { type APISectionComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
-import {
-  type SectionComponentForMessageRequest,
-  SectionComponentForMessageRequestType,
-} from "../api/models";
+import { removeUndefined } from "../utils/removeUndefined";
 import type { ButtonElement } from "./buttonElement";
 import { buttonElementSchema } from "./buttonElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
@@ -37,10 +34,11 @@ export const sectionElementSchema = z
     children: z.array(sectionComponentSchema).min(1).max(3),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<SectionComponentForMessageRequest> => ({
-      type: SectionComponentForMessageRequestType.NUMBER_9,
-      id: obj.props.id,
-      components: obj.children,
-      accessory: obj.props.accessory,
-    }),
+    (obj): APISectionComponent =>
+      removeUndefined({
+        type: ComponentType.Section as const,
+        id: obj.props.id,
+        components: obj.children,
+        accessory: obj.props.accessory,
+      }),
   );

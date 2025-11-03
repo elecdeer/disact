@@ -1,9 +1,10 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type RoleSelectComponentForMessageRequest,
-  RoleSelectComponentForMessageRequestType,
-} from "../api/models";
+  type APIRoleSelectComponent,
+  ComponentType,
+  SelectMenuDefaultValueType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export type RoleSelectElement = {
@@ -46,15 +47,19 @@ export const roleSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<RoleSelectComponentForMessageRequest> => ({
-      type: RoleSelectComponentForMessageRequestType.NUMBER_6,
-      id: obj.props.id,
-      custom_id: obj.props.customId,
-      placeholder: obj.props.placeholder,
-      min_values: obj.props.minValues,
-      max_values: obj.props.maxValues,
-      disabled: obj.props.disabled,
-      required: obj.props.required,
-      default_values: obj.props.defaultValues,
-    }),
+    (obj): APIRoleSelectComponent =>
+      removeUndefined({
+        type: ComponentType.RoleSelect as const,
+        id: obj.props.id,
+        custom_id: obj.props.customId,
+        placeholder: obj.props.placeholder,
+        min_values: obj.props.minValues,
+        max_values: obj.props.maxValues,
+        disabled: obj.props.disabled,
+        required: obj.props.required,
+        default_values: obj.props.defaultValues?.map((item) => ({
+          id: item.id,
+          type: SelectMenuDefaultValueType.Role as const,
+        })),
+      }),
   );

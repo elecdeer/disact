@@ -1,9 +1,10 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type ChannelSelectComponentForMessageRequest,
-  ChannelSelectComponentForMessageRequestType,
-} from "../api/models";
+  type APIChannelSelectComponent,
+  ComponentType,
+  SelectMenuDefaultValueType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export type ChannelSelectElement = {
@@ -48,9 +49,9 @@ export const channelSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<ChannelSelectComponentForMessageRequest> => {
-      return {
-        type: ChannelSelectComponentForMessageRequestType.NUMBER_8,
+    (obj): APIChannelSelectComponent =>
+      removeUndefined({
+        type: ComponentType.ChannelSelect as const,
         id: obj.props.id,
         custom_id: obj.props.customId,
         placeholder: obj.props.placeholder,
@@ -58,8 +59,10 @@ export const channelSelectElementSchema = z
         max_values: obj.props.maxValues,
         disabled: obj.props.disabled,
         required: obj.props.required,
-        default_values: obj.props.defaultValues,
+        default_values: obj.props.defaultValues?.map((item) => ({
+          id: item.id,
+          type: SelectMenuDefaultValueType.Channel as const,
+        })),
         channel_types: obj.props.channelTypes,
-      };
-    },
+      }),
   );

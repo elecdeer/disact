@@ -40,13 +40,12 @@
   "scripts": {
     "build": "tsup",
     "lint": "biome check ./src",
-    "generate:api": "orval"
+    "test": "vitest --project disact run"
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
     "@types/mdast": "catalog:",
     "@types/node": "catalog:",
-    "orval": "catalog:",
     "ts-dedent": "catalog:"
   },
   "keywords": [],
@@ -54,8 +53,10 @@
   "license": "MIT",
   "dependencies": {
     "@disact/engine": "workspace:*",
+    "discord-api-types": "^0.38.31",
     "mdast-util-gfm-strikethrough": "catalog:",
     "mdast-util-to-markdown": "catalog:",
+    "ofetch": "^1.4.1",
     "type-fest": "^5.1.0",
     "zod": "^4.1.12"
   }

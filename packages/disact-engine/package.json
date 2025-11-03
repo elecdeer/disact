@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsup",
     "lint": "biome check ./src",
-    "test": "vitest"
+    "test": "vitest --project disact-engine run"
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",

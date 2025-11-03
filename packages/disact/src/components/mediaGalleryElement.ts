@@ -1,7 +1,9 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
+import {
+  type APIMediaGalleryComponent,
+  ComponentType,
+} from "discord-api-types/v10";
 import * as z from "zod";
-import type { MediaGalleryComponentForMessageRequest } from "../api/models";
-import { MediaGalleryComponentForMessageRequestType } from "../api/models";
+import { removeUndefined } from "../utils/removeUndefined";
 
 export type MediaGalleryElement = {
   id?: number;
@@ -33,9 +35,16 @@ export const mediaGalleryElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<MediaGalleryComponentForMessageRequest> => ({
-      type: MediaGalleryComponentForMessageRequestType.NUMBER_12,
-      id: obj.props.id,
-      items: obj.props.items,
-    }),
+    (obj): APIMediaGalleryComponent =>
+      removeUndefined({
+        type: ComponentType.MediaGallery as const,
+        id: obj.props.id,
+        items: obj.props.items.map((item) =>
+          removeUndefined({
+            media: item.media,
+            description: item.description ?? null,
+            spoiler: item.spoiler,
+          }),
+        ),
+      }),
   );

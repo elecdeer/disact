@@ -2,7 +2,7 @@ import type { RenderedElement } from "@disact/engine";
 import * as z from "zod";
 import {
   type ActionRowElement,
-  actionRowElementSchema,
+  actionRowInMessageElementSchema,
 } from "./actionRowElement";
 import { type ButtonElement, buttonElementSchema } from "./buttonElement";
 import {
@@ -78,7 +78,7 @@ export const toPayload = (element: RenderedElement): PayloadElement => {
 };
 
 const rootElementSchema = z.discriminatedUnion("name", [
-  actionRowElementSchema,
+  actionRowInMessageElementSchema,
   buttonElementSchema,
   channelSelectElementSchema,
   containerElementSchema,

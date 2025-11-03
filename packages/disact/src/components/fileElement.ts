@@ -1,7 +1,6 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
+import { type APIFileComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
-import type { FileComponentForMessageRequest } from "../api/models";
-import { FileComponentForMessageRequestType } from "../api/models";
+import { removeUndefined } from "../utils/removeUndefined";
 
 export type FileElement = {
   id?: number;
@@ -27,10 +26,11 @@ export const fileElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<FileComponentForMessageRequest> => ({
-      type: FileComponentForMessageRequestType.NUMBER_13,
-      id: obj.props.id,
-      spoiler: obj.props.spoiler,
-      file: obj.props.file,
-    }),
+    (obj): APIFileComponent =>
+      removeUndefined({
+        type: ComponentType.File as const,
+        id: obj.props.id,
+        spoiler: obj.props.spoiler,
+        file: obj.props.file,
+      }),
   );

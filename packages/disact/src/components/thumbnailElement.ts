@@ -1,9 +1,9 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type ThumbnailComponentForMessageRequest,
-  ThumbnailComponentForMessageRequestType,
-} from "../api/models";
+  type APIThumbnailComponent,
+  ComponentType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 
 export type ThumbnailElement = {
   id?: number;
@@ -29,11 +29,12 @@ export const thumbnailElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<ThumbnailComponentForMessageRequest> => ({
-      type: ThumbnailComponentForMessageRequestType.NUMBER_11,
-      id: obj.props.id,
-      description: obj.props.description,
-      spoiler: obj.props.spoiler,
-      media: obj.props.media,
-    }),
+    (obj): APIThumbnailComponent =>
+      removeUndefined({
+        type: ComponentType.Thumbnail as const,
+        id: obj.props.id,
+        description: obj.props.description ?? null,
+        spoiler: obj.props.spoiler,
+        media: obj.props.media,
+      }),
   );

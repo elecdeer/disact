@@ -1,8 +1,11 @@
 import type { DisactNode } from "@disact/engine";
-import type { UndefinedOnPartialDeep } from "type-fest";
+import {
+  type APIActionRowComponent,
+  type APIComponentInMessageActionRow,
+  ComponentType,
+} from "discord-api-types/v10";
 import * as z from "zod";
-import type { ActionRowComponentForMessageRequest } from "../api/models";
-import { ActionRowComponentForMessageRequestType } from "../api/models";
+import { removeUndefined } from "../utils/removeUndefined";
 import { buttonElementSchema } from "./buttonElement";
 import { channelSelectElementSchema } from "./channelSelectElement";
 import { mentionableSelectElementSchema } from "./mentionableSelectElement";
@@ -15,7 +18,7 @@ export type ActionRowElement = {
   children: DisactNode;
 };
 
-export const actionRowElementSchema = z
+export const actionRowInMessageElementSchema = z
   .object({
     type: z.literal("intrinsic"),
     name: z.literal("actionRow"),
@@ -37,9 +40,10 @@ export const actionRowElementSchema = z
       .max(5),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<ActionRowComponentForMessageRequest> => ({
-      type: ActionRowComponentForMessageRequestType.NUMBER_1,
-      id: obj.props.id,
-      components: obj.children,
-    }),
+    (obj): APIActionRowComponent<APIComponentInMessageActionRow> =>
+      removeUndefined({
+        type: ComponentType.ActionRow as const,
+        id: obj.props.id,
+        components: obj.children,
+      }),
   );

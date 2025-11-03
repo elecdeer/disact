@@ -1,9 +1,10 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type UserSelectComponentForMessageRequest,
-  UserSelectComponentForMessageRequestType,
-} from "../api/models";
+  type APIUserSelectComponent,
+  ComponentType,
+  SelectMenuDefaultValueType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 import { snowflakeSchema } from "../utils/snowflakeSchema";
 
 export type UserSelectElement = {
@@ -46,15 +47,19 @@ export const userSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<UserSelectComponentForMessageRequest> => ({
-      type: UserSelectComponentForMessageRequestType.NUMBER_5,
-      id: obj.props.id,
-      custom_id: obj.props.customId,
-      placeholder: obj.props.placeholder,
-      min_values: obj.props.minValues,
-      max_values: obj.props.maxValues,
-      disabled: obj.props.disabled,
-      required: obj.props.required,
-      default_values: obj.props.defaultValues,
-    }),
+    (obj): APIUserSelectComponent =>
+      removeUndefined({
+        type: ComponentType.UserSelect as const,
+        id: obj.props.id,
+        custom_id: obj.props.customId,
+        placeholder: obj.props.placeholder,
+        min_values: obj.props.minValues,
+        max_values: obj.props.maxValues,
+        disabled: obj.props.disabled,
+        required: obj.props.required,
+        default_values: obj.props.defaultValues?.map((item) => ({
+          id: item.id,
+          type: SelectMenuDefaultValueType.User as const,
+        })),
+      }),
   );

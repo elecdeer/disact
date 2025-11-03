@@ -1,9 +1,9 @@
-import type { UndefinedOnPartialDeep } from "type-fest";
-import * as z from "zod";
 import {
-  type SeparatorComponentForMessageRequest,
-  SeparatorComponentForMessageRequestType,
-} from "../api/models";
+  type APISeparatorComponent,
+  ComponentType,
+} from "discord-api-types/v10";
+import * as z from "zod";
+import { removeUndefined } from "../utils/removeUndefined";
 
 export type SeparatorElement = {
   id?: number;
@@ -23,10 +23,11 @@ export const separatorElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<SeparatorComponentForMessageRequest> => ({
-      type: SeparatorComponentForMessageRequestType.NUMBER_14,
-      id: obj.props.id,
-      spacing: obj.props.spacing,
-      divider: obj.props.divider,
-    }),
+    (obj): APISeparatorComponent =>
+      removeUndefined({
+        type: ComponentType.Separator as const,
+        id: obj.props.id,
+        spacing: obj.props.spacing,
+        divider: obj.props.divider,
+      }),
   );

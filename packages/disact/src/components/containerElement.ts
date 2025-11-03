@@ -1,9 +1,11 @@
 import type { DisactNode } from "@disact/engine";
-import type { UndefinedOnPartialDeep } from "type-fest";
+import {
+  type APIContainerComponent,
+  ComponentType,
+} from "discord-api-types/v10";
 import * as z from "zod";
-import type { ContainerComponentForMessageRequest } from "../api/models";
-import { ContainerComponentForMessageRequestType } from "../api/models";
-import { actionRowElementSchema } from "./actionRowElement";
+import { removeUndefined } from "../utils/removeUndefined";
+import { actionRowInMessageElementSchema } from "./actionRowElement";
 import { fileElementSchema } from "./fileElement";
 import { mediaGalleryElementSchema } from "./mediaGalleryElement";
 import { sectionElementSchema } from "./sectionElement";
@@ -18,7 +20,7 @@ export type ContainerElement = {
 };
 
 const containerComponentsSchema = z.discriminatedUnion("name", [
-  actionRowElementSchema,
+  actionRowInMessageElementSchema,
   fileElementSchema,
   mediaGalleryElementSchema,
   sectionElementSchema,
@@ -38,11 +40,12 @@ export const containerElementSchema = z
     children: z.array(containerComponentsSchema).min(1).max(40),
   })
   .transform(
-    (obj): UndefinedOnPartialDeep<ContainerComponentForMessageRequest> => ({
-      type: ContainerComponentForMessageRequestType.NUMBER_17,
-      id: obj.props.id,
-      accent_color: obj.props.accentColor,
-      components: obj.children,
-      spoiler: obj.props.spoiler,
-    }),
+    (obj): APIContainerComponent =>
+      removeUndefined({
+        type: ComponentType.Container as const,
+        id: obj.props.id,
+        accent_color: obj.props.accentColor,
+        components: obj.children,
+        spoiler: obj.props.spoiler,
+      }),
   );
