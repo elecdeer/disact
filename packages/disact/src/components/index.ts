@@ -65,7 +65,7 @@ export type IntrinsicElements = {
   container: ContainerElement;
 };
 
-export type PayloadElement = z.infer<typeof rootElementSchema>;
+export type PayloadElement = z.output<typeof rootElementSchema>;
 
 export const toPayload = (element: RenderedElement): PayloadElement => {
   if (element.type === "intrinsic") {

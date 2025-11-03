@@ -1,4 +1,5 @@
 import { type DisactElement, renderToReadableStream } from "@disact/engine";
+import { toPayload } from "../components";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
 
@@ -12,16 +13,18 @@ export const createDisactApp = (): DisactApp => {
 
     void (async () => {
       for await (const chunk of stream) {
-        if (chunk === null)
-          throw new Error("Received null chunk from render stream");
+        if (chunk === null || Array.isArray(chunk)) {
+          throw new Error("Unexpected chunk format");
+        }
 
         const current = await session.getCurrent();
+        const chunkPayload = toPayload(chunk);
         // 差分がない場合はスキップ
-        if (!isDifferentPayloadElement(current, chunk)) {
+        if (!isDifferentPayloadElement(current, chunkPayload)) {
           continue;
         }
 
-        await session.commit(chunk);
+        await session.commit(chunkPayload);
       }
     })();
   };
