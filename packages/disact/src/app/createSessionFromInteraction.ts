@@ -1,4 +1,7 @@
-import type { RESTPatchAPIWebhookWithTokenMessageJSONBody } from "discord-api-types/v10";
+import type {
+  APIApplicationCommandInteraction,
+  RESTPatchAPIWebhookWithTokenMessageJSONBody,
+} from "discord-api-types/v10";
 import {
   createInteractionResponse,
   getOriginalWebhookMessage,
@@ -8,28 +11,10 @@ import type { PayloadElement } from "../components/index.ts";
 import type { Session } from "./session";
 
 /**
- * Application Command Interactionオブジェクトの最小型定義
- * Discord APIから渡されるinteractionオブジェクトの構造
+ * Application Command Interactionの型
+ * discord-api-types/v10のAPIApplicationCommandInteractionを使用
  */
-export type ApplicationCommandInteraction = {
-  /** Interaction ID */
-  id: string;
-  /** Application ID */
-  application_id: string;
-  /** Interaction Type (2 for Application Command) */
-  type: 2;
-  /** Interaction token - valid for 15 minutes */
-  token: string;
-  /** Command data */
-  data?: unknown;
-  /** Guild ID (if invoked in a guild) */
-  guild_id?: string;
-  /** Channel ID where invoked */
-  channel_id?: string;
-  /** User who invoked (in DMs) or member who invoked (in guilds) */
-  member?: unknown;
-  user?: unknown;
-};
+export type ApplicationCommandInteraction = APIApplicationCommandInteraction;
 
 /**
  * Application Command InteractionからSessionを作成する際のオプション

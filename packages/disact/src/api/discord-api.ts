@@ -1,14 +1,15 @@
 /**
  * Discord API client using ofetch and discord-api-types
  */
-import { ofetch } from "ofetch";
+
 import type {
-	RESTPostAPIInteractionCallbackJSONBody,
-	RESTPostAPIInteractionCallbackResult,
-	RESTGetAPIWebhookWithTokenMessageResult,
-	RESTPatchAPIWebhookWithTokenMessageJSONBody,
-	RESTPatchAPIWebhookWithTokenMessageResult,
+  RESTGetAPIWebhookWithTokenMessageResult,
+  RESTPatchAPIWebhookWithTokenMessageJSONBody,
+  RESTPatchAPIWebhookWithTokenMessageResult,
+  RESTPostAPIInteractionCallbackJSONBody,
+  RESTPostAPIInteractionCallbackResult,
 } from "discord-api-types/v10";
+import { ofetch } from "ofetch";
 
 const API_BASE_URL = "https://discord.com/api/v10";
 
@@ -17,17 +18,17 @@ const API_BASE_URL = "https://discord.com/api/v10";
  * POST /interactions/{interaction.id}/{interaction.token}/callback
  */
 export const createInteractionResponse = async (
-	interactionId: string,
-	interactionToken: string,
-	body: RESTPostAPIInteractionCallbackJSONBody,
+  interactionId: string,
+  interactionToken: string,
+  body: RESTPostAPIInteractionCallbackJSONBody,
 ): Promise<RESTPostAPIInteractionCallbackResult | void> => {
-	return await ofetch(
-		`${API_BASE_URL}/interactions/${interactionId}/${interactionToken}/callback`,
-		{
-			method: "POST",
-			body,
-		},
-	);
+  return await ofetch(
+    `${API_BASE_URL}/interactions/${interactionId}/${interactionToken}/callback`,
+    {
+      method: "POST",
+      body,
+    },
+  );
 };
 
 /**
@@ -35,15 +36,15 @@ export const createInteractionResponse = async (
  * GET /webhooks/{application.id}/{interaction.token}/messages/@original
  */
 export const getOriginalWebhookMessage = async (
-	applicationId: string,
-	interactionToken: string,
+  applicationId: string,
+  interactionToken: string,
 ): Promise<RESTGetAPIWebhookWithTokenMessageResult> => {
-	return await ofetch(
-		`${API_BASE_URL}/webhooks/${applicationId}/${interactionToken}/messages/@original`,
-		{
-			method: "GET",
-		},
-	);
+  return await ofetch(
+    `${API_BASE_URL}/webhooks/${applicationId}/${interactionToken}/messages/@original`,
+    {
+      method: "GET",
+    },
+  );
 };
 
 /**
@@ -51,18 +52,15 @@ export const getOriginalWebhookMessage = async (
  * PATCH /webhooks/{application.id}/{interaction.token}/messages/@original
  */
 export const updateOriginalWebhookMessage = async (
-	applicationId: string,
-	interactionToken: string,
-	body: RESTPatchAPIWebhookWithTokenMessageJSONBody,
+  applicationId: string,
+  interactionToken: string,
+  body: RESTPatchAPIWebhookWithTokenMessageJSONBody,
 ): Promise<RESTPatchAPIWebhookWithTokenMessageResult> => {
-	return await ofetch(
-		`${API_BASE_URL}/webhooks/${applicationId}/${interactionToken}/messages/@original`,
-		{
-			method: "PATCH",
-			body,
-		},
-	);
+  return await ofetch(
+    `${API_BASE_URL}/webhooks/${applicationId}/${interactionToken}/messages/@original`,
+    {
+      method: "PATCH",
+      body,
+    },
+  );
 };
-
-
-

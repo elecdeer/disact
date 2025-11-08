@@ -13,18 +13,15 @@ vi.mock("../api/discord-api", () => ({
 }));
 
 // テスト用のモックinteractionオブジェクト
-const createMockInteraction = (): ApplicationCommandInteraction => ({
-  id: "interaction-id-123",
-  application_id: "app-id-456",
-  type: 2,
-  token: "interaction-token-xyz",
-  data: {
-    id: "command-id",
-    name: "test-command",
-  },
-  guild_id: "guild-id-789",
-  channel_id: "channel-id-abc",
-});
+const createMockInteraction = (): ApplicationCommandInteraction =>
+  ({
+    id: "interaction-id-123",
+    application_id: "app-id-456",
+    type: 2,
+    token: "interaction-token-xyz",
+    guild_id: "guild-id-789",
+    channel_id: "channel-id-abc",
+  }) as ApplicationCommandInteraction;
 
 describe("createSessionFromApplicationCommandInteraction", () => {
   it("初回のgetCurrentはnullを返す", async () => {
@@ -66,10 +63,6 @@ describe("createSessionFromApplicationCommandInteraction", () => {
         type: 4,
         data: expect.any(Object),
       }),
-      undefined,
-      expect.objectContaining({
-        headers: expect.any(Object),
-      }),
     );
 
     // 2回目はupdateOriginalWebhookMessageが呼ばれることを確認
@@ -78,10 +71,6 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       interaction.application_id,
       interaction.token,
       payload2,
-      undefined,
-      expect.objectContaining({
-        headers: expect.any(Object),
-      }),
     );
   });
 
@@ -116,10 +105,6 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       interaction.application_id,
       interaction.token,
       payload2,
-      undefined,
-      expect.objectContaining({
-        headers: expect.any(Object),
-      }),
     );
   });
 
@@ -127,26 +112,22 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     const { getOriginalWebhookMessage } = await import("../api/discord-api");
 
     const mockMessageResponse = {
-      data: {
-        id: "message-id",
-        channel_id: "channel-id",
-        author: { id: "author-id", username: "bot", discriminator: "0000" },
-        content: "",
-        timestamp: new Date().toISOString(),
-        edited_timestamp: null,
-        tts: false,
-        mention_everyone: false,
-        mentions: [],
-        mention_roles: [],
-        attachments: [],
-        embeds: [],
-        pinned: false,
-        type: 0,
-        flags: 0,
-        components: [{ type: 10, content: "Hello World" }],
-      },
-      status: 200,
-      headers: new Headers(),
+      id: "message-id",
+      channel_id: "channel-id",
+      author: { id: "author-id", username: "bot", discriminator: "0000" },
+      content: "",
+      timestamp: new Date().toISOString(),
+      edited_timestamp: null,
+      tts: false,
+      mention_everyone: false,
+      mentions: [],
+      mention_roles: [],
+      attachments: [],
+      embeds: [],
+      pinned: false,
+      type: 0,
+      flags: 0,
+      components: [{ type: 10, content: "Hello World" }],
     };
 
     vi.mocked(getOriginalWebhookMessage).mockResolvedValue(
@@ -173,10 +154,6 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     expect(getOriginalWebhookMessage).toHaveBeenCalledWith(
       interaction.application_id,
       interaction.token,
-      undefined,
-      expect.objectContaining({
-        headers: expect.any(Object),
-      }),
     );
 
     expect(current).toEqual([{ type: 10, content: "Hello World" }]);
@@ -212,11 +189,7 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     vi.mocked(getOriginalWebhookMessage).mockClear();
 
     const mockMessageResponse = {
-      data: {
-        components: [{ type: 10, content: "From API" }],
-      },
-      status: 200,
-      headers: new Headers(),
+      components: [{ type: 10, content: "From API" }],
     };
 
     vi.mocked(getOriginalWebhookMessage).mockResolvedValue(
@@ -259,19 +232,6 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     );
 
     // ephemeralは現在実装されていないが、オプションとして指定可能
-    expect(session).toBeDefined();
-  });
-
-  it("カスタムbaseUrlを指定できる（将来の拡張用）", async () => {
-    const interaction = createMockInteraction();
-    const session = createSessionFromApplicationCommandInteraction(
-      interaction,
-      {
-        baseUrl: "https://custom-api.example.com/v10",
-      },
-    );
-
-    // baseUrlは現在使用されていないが、オプションとして指定可能
     expect(session).toBeDefined();
   });
 });
