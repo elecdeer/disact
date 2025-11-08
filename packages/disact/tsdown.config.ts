@@ -6,7 +6,7 @@ export default defineConfig({
     "jsx-runtime": "src/jsx-runtime.ts",
     "jsx-dev-runtime": "src/jsx-dev-runtime.ts",
   },
-  format: ["cjs", "esm"],
+  format: ["esm"],
   sourcemap: true,
   clean: true,
   dts: true,
