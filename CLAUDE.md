@@ -66,3 +66,14 @@ cd packages/disact-engine && npx vitest
 - TypeScript strict mode enabled
 - ESM modules with dual CJS/ESM exports
 - Supports both import and require for compatibility
+
+### Referencing discord-api-types Type Definitions
+
+When you need to reference discord-api-types type definitions:
+
+1. **Find the package path**:
+```bash
+npm list -r --depth 0 --parseable discord-api-types
+```
+
+2. **Check the `.d.ts` files** in the returned path to understand the actual type structures
