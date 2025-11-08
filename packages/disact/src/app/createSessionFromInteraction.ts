@@ -1,13 +1,11 @@
-import type {
-  APIApplicationCommandInteraction,
-  RESTPatchAPIWebhookWithTokenMessageJSONBody,
-} from "discord-api-types/v10";
+import type { APIApplicationCommandInteraction } from "discord-api-types/v10";
 import {
   createInteractionResponse,
   getOriginalWebhookMessage,
   updateOriginalWebhookMessage,
 } from "../api/discord-api";
 import type { PayloadElements } from "../components/index.ts";
+import { messageFlags } from "../utils/messageFlags";
 import type { Session } from "./session";
 
 /**
@@ -61,21 +59,25 @@ export const createSessionFromApplicationCommandInteraction = (
         await createInteractionResponse(interaction.id, interaction.token, {
           type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
           data: {
-            ...(payload as any),
-            ...(ephemeral ? { flags: 64 } : {}),
+            components: payload,
+            flags: messageFlags({
+              isComponentsV2: true,
+              ephemeral,
+            }),
           },
         });
         hasCommitted = true;
-        cachedPayload = payload;
       } else {
         // 2回目以降: PATCH /webhooks/{application.id}/{interaction.token}/messages/@original
         await updateOriginalWebhookMessage(
           interaction.application_id,
           interaction.token,
-          payload as unknown as RESTPatchAPIWebhookWithTokenMessageJSONBody,
+          {
+            components: payload,
+          },
         );
-        cachedPayload = payload;
       }
+      cachedPayload = payload;
     },
 
     getCurrent: async (): Promise<PayloadElements | null> => {
