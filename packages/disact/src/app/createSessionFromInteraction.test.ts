@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { PayloadElement } from "../components";
+import type { PayloadElements } from "../components";
 import {
   type ApplicationCommandInteraction,
   createSessionFromApplicationCommandInteraction,
@@ -41,15 +41,19 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     const interaction = createMockInteraction();
     const session = createSessionFromApplicationCommandInteraction(interaction);
 
-    const payload1: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "First" }],
-    };
+    const payload1: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "First" }],
+      },
+    ];
 
-    const payload2: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "Second" }],
-    };
+    const payload2: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Second" }],
+      },
+    ];
 
     await session.commit(payload1);
     await session.commit(payload2);
@@ -83,15 +87,19 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     const interaction = createMockInteraction();
     const session = createSessionFromApplicationCommandInteraction(interaction);
 
-    const payload1: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "First" }],
-    };
+    const payload1: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "First" }],
+      },
+    ];
 
-    const payload2: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "Second" }],
-    };
+    const payload2: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Second" }],
+      },
+    ];
 
     await session.commit(payload1);
     await session.commit(payload2);
@@ -142,10 +150,12 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       },
     );
 
-    const payload: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "Hello World" }],
-    };
+    const payload: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Hello World" }],
+      },
+    ];
 
     await session.commit(payload);
 
@@ -166,10 +176,12 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     const interaction = createMockInteraction();
     const session = createSessionFromApplicationCommandInteraction(interaction);
 
-    const payload: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "Cached" }],
-    };
+    const payload: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Cached" }],
+      },
+    ];
 
     await session.commit(payload);
 
@@ -204,10 +216,12 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       },
     );
 
-    const payload: PayloadElement = {
-      type: 17,
-      components: [{ type: 10, content: "Committed" }],
-    };
+    const payload: PayloadElements = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Committed" }],
+      },
+    ];
 
     await session.commit(payload);
 

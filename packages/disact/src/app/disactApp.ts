@@ -1,5 +1,5 @@
 import { type DisactElement, renderToReadableStream } from "@disact/engine";
-import { toPayload } from "../components";
+import { toMessageComponentsPayload } from "../components";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
 
@@ -18,7 +18,7 @@ export const createDisactApp = (): DisactApp => {
         }
 
         const current = await session.getCurrent();
-        const chunkPayload = toPayload(chunk);
+        const chunkPayload = toMessageComponentsPayload(chunk);
         // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
         if (
           current !== null &&

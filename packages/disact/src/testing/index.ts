@@ -1,6 +1,6 @@
 import type { DisactElement, RenderResult } from "@disact/engine";
 import { renderToReadableStream } from "@disact/engine";
-import { toPayload } from "../components/index";
+import { toMessageComponentsPayload } from "../components/index";
 
 type PayloadElement = object | string;
 
@@ -72,10 +72,10 @@ const renderResultToPayloads = (result: RenderResult): PayloadElement[] => {
   }
 
   if (Array.isArray(result)) {
-    return result.map((element) => toPayload(element));
+    return result.map((element) => toMessageComponentsPayload(element));
   }
 
-  return [toPayload(result)];
+  return [toMessageComponentsPayload(result)];
 };
 
 export const removeUndefinedValuesDeep = <T>(val: T): T => {

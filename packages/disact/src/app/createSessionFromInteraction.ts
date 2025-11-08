@@ -7,7 +7,7 @@ import {
   getOriginalWebhookMessage,
   updateOriginalWebhookMessage,
 } from "../api/discord-api";
-import type { PayloadElement } from "../components/index.ts";
+import type { PayloadElements } from "../components/index.ts";
 import type { Session } from "./session";
 
 /**
@@ -52,10 +52,10 @@ export const createSessionFromApplicationCommandInteraction = (
   const alwaysFetch = options?.alwaysFetch ?? false;
 
   let hasCommitted = false;
-  let cachedPayload: PayloadElement | null = null;
+  let cachedPayload: PayloadElements | null = null;
 
   return {
-    commit: async (payload: PayloadElement): Promise<void> => {
+    commit: async (payload: PayloadElements): Promise<void> => {
       if (!hasCommitted) {
         // 初回: POST /interactions/{interaction.id}/{interaction.token}/callback
         await createInteractionResponse(interaction.id, interaction.token, {
@@ -78,7 +78,7 @@ export const createSessionFromApplicationCommandInteraction = (
       }
     },
 
-    getCurrent: async (): Promise<PayloadElement | null> => {
+    getCurrent: async (): Promise<PayloadElements | null> => {
       if (!hasCommitted) {
         return null;
       }
@@ -95,7 +95,7 @@ export const createSessionFromApplicationCommandInteraction = (
 
       if (response.components) {
         // MessageResponse.components を PayloadElement として返す
-        const payload = response.components as unknown as PayloadElement;
+        const payload = response.components as unknown as PayloadElements;
         cachedPayload = payload;
         return payload;
       }

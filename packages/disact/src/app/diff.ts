@@ -1,54 +1,20 @@
-import type { PayloadElement } from "../components";
+import type { PayloadElements } from "../components";
 
 /**
  * 再帰的にPayloadElementを比較し、異なる場合にtrueを返す
  */
 export const isDifferentPayloadElement = (
-  prev: PayloadElement,
-  next: PayloadElement,
+  prev: PayloadElements,
+  next: PayloadElements,
 ): boolean => {
   // 同じ参照なら false
   if (prev === next) return false;
 
-  // 型が異なる場合は true
-  const prevType = typeof prev;
-  const nextType = typeof next;
-  if (prevType !== nextType) return true;
+  // 配列の長さが異なる場合は true
+  if (prev.length !== next.length) return true;
 
-  // プリミティブ値の比較
-  if (prevType !== "object" || prev === null || next === null) {
-    return prev !== next;
-  }
-
-  // 配列の比較
-  if (Array.isArray(prev) && Array.isArray(next)) {
-    if (prev.length !== next.length) return true;
-    return prev.some((item, index) =>
-      isDifferentPayloadElement(item, next[index]),
-    );
-  }
-
-  // 配列と非配列の比較
-  if (Array.isArray(prev) !== Array.isArray(next)) return true;
-
-  // オブジェクトの比較
-  const prevKeys = Object.keys(prev);
-  const nextKeys = Object.keys(next);
-
-  // キーの数が異なる場合は true
-  if (prevKeys.length !== nextKeys.length) return true;
-
-  // すべてのキーの値を再帰的に比較
-  for (const key of prevKeys) {
-    if (!(key in next)) return true;
-    const prevValue = prev[key as keyof typeof prev];
-    const nextValue = next[key as keyof typeof next];
-    if (isDifferent(prevValue, nextValue)) {
-      return true;
-    }
-  }
-
-  return false;
+  // 各要素を再帰的に比較
+  return prev.some((item, index) => isDifferent(item, next[index]));
 };
 
 /**

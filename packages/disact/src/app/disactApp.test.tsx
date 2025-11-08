@@ -2,7 +2,7 @@
 
 import { Suspense, use } from "@disact/engine";
 import { test as base, describe, expect, vi } from "vitest";
-import type { PayloadElement } from "../components";
+import type { PayloadElements } from "../components";
 import { waitFor } from "../testing";
 import { createDisactApp } from "./disactApp";
 import type { Session } from "./session";
@@ -10,21 +10,21 @@ import type { Session } from "./session";
 type TestContext = {
   mockSession: Session;
   commitSpy: ReturnType<typeof vi.fn<Session["commit"]>>;
-  currentPayload: { value: PayloadElement | null };
+  currentPayload: { value: PayloadElements | null };
 };
 
 const test = base.extend<TestContext>({
   currentPayload: async ({}, use) => {
     // 初期状態は null (未コミット)
     const payload: {
-      value: PayloadElement | null;
+      value: PayloadElements | null;
     } = {
       value: null,
     };
     await use(payload);
   },
   commitSpy: async ({ currentPayload }, use) => {
-    const spy = vi.fn(async (payload: PayloadElement) => {
+    const spy = vi.fn(async (payload: PayloadElements) => {
       currentPayload.value = payload;
     });
     await use(spy);

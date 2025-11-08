@@ -1,6 +1,6 @@
-import type { PayloadElement } from "../components/index.ts";
+import type { PayloadElements } from "../components/index.ts";
 
 export type Session = {
-  commit: (payload: PayloadElement) => Promise<void>;
-  getCurrent: () => Promise<PayloadElement | null>;
+  commit: (payload: PayloadElements) => Promise<void>;
+  getCurrent: () => Promise<PayloadElements | null>;
 };
