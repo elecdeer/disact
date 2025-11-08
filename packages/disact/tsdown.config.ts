@@ -12,4 +12,5 @@ export default defineConfig({
   dts: {
     sourcemap: true,
   },
+  unbundle: true,
 });
