@@ -21,14 +21,23 @@ export const createInteractionResponse = async (
   interactionId: string,
   interactionToken: string,
   body: RESTPostAPIInteractionCallbackJSONBody,
-): Promise<RESTPostAPIInteractionCallbackResult | void> => {
-  return await ofetch(
-    `${API_BASE_URL}/interactions/${interactionId}/${interactionToken}/callback`,
-    {
-      method: "POST",
-      body,
-    },
-  );
+): Promise<RESTPostAPIInteractionCallbackResult> => {
+  try {
+    console.log("Sending interaction response:", JSON.stringify(body, null, 2));
+    return await ofetch(
+      `${API_BASE_URL}/interactions/${interactionId}/${interactionToken}/callback`,
+      {
+        method: "POST",
+        body,
+      },
+    );
+  } catch (error) {
+    console.error("Discord API Error:", error);
+    if (error && typeof error === "object" && "data" in error) {
+      console.error("Error details:", JSON.stringify(error.data, null, 2));
+    }
+    throw error;
+  }
 };
 
 /**
