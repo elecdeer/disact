@@ -2,15 +2,13 @@ import type { DisactNode } from "@disact/engine";
 import { type APISectionComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../utils/removeUndefined";
-import type { ButtonElement } from "./buttonElement";
 import { buttonElementSchema } from "./buttonElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
-import type { ThumbnailElement } from "./thumbnailElement";
 import { thumbnailElementSchema } from "./thumbnailElement";
 
 export type SectionElement = {
   id?: number;
-  accessory: ButtonElement | ThumbnailElement;
+  accessory: DisactNode;
   children: DisactNode;
 };
 
