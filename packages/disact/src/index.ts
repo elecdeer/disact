@@ -11,8 +11,8 @@ export type {
   TextInstance,
 } from "./reconciler/types.js";
 export type {
+  DisactElement,
+  DisactNode,
   FC,
   PropsWithChildren,
-  ReactElement,
-  ReactNode,
 } from "./types.js";

@@ -3,13 +3,13 @@
  * These demonstrate how to define Discord-specific components
  */
 
-import type { ReactNode } from "../types.js";
+import type { DisactNode } from "../types.js";
 
 /**
  * Button component example
  */
 type ButtonProps = {
-  children?: ReactNode;
+  children?: DisactNode;
   disabled?: boolean;
 } & (
   | { style: "primary" | "secondary" | "success" | "danger"; customId: string }
@@ -26,8 +26,8 @@ export const Button = ({ children, ...props }: ButtonProps) => {
  */
 type SectionProps = {
   id?: number;
-  children?: ReactNode;
-  accessory?: ReactNode;
+  children?: DisactNode;
+  accessory?: DisactNode;
 };
 
 export const Section = ({ children, accessory, ...props }: SectionProps) => {
