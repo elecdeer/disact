@@ -62,9 +62,6 @@ importers:
 
   packages/disact:
     dependencies:
-      '@disact/engine':
-        specifier: workspace:*
-        version: link:../disact-engine
       discord-api-types:
         specifier: ^0.38.31
         version: 0.38.31
@@ -77,6 +74,12 @@ importers:
       ofetch:
         specifier: ^1.4.1
         version: 1.5.1
+      react:
+        specifier: ^19.2.0
+        version: 19.2.0
+      react-reconciler:
+        specifier: ^0.33.0
+        version: 0.33.0(react@19.2.0)
       type-fest:
         specifier: ^5.1.0
         version: 5.1.0
@@ -90,25 +93,6 @@ importers:
       '@types/mdast':
         specifier: 'catalog:'
         version: 4.0.4
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.18.6
-      ts-dedent:
-        specifier: 'catalog:'
-        version: 2.2.0
-
-  packages/disact-engine:
-    dependencies:
-      react:
-        specifier: ^19.2.0
-        version: 19.2.0
-      react-reconciler:
-        specifier: ^0.33.0
-        version: 0.33.0(react@19.2.0)
-    devDependencies:
-      '@monorepo/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
       '@types/node':
         specifier: 'catalog:'
         version: 22.18.6

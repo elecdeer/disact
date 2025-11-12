@@ -5,8 +5,13 @@
 import React from "react";
 import type { HostConfig, ReactContext } from "react-reconciler";
 import { DefaultEventPriority } from "react-reconciler/constants";
-import type { PropsBase } from "../element.js";
-import type { ChildSet, Container, Instance, TextInstance } from "./types.js";
+import type {
+  ChildSet,
+  Container,
+  Instance,
+  PropsBase,
+  TextInstance,
+} from "./types.js";
 
 type Type = string;
 type Props = PropsBase;

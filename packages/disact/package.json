@@ -20,23 +20,27 @@
   "scripts": {
     "build": "tsdown",
     "lint": "biome check ./src",
-    "test": "vitest --project disact run"
+    "test": "vitest --project disact run",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
     "@types/mdast": "catalog:",
     "@types/node": "catalog:",
+    "@types/react": "^19.0.0",
+    "@types/react-reconciler": "^0.32.3",
     "ts-dedent": "catalog:"
   },
   "keywords": [],
   "author": "elecdeer",
   "license": "MIT",
   "dependencies": {
-    "@disact/engine": "workspace:*",
     "discord-api-types": "^0.38.31",
     "mdast-util-gfm-strikethrough": "catalog:",
     "mdast-util-to-markdown": "catalog:",
     "ofetch": "^1.4.1",
+    "react": "^19.2.0",
+    "react-reconciler": "^0.33.0",
     "type-fest": "^5.1.0",
     "zod": "^4.1.12"
   }

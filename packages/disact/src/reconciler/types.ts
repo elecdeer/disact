@@ -2,7 +2,10 @@
  * Instance types for the React reconciler
  */
 
-import type { PropsBase } from "../element.js";
+/**
+ * Base type for component props
+ */
+export type PropsBase = Record<PropertyKey, unknown>;
 
 /**
  * Represents a rendered element instance
