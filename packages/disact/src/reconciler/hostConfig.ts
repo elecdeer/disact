@@ -7,9 +7,9 @@ import type { HostConfig, ReactContext } from "react-reconciler";
 import { DefaultEventPriority } from "react-reconciler/constants";
 import type {
   ChildSet,
-  Container,
   Instance,
   PropsBase,
+  RenderContainer,
   TextInstance,
 } from "./types.js";
 
@@ -30,7 +30,7 @@ type TransitionStatus = null;
 const createInstance = (
   type: Type,
   props: Props,
-  _rootContainer: Container,
+  _rootContainer: RenderContainer,
   _hostContext: HostContext,
   _internalHandle: unknown,
 ): Instance => {
@@ -50,7 +50,7 @@ const createInstance = (
  */
 const createTextInstance = (
   text: string,
-  _rootContainer: Container,
+  _rootContainer: RenderContainer,
   _hostContext: HostContext,
   _internalHandle: unknown,
 ): TextInstance => {
@@ -117,7 +117,7 @@ const cloneHiddenTextInstance = (
 /**
  * Creates a container child set for batching children
  */
-const createContainerChildSet = (_container: Container): ChildSet => {
+const createContainerChildSet = (_container: RenderContainer): ChildSet => {
   return [];
 };
 
@@ -135,7 +135,7 @@ const appendChildToContainerChildSet = (
  * Finalizes the container children by replacing them
  */
 const finalizeContainerChildren = (
-  _container: Container,
+  _container: RenderContainer,
   _newChildren: ChildSet,
 ): void => {
   // Nothing to do here for our use case
@@ -145,7 +145,7 @@ const finalizeContainerChildren = (
  * Replaces container children with a new set
  */
 const replaceContainerChildren = (
-  container: Container,
+  container: RenderContainer,
   newChildren: ChildSet,
 ): void => {
   container.root = newChildren;
@@ -155,7 +155,7 @@ const replaceContainerChildren = (
  * Appends child to container
  */
 const appendChildToContainer = (
-  container: Container,
+  container: RenderContainer,
   child: Instance | TextInstance,
 ): void => {
   container.root.push(child);
@@ -165,7 +165,7 @@ const appendChildToContainer = (
  * Inserts child before another child in container
  */
 const insertInContainerBefore = (
-  container: Container,
+  container: RenderContainer,
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance,
 ): void => {
@@ -179,7 +179,7 @@ const insertInContainerBefore = (
  * Removes child from container
  */
 const removeChildFromContainer = (
-  container: Container,
+  container: RenderContainer,
   child: Instance | TextInstance,
 ): void => {
   const index = container.root.indexOf(child);
@@ -194,7 +194,7 @@ const removeChildFromContainer = (
 export const hostConfig: HostConfig<
   Type,
   Props,
-  Container,
+  RenderContainer,
   Instance,
   TextInstance,
   SuspenseInstance,

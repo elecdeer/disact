@@ -1,13 +1,22 @@
 import { type APIFileComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../utils/removeUndefined.js";
 
-export type FileElement = {
+export type FileProps = {
   id?: number;
   spoiler?: boolean;
   file: {
     url: string;
   };
+};
+
+/**
+ * File Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#file
+ */
+export const File = (props: FileProps) => {
+  return <file {...props} />;
 };
 
 const unfurledMediaSchema = z.object({
@@ -16,8 +25,8 @@ const unfurledMediaSchema = z.object({
 
 export const fileElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("file"),
+    type: z.literal("file"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       spoiler: z.optional(z.boolean()),

@@ -4,7 +4,7 @@
 
 import type { ReactElement } from "react";
 import { reconciler } from "./reconciler.js";
-import type { Container, Instance, TextInstance } from "./types.js";
+import type { Instance, RenderContainer, TextInstance } from "./types.js";
 
 /**
  * Renders a React element using the reconciler
@@ -17,7 +17,7 @@ export const renderToInstance = (
   return new Promise((resolve, reject) => {
     try {
       // Create container
-      const container: Container = { root: [] };
+      const container: RenderContainer = { root: [] };
 
       // Create root
       const root = reconciler.createContainer(

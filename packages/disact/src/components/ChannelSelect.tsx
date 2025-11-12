@@ -1,13 +1,14 @@
 import {
-  type APIRoleSelectComponent,
+  type APIChannelSelectComponent,
+  type ChannelType,
   ComponentType,
   SelectMenuDefaultValueType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { snowflakeSchema } from "../utils/snowflakeSchema";
+import { removeUndefined } from "../utils/removeUndefined.js";
+import { snowflakeSchema } from "../utils/snowflakeSchema.js";
 
-export type RoleSelectElement = {
+export type ChannelSelectProps = {
   id?: number;
   customId: string;
   placeholder?: string;
@@ -15,16 +16,26 @@ export type RoleSelectElement = {
   maxValues?: number;
   disabled?: boolean;
   required?: boolean;
+  channelTypes?: ChannelType[];
   defaultValues?: Array<{
     id: string;
-    type: "role";
+    type: "channel";
   }>;
 };
 
-export const roleSelectElementSchema = z
+/**
+ * ChannelSelect Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#channel-select
+ */
+export const ChannelSelect = (props: ChannelSelectProps) => {
+  return <channelSelect {...props} />;
+};
+
+export const channelSelectElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("roleSelect"),
+    type: z.literal("channelSelect"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       customId: z.string().max(100),
@@ -33,12 +44,13 @@ export const roleSelectElementSchema = z
       maxValues: z.optional(z.number().int().min(1).max(25)),
       disabled: z.optional(z.boolean()),
       required: z.optional(z.boolean()),
+      channelTypes: z.optional(z.array(z.number())),
       defaultValues: z.optional(
         z
           .array(
             z.object({
               id: snowflakeSchema,
-              type: z.literal("role"),
+              type: z.literal("channel"),
             }),
           )
           .max(25),
@@ -47,9 +59,9 @@ export const roleSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): APIRoleSelectComponent =>
+    (obj): APIChannelSelectComponent =>
       removeUndefined({
-        type: ComponentType.RoleSelect as const,
+        type: ComponentType.ChannelSelect as const,
         id: obj.props.id,
         custom_id: obj.props.customId,
         placeholder: obj.props.placeholder,
@@ -57,9 +69,10 @@ export const roleSelectElementSchema = z
         max_values: obj.props.maxValues,
         disabled: obj.props.disabled,
         required: obj.props.required,
+        channel_types: obj.props.channelTypes,
         default_values: obj.props.defaultValues?.map((item) => ({
           id: item.id,
-          type: SelectMenuDefaultValueType.Role as const,
+          type: SelectMenuDefaultValueType.Channel as const,
         })),
       }),
   );

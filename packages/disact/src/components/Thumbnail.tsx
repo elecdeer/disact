@@ -3,9 +3,9 @@ import {
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../utils/removeUndefined.js";
 
-export type ThumbnailElement = {
+export type ThumbnailProps = {
   id?: number;
   description?: string;
   spoiler?: boolean;
@@ -14,10 +14,19 @@ export type ThumbnailElement = {
   };
 };
 
+/**
+ * Thumbnail Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#thumbnail
+ */
+export const Thumbnail = (props: ThumbnailProps) => {
+  return <thumbnail {...props} />;
+};
+
 export const thumbnailElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("thumbnail"),
+    type: z.literal("thumbnail"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       description: z.optional(z.string().min(1).max(1024)),

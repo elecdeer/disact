@@ -1,20 +1,28 @@
-import type { DisactNode } from "@disact/engine";
 import {
   type APITextDisplayComponent,
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import type { DisactNode } from "../types.js";
+import { removeUndefined } from "../utils/removeUndefined.js";
 
-export type TextDisplayElement = {
+export type TextDisplayProps = {
   id?: number;
   children: DisactNode;
 };
 
+/**
+ * TextDisplay Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#text-display
+ */
+export const TextDisplay = ({ children, ...props }: TextDisplayProps) => {
+  return <textDisplay {...props}>{children}</textDisplay>;
+};
+
 export const textDisplayElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("textDisplay"),
+    type: z.literal("textDisplay"),
     props: z.object({
       id: z.optional(z.number().int().min(0)),
     }),

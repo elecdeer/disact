@@ -3,7 +3,7 @@ import {
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../utils/removeUndefined.js";
 
 // StringSelectのオプションスキーマ
 export const stringSelectOptionSchema = z.object({
@@ -19,7 +19,7 @@ export const stringSelectOptionSchema = z.object({
   ),
 });
 
-export type StringSelectElement = {
+export type StringSelectProps = {
   id?: number;
   customId: string;
   placeholder?: string;
@@ -39,10 +39,19 @@ export type StringSelectElement = {
   }>;
 };
 
+/**
+ * StringSelect Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#string-select
+ */
+export const StringSelect = (props: StringSelectProps) => {
+  return <stringSelect {...props} />;
+};
+
 export const stringSelectElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("stringSelect"),
+    type: z.literal("stringSelect"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       customId: z.string().max(100),

@@ -1,13 +1,14 @@
-import type { DisactNode } from "@disact/engine";
 import {
   type APIButtonComponent,
   ButtonStyle,
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { snowflakeSchema } from "../utils/snowflakeSchema";
-export type ButtonElement = {
+import type { DisactNode } from "../types.js";
+import { removeUndefined } from "../utils/removeUndefined.js";
+import { snowflakeSchema } from "../utils/snowflakeSchema.js";
+
+export type ButtonProps = {
   id?: number;
   children?: DisactNode;
   disabled?: boolean;
@@ -16,6 +17,15 @@ export type ButtonElement = {
   | { style: "link"; url: string }
   | { style: "premium"; skuId: string }
 );
+
+/**
+ * Button Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#button
+ */
+export const Button = ({ children, ...props }: ButtonProps) => {
+  return <button {...props}>{children}</button>;
+};
 
 export const buttonElementSchema = z
   .object({
@@ -46,26 +56,25 @@ export const buttonElementSchema = z
         skuId: snowflakeSchema,
       }),
     ]),
-    children: z.optional(
-      z
-        .array(
-          z.object({
-            type: z.literal("text"),
-            content: z.string(),
-          }),
-        )
-        .transform((arr) => arr.map((v) => v.content).join(""))
-        .pipe(z.string().max(80)),
-    ),
+    children: z
+      .array(
+        z.object({
+          type: z.literal("text"),
+          content: z.string(),
+        }),
+      )
+      .transform((arr) =>
+        arr.length > 0 ? arr.map((v) => v.content).join("") : undefined,
+      )
+      .optional(),
   })
   .transform((obj): APIButtonComponent => {
     const shared = {
       type: ComponentType.Button as const,
       id: obj.props.id,
       disabled: obj.props.disabled,
-      label: obj.children,
+      label: obj.children || undefined,
     };
-
     switch (obj.props.style) {
       case "primary":
         return removeUndefined({

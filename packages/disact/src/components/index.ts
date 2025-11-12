@@ -1,53 +1,23 @@
-import type { RenderedElement } from "@disact/engine";
-import type { APIMessageTopLevelComponent } from "discord-api-types/v10";
-import type { ActionRowElement } from "./actionRowElement";
-import type { ButtonElement } from "./buttonElement";
-import type { ChannelSelectElement } from "./channelSelectElement";
-import type { ContainerElement } from "./containerElement";
-import type { FileElement } from "./fileElement";
-import type { MediaGalleryElement } from "./mediaGalleryElement";
-import type { MentionableSelectElement } from "./mentionableSelectElement";
-import {
-  type MessageComponentsRootElement,
-  messageComponentsRootElementSchema,
-} from "./messageComponentRoot";
-import type { RoleSelectElement } from "./roleSelectElement";
-import type { SectionElement } from "./sectionElement";
-import type { SeparatorElement } from "./separatorElement";
-import type { StringSelectElement } from "./stringSelectElement";
-import type { TextDisplayElement } from "./textDisplayElement";
-import type { ThumbnailElement } from "./thumbnailElement";
-import type { UserSelectElement } from "./userSelectElement";
-
-export type IntrinsicElements = {
-  components: MessageComponentsRootElement;
-
-  actionRow: ActionRowElement;
-  button: ButtonElement;
-  stringSelect: StringSelectElement;
-  userSelect: UserSelectElement;
-  roleSelect: RoleSelectElement;
-  mentionableSelect: MentionableSelectElement;
-  channelSelect: ChannelSelectElement;
-  textDisplay: TextDisplayElement;
-  separator: SeparatorElement;
-  file: FileElement;
-  mediaGallery: MediaGalleryElement;
-  thumbnail: ThumbnailElement;
-  section: SectionElement;
-  container: ContainerElement;
-};
-
-export type PayloadElements = APIMessageTopLevelComponent[];
-
-export const toMessageComponentsPayload = (
-  element: RenderedElement,
-): PayloadElements => {
-  if (element.type === "intrinsic") {
-    return messageComponentsRootElementSchema.parse(element).children;
-  }
-
-  throw new Error(
-    `Invalid root element type: ${element.type}. Only intrinsic elements are allowed at root level.`,
-  );
-};
+// Core Components
+export { Button, type ButtonProps } from "./Button.js";
+export {
+  ChannelSelect,
+  type ChannelSelectProps,
+} from "./ChannelSelect.js";
+export { Container, type ContainerProps } from "./Container.js";
+export { File, type FileProps } from "./File.js";
+export { MediaGallery, type MediaGalleryProps } from "./MediaGallery.js";
+export {
+  MentionableSelect,
+  type MentionableSelectProps,
+} from "./MentionableSelect.js";
+export { RoleSelect, type RoleSelectProps } from "./RoleSelect.js";
+export { Section, type SectionProps } from "./Section.js";
+export { Separator, type SeparatorProps } from "./Separator.js";
+export {
+  StringSelect,
+  type StringSelectProps,
+} from "./StringSelect.js";
+export { TextDisplay, type TextDisplayProps } from "./TextDisplay.js";
+export { Thumbnail, type ThumbnailProps } from "./Thumbnail.js";
+export { UserSelect, type UserSelectProps } from "./UserSelect.js";

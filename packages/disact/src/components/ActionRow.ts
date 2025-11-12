@@ -1,17 +1,17 @@
-import type { DisactNode } from "@disact/engine";
 import {
   type APIActionRowComponent,
   type APIComponentInMessageActionRow,
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
+import type { DisactNode } from "../types.js";
 import { removeUndefined } from "../utils/removeUndefined";
-import { buttonElementSchema } from "./buttonElement";
-import { channelSelectElementSchema } from "./channelSelectElement";
-import { mentionableSelectElementSchema } from "./mentionableSelectElement";
-import { roleSelectElementSchema } from "./roleSelectElement";
-import { stringSelectElementSchema } from "./stringSelectElement";
-import { userSelectElementSchema } from "./userSelectElement";
+import { buttonElementSchema } from "./Button";
+import { channelSelectElementSchema } from "./ChannelSelect";
+import { mentionableSelectElementSchema } from "./MentionableSelect";
+import { roleSelectElementSchema } from "./RoleSelect";
+import { stringSelectElementSchema } from "./StringSelect";
+import { userSelectElementSchema } from "./UserSelect";
 
 export type ActionRowElement = {
   id?: number;

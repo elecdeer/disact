@@ -1,13 +1,13 @@
 import {
-  type APIUserSelectComponent,
+  type APIMentionableSelectComponent,
   ComponentType,
   SelectMenuDefaultValueType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { snowflakeSchema } from "../utils/snowflakeSchema";
+import { removeUndefined } from "../utils/removeUndefined.js";
+import { snowflakeSchema } from "../utils/snowflakeSchema.js";
 
-export type UserSelectElement = {
+export type MentionableSelectProps = {
   id?: number;
   customId: string;
   placeholder?: string;
@@ -17,14 +17,23 @@ export type UserSelectElement = {
   required?: boolean;
   defaultValues?: Array<{
     id: string;
-    type: "user";
+    type: "user" | "role";
   }>;
 };
 
-export const userSelectElementSchema = z
+/**
+ * MentionableSelect Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#mentionable-select
+ */
+export const MentionableSelect = (props: MentionableSelectProps) => {
+  return <mentionableSelect {...props} />;
+};
+
+export const mentionableSelectElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("userSelect"),
+    type: z.literal("mentionableSelect"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       customId: z.string().max(100),
@@ -38,7 +47,7 @@ export const userSelectElementSchema = z
           .array(
             z.object({
               id: snowflakeSchema,
-              type: z.literal("user"),
+              type: z.union([z.literal("user"), z.literal("role")]),
             }),
           )
           .max(25),
@@ -47,9 +56,9 @@ export const userSelectElementSchema = z
     children: z.null(),
   })
   .transform(
-    (obj): APIUserSelectComponent =>
+    (obj): APIMentionableSelectComponent =>
       removeUndefined({
-        type: ComponentType.UserSelect as const,
+        type: ComponentType.MentionableSelect as const,
         id: obj.props.id,
         custom_id: obj.props.customId,
         placeholder: obj.props.placeholder,
@@ -59,7 +68,10 @@ export const userSelectElementSchema = z
         required: obj.props.required,
         default_values: obj.props.defaultValues?.map((item) => ({
           id: item.id,
-          type: SelectMenuDefaultValueType.User as const,
+          type:
+            item.type === "user"
+              ? (SelectMenuDefaultValueType.User as const)
+              : (SelectMenuDefaultValueType.Role as const),
         })),
       }),
   );

@@ -3,9 +3,9 @@ import {
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../utils/removeUndefined.js";
 
-export type MediaGalleryElement = {
+export type MediaGalleryProps = {
   id?: number;
   items: Array<{
     description?: string;
@@ -14,6 +14,15 @@ export type MediaGalleryElement = {
       url: string;
     };
   }>;
+};
+
+/**
+ * MediaGallery Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#media-gallery
+ */
+export const MediaGallery = (props: MediaGalleryProps) => {
+  return <mediaGallery {...props} />;
 };
 
 const mediaGalleryItemSchema = z.object({
@@ -26,8 +35,8 @@ const mediaGalleryItemSchema = z.object({
 
 export const mediaGalleryElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("mediaGallery"),
+    type: z.literal("mediaGallery"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       items: z.array(mediaGalleryItemSchema).min(1).max(10),

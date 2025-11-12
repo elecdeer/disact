@@ -1,13 +1,13 @@
 import {
-  type APIChannelSelectComponent,
+  type APIRoleSelectComponent,
   ComponentType,
   SelectMenuDefaultValueType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { snowflakeSchema } from "../utils/snowflakeSchema";
+import { removeUndefined } from "../utils/removeUndefined.js";
+import { snowflakeSchema } from "../utils/snowflakeSchema.js";
 
-export type ChannelSelectElement = {
+export type RoleSelectProps = {
   id?: number;
   customId: string;
   placeholder?: string;
@@ -17,15 +17,23 @@ export type ChannelSelectElement = {
   required?: boolean;
   defaultValues?: Array<{
     id: string;
-    type: "channel";
+    type: "role";
   }>;
-  channelTypes?: number[];
 };
 
-export const channelSelectElementSchema = z
+/**
+ * RoleSelect Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#role-select
+ */
+export const RoleSelect = (props: RoleSelectProps) => {
+  return <roleSelect {...props} />;
+};
+
+export const roleSelectElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("channelSelect"),
+    type: z.literal("roleSelect"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       customId: z.string().max(100),
@@ -39,19 +47,18 @@ export const channelSelectElementSchema = z
           .array(
             z.object({
               id: snowflakeSchema,
-              type: z.literal("channel"),
+              type: z.literal("role"),
             }),
           )
           .max(25),
       ),
-      channelTypes: z.optional(z.array(z.number().int())),
     }),
     children: z.null(),
   })
   .transform(
-    (obj): APIChannelSelectComponent =>
+    (obj): APIRoleSelectComponent =>
       removeUndefined({
-        type: ComponentType.ChannelSelect as const,
+        type: ComponentType.RoleSelect as const,
         id: obj.props.id,
         custom_id: obj.props.customId,
         placeholder: obj.props.placeholder,
@@ -61,8 +68,7 @@ export const channelSelectElementSchema = z
         required: obj.props.required,
         default_values: obj.props.defaultValues?.map((item) => ({
           id: item.id,
-          type: SelectMenuDefaultValueType.Channel as const,
+          type: SelectMenuDefaultValueType.Role as const,
         })),
-        channel_types: obj.props.channelTypes,
       }),
   );

@@ -1,26 +1,33 @@
-import type { DisactNode } from "@disact/engine";
 import {
   type APIContainerComponent,
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { actionRowInMessageElementSchema } from "./actionRowElement";
-import { fileElementSchema } from "./fileElement";
-import { mediaGalleryElementSchema } from "./mediaGalleryElement";
-import { sectionElementSchema } from "./sectionElement";
-import { separatorElementSchema } from "./separatorElement";
-import { textDisplayElementSchema } from "./textDisplayElement";
+import type { DisactNode } from "../types.js";
+import { removeUndefined } from "../utils/removeUndefined.js";
+import { fileElementSchema } from "./File.js";
+import { mediaGalleryElementSchema } from "./MediaGallery.js";
+import { sectionElementSchema } from "./Section.js";
+import { separatorElementSchema } from "./Separator.js";
+import { textDisplayElementSchema } from "./TextDisplay.js";
 
-export type ContainerElement = {
+export type ContainerProps = {
   id?: number;
   accentColor?: number;
   spoiler?: boolean;
   children: DisactNode;
 };
 
+/**
+ * Container Core Component
+ *
+ * @see https://discord.com/developers/docs/components/reference#container
+ */
+export const Container = ({ children, ...props }: ContainerProps) => {
+  return <container {...props}>{children}</container>;
+};
+
 const containerComponentsSchema = z.discriminatedUnion("name", [
-  actionRowInMessageElementSchema,
   fileElementSchema,
   mediaGalleryElementSchema,
   sectionElementSchema,
@@ -30,8 +37,8 @@ const containerComponentsSchema = z.discriminatedUnion("name", [
 
 export const containerElementSchema = z
   .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("container"),
+    type: z.literal("container"),
+
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       accentColor: z.optional(z.number().int().min(0).max(0xffffff)),

@@ -28,7 +28,7 @@ export type TextInstance = {
 /**
  * Container type that holds the root of the rendered tree
  */
-export type Container = {
+export type RenderContainer = {
   root: (Instance | TextInstance)[];
 };
 

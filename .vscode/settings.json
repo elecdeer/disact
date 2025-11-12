@@ -23,5 +23,7 @@
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "explicit"
-  }
+  },
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "typescript.updateImportsOnPaste.enabled": false
 }
