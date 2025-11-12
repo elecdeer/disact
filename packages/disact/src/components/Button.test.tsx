@@ -11,10 +11,10 @@ describe("Button", () => {
     );
 
     expect(result).toHaveLength(1);
-    expect(() => buttonElementSchema.parse(result[0])).not.toThrow();
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2, // ComponentType.Button
       style: 1, // ButtonStyle.Primary
       custom_id: "test-button",
@@ -29,8 +29,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 2, // ButtonStyle.Secondary
       custom_id: "secondary-btn",
@@ -45,8 +48,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 5, // ButtonStyle.Link
       url: "https://example.com",
@@ -61,8 +67,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 6, // ButtonStyle.Premium
       sku_id: "123456789",
@@ -77,8 +86,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 1,
       custom_id: "disabled-btn",
@@ -94,8 +106,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 3, // ButtonStyle.Success
       custom_id: "success-btn",
@@ -111,8 +126,11 @@ describe("Button", () => {
       </Button>,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 4, // ButtonStyle.Danger
       custom_id: "danger-btn",
@@ -125,12 +143,16 @@ describe("Button", () => {
       <Button style="primary" customId="no-label" />,
     );
 
-    const parsed = buttonElementSchema.parse(result[0]);
-    expect(parsed).toMatchObject({
+    expect(result).toHaveLength(1);
+
+    const parsed = buttonElementSchema.safeParse(result[0]);
+    expect.assert(parsed.success);
+    expect(parsed.data).toMatchObject({
       type: 2,
       style: 1,
       custom_id: "no-label",
     });
-    expect(parsed.label).toBeUndefined();
+    // @ts-expect-error
+    expect(parsed.data.label).toBeUndefined();
   });
 });
