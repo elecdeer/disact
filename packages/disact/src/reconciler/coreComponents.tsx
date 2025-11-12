@@ -3,7 +3,7 @@
  * These demonstrate how to define Discord-specific components
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode } from "../types.js";
 
 /**
  * Button component example

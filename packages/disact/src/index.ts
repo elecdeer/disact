@@ -1,18 +1,18 @@
-export type {
-  DisactElement,
-  DisactNode,
-  FunctionComponent,
-  IntrinsicElementName,
-  PropsBase,
-} from "@disact/engine";
+// Core types
 
-export { ErrorBoundary, Suspense } from "@disact/engine";
+// Core components (examples)
+export { Button, Section } from "./reconciler/coreComponents.js";
+export { renderToInstance } from "./reconciler/render.js";
+// Reconciler types and utilities
 export type {
-  ApplicationCommandInteraction,
-  CreateSessionFromInteractionOptions,
-} from "./app/createSessionFromInteraction";
-export { createSessionFromApplicationCommandInteraction } from "./app/createSessionFromInteraction";
-// DisactApp
-export type { DisactApp } from "./app/disactApp";
-export { createDisactApp } from "./app/disactApp";
-export type { Session } from "./app/session";
+  Container,
+  Instance,
+  PropsBase,
+  TextInstance,
+} from "./reconciler/types.js";
+export type {
+  FC,
+  PropsWithChildren,
+  ReactElement,
+  ReactNode,
+} from "./types.js";
