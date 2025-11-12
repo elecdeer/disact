@@ -1,12 +1,25 @@
-export { Fragment, jsxDEV } from "@disact/engine";
+/**
+ * JSX Dev Runtime for disact
+ * Re-exports React's jsx-dev-runtime with custom type definitions
+ */
 
-// Re-export IntrinsicElements under a different name for JSX namespace
-type _IntrinsicElements = import("./components/index.ts").IntrinsicElements;
+import type React from "react";
 
+// Re-export React's jsx-dev-runtime
+export { Fragment, jsxDEV } from "react/jsx-dev-runtime";
+
+// Custom JSX namespace with disact-specific types
 export namespace JSX {
-  export type Element = import("@disact/engine").DisactElement;
+  export type Element = React.ReactElement;
   export type ElementChildrenAttribute = {
     children: unknown;
   };
-  export type IntrinsicElements = _IntrinsicElements;
+  // Loose intrinsic elements definition - allows any element with children
+  export type IntrinsicElements = Record<
+    string,
+    {
+      children?: React.ReactNode;
+      [key: string]: unknown;
+    }
+  >;
 }
