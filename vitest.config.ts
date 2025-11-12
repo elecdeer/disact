@@ -12,15 +12,6 @@ export default defineConfig({
           },
         },
       },
-      {
-        test: {
-          name: "disact-engine",
-          root: "./packages/disact-engine",
-          typecheck: {
-            enabled: true,
-          },
-        },
-      },
     ],
   },
 });

@@ -3,8 +3,6 @@
  * These demonstrate how to define Discord-specific components
  */
 
-/// <reference path="./jsx.d.ts" />
-
 import type { ReactNode } from "react";
 
 /**
@@ -20,8 +18,7 @@ type ButtonProps = {
 );
 
 export const Button = ({ children, ...props }: ButtonProps) => {
-  // biome-ignore lint/suspicious/noExplicitAny: using internal intrinsic element
-  return <button {...(props as any)}>{children}</button>;
+  return <button {...props}>{children}</button>;
 };
 
 /**
@@ -35,8 +32,7 @@ type SectionProps = {
 
 export const Section = ({ children, accessory, ...props }: SectionProps) => {
   return (
-    // biome-ignore lint/suspicious/noExplicitAny: using internal intrinsic element
-    <section {...(props as any)}>
+    <section {...props}>
       <slot name="components">{children}</slot>
       <slot name="accessory">{accessory}</slot>
     </section>
