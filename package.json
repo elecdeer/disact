@@ -6,6 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "turbo build",
+    "format": "pnpm exec oxfmt --check .",
+    "format:fix": "pnpm exec oxfmt --write .",
     "lint": "pnpm exec biome check",
     "lint:fix": "pnpm exec biome check --write",
     "test": "vitest run"
