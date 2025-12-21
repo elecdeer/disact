@@ -1,19 +1,18 @@
 {
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "cSpell.words": ["crossposted", "disact", "Mdast"],
+  "cSpell.words": [
+    "crossposted",
+    "disact",
+    "Mdast",
+    "oxfmt",
+    "oxlint"
+  ],
   "typescript.preferences.importModuleSpecifier": "project-relative",
   "javascript.preferences.importModuleSpecifier": "project-relative",
-  "biome.lsp.bin": {
-    "linux-x64": "./node_modules/bin/biome",
-    "linux-arm64-musl": "./node_modules/bin/biome",
-    "darwin-arm64": "./node_modules/bin/biome",
-    "win32-x64": "./node_modules/bin/biome"
-  },
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
+    "source.fixAll.oxc": "explicit"
   },
   "oxc.typeAware": true,
-  "oxc.requireConfig": true,
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },

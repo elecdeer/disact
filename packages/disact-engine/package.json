@@ -15,7 +15,6 @@
   },
   "scripts": {
     "build": "tsdown",
-    "lint": "biome check ./src",
     "test": "vitest --project disact-engine run"
   },
   "devDependencies": {

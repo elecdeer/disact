@@ -24,7 +24,7 @@ pnpm run build          # Build all packages using Turbo
 ### Linting
 
 ```bash
-pnpm run lint           # Lint all packages using Biome
+pnpm run lint           # Lint all packages using oxlint
 ```
 
 ### Running Tests
@@ -68,7 +68,8 @@ cd packages/disact-engine && npx vitest
 
 ## Development Notes
 
-- Uses Biome for linting and code formatting
+- Uses oxlint for linting
+- Uses oxfmt for code formatting
 - TypeScript strict mode enabled
 - ESM modules with dual CJS/ESM exports
 - Supports both import and require for compatibility
