@@ -11,8 +11,8 @@
     "build": "turbo build",
     "format": "pnpm exec oxfmt --check .",
     "format:fix": "pnpm exec oxfmt --write .",
-    "lint": "pnpm exec biome check",
-    "lint:fix": "pnpm exec biome check --write",
+    "lint": "pnpm exec oxlint --type-aware --type-check",
+    "lint:fix": "pnpm exec oxlint --type-aware --type-check --fix",
     "test": "vitest run"
   },
   "devDependencies": {
