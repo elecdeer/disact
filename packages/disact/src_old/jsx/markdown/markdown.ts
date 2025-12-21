@@ -38,7 +38,7 @@ export const mdastToMarkdown = (root: mdast.Root): string => {
  * @returns
  */
 export const traverseMarkdown = (
-  // biome-ignore lint/suspicious/noExplicitAny: TODO:
+  // oxlint-disable-next-line no-explicit-any: TODO:
   element: Record<PropertyKey, any>,
   transform: (value: object) => object | string,
 ): object | string => {

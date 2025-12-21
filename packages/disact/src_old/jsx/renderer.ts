@@ -12,7 +12,7 @@ export const createRenderer = (_config: RendererConfig) => {
     obj: object,
     combinedContextRunner: <T>(cb: () => T) => T = (cb) => cb(),
   ): Promise<object> => {
-    // biome-ignore lint/suspicious/noExplicitAny: 必要
+    // oxlint-disable-next-line no-explicit-any: 必要
     const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
     const promises: Promise<void>[] = [];
 

@@ -1,3 +1,5 @@
+// oxlint-disable require-to-throw-message: SuspenseではError以外もthrowしうる
+
 import { describe, expect, it } from "vitest";
 import { use } from "./thenable";
 
@@ -98,11 +100,13 @@ describe("use", () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
       // pending状態
+      let thrown: unknown;
       try {
         use(promise);
-      } catch (thrown) {
-        expect(thrown).toBe(promise);
+      } catch (err) {
+        thrown = err;
       }
+      expect(thrown).toBe(promise);
 
       resolve("test value");
       await promise;

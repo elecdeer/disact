@@ -45,7 +45,8 @@ export type DisactChildNode = DisactElement | boolean | null | undefined;
 export type DisactChildNodes = DisactChildNode | DisactChildNode[];
 
 export type PropType = Record<PropertyKey, unknown>;
-// biome-ignore lint/suspicious/noExplicitAny: TODO:
+
+// oxlint-disable-next-line no-explicit-any: TODO:
 export type FunctionComponent<P extends PropType = any> = (
   props: P,
 ) => DisactJSX.Element | Promise<DisactJSX.Element>;

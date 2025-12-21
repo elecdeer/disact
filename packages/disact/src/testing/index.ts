@@ -31,7 +31,7 @@ export interface TestRenderResult {
  */
 export const testRender = async <Context = undefined>(
   element: DisactElement,
-  context?: Context | undefined,
+  context?: Context,
 ): Promise<TestRenderResult> => {
   const history: PayloadElement[][] = [];
   const result: TestRenderResult["result"] = {
@@ -44,7 +44,7 @@ export const testRender = async <Context = undefined>(
   return new Promise<TestRenderResult>((resolve) => {
     let isFirstValue = true;
 
-    (async () => {
+    void (async () => {
       for await (const value of stream) {
         // RenderResult を PayloadElement[] に変換
         const payloads = removeUndefinedValuesDeep(renderResultToPayloads(value));

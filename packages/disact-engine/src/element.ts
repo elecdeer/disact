@@ -3,7 +3,7 @@ export type IntrinsicElementName = string;
 
 export type PropsBase = Record<PropertyKey, unknown>;
 
-// biome-ignore lint/suspicious/noExplicitAny: 右側はanyにせざるを得ない
+// oxlint-disable-next-line no-explicit-any: 右側はanyにせざるを得ない
 export type FunctionComponent<P extends PropsBase = any> = (props: P) => DisactNode;
 
 export type DevSource = {

@@ -158,10 +158,9 @@ const render = <Context>(
         return render(element.props.fallback(thrown), context, promises);
       }
       // Error以外の例外も一応処理
-      const error =
-        typeof thrown === "object" && thrown !== null
-          ? new Error(String(thrown))
-          : new Error("Unknown error");
+      const error = new Error("Unknown error", {
+        cause: thrown,
+      });
       return render(element.props.fallback(error), context, promises);
     }
   }
