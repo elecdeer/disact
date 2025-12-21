@@ -1,25 +1,27 @@
-import type { RenderedElement } from "@disact/engine";
+import type { DisactNode, RenderedElement } from "@disact/engine";
 import type { APIMessageTopLevelComponent } from "discord-api-types/v10";
-import type { ActionRowElement } from "./actionRowElement";
-import type { ButtonElement } from "./buttonElement";
-import type { ChannelSelectElement } from "./channelSelectElement";
-import type { ContainerElement } from "./containerElement";
-import type { FileElement } from "./fileElement";
-import type { MediaGalleryElement } from "./mediaGalleryElement";
-import type { MentionableSelectElement } from "./mentionableSelectElement";
+import type { ActionRowElement } from "./elements/actionRowElement";
+import type { ButtonElement } from "./elements/buttonElement";
+import type { ChannelSelectElement } from "./elements/channelSelectElement";
+import type { ContainerElement } from "./elements/containerElement";
+import type { FileElement } from "./elements/fileElement";
+import type { MediaGalleryElement } from "./elements/mediaGalleryElement";
+import type { MentionableSelectElement } from "./elements/mentionableSelectElement";
 import {
   type MessageComponentsRootElement,
   messageComponentsRootElementSchema,
-} from "./messageComponentRoot";
-import type { RoleSelectElement } from "./roleSelectElement";
-import type { SectionElement } from "./sectionElement";
-import type { SeparatorElement } from "./separatorElement";
-import type { StringSelectElement } from "./stringSelectElement";
-import type { TextDisplayElement } from "./textDisplayElement";
-import type { ThumbnailElement } from "./thumbnailElement";
-import type { UserSelectElement } from "./userSelectElement";
+} from "./elements/messageComponentRoot";
+import type { RoleSelectElement } from "./elements/roleSelectElement";
+import type { SectionElement } from "./elements/sectionElement";
+import type { SeparatorElement } from "./elements/separatorElement";
+import type { StringSelectElement } from "./elements/stringSelectElement";
+import type { TextDisplayElement } from "./elements/textDisplayElement";
+import type { ThumbnailElement } from "./elements/thumbnailElement";
+import type { UserSelectElement } from "./elements/userSelectElement";
 
 export type IntrinsicElements = {
+  slot: { children?: DisactNode };
+
   components: MessageComponentsRootElement;
 
   actionRow: ActionRowElement;

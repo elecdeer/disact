@@ -1,7 +1,7 @@
 import type { DisactNode } from "@disact/engine";
 import { type APIContainerComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../../utils/removeUndefined";
 import { actionRowInMessageElementSchema } from "./actionRowElement";
 import { fileElementSchema } from "./fileElement";
 import { mediaGalleryElementSchema } from "./mediaGalleryElement";

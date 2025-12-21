@@ -5,7 +5,7 @@ import {
   ComponentType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
+import { removeUndefined } from "../../utils/removeUndefined";
 import { buttonElementSchema } from "./buttonElement";
 import { channelSelectElementSchema } from "./channelSelectElement";
 import { mentionableSelectElementSchema } from "./mentionableSelectElement";

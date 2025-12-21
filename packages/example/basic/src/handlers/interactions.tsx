@@ -1,4 +1,14 @@
-import { createDisactApp, createSessionFromApplicationCommandInteraction } from "disact";
+import {
+  ActionRow,
+  Button,
+  Components,
+  Section,
+  Separator,
+  StringSelect,
+  TextDisplay,
+  createDisactApp,
+  createSessionFromApplicationCommandInteraction,
+} from "disact";
 import type {
   APIApplicationCommandInteraction,
   APIInteraction,
@@ -75,37 +85,37 @@ const handleApplicationCommand = async (
 
     // disactを使用してMessage Componentsを定義
     const element = (
-      <components>
-        <section
+      <Components>
+        <Section
           accessory={
-            <button customId="section_button" style="primary">
+            <Button customId="section_button" style="primary">
               アクション
-            </button>
+            </Button>
           }
         >
-          <textDisplay>✨ Hello from disact!</textDisplay>
-          <textDisplay>実行されたコマンド: /{interaction.data.name}</textDisplay>
-          <textDisplay>
+          <TextDisplay>✨ Hello from disact!</TextDisplay>
+          <TextDisplay>実行されたコマンド: /{interaction.data.name}</TextDisplay>
+          <TextDisplay>
             disactを使用してDiscord Message ComponentsをJSXで記述しています！
-          </textDisplay>
-        </section>
+          </TextDisplay>
+        </Section>
 
-        <separator />
+        <Separator />
 
-        <actionRow>
-          <button customId="button_primary" style="primary">
+        <ActionRow>
+          <Button customId="button_primary" style="primary">
             Primary Button
-          </button>
-          <button customId="button_success" style="success">
+          </Button>
+          <Button customId="button_success" style="success">
             Success Button
-          </button>
-          <button customId="button_danger" style="danger">
+          </Button>
+          <Button customId="button_danger" style="danger">
             Danger Button
-          </button>
-        </actionRow>
+          </Button>
+        </ActionRow>
 
-        <actionRow>
-          <stringSelect
+        <ActionRow>
+          <StringSelect
             customId="string_select"
             placeholder="オプションを選択..."
             options={[
@@ -114,8 +124,8 @@ const handleApplicationCommand = async (
               { label: "オプション 3", value: "option_3" },
             ]}
           />
-        </actionRow>
-      </components>
+        </ActionRow>
+      </Components>
     );
 
     // JSXをレンダリングしてSessionに接続

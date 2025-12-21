@@ -102,21 +102,10 @@ const render = <Context>(
     const { children, ...rest } = element.props;
     const renderedChildren = render(children as DisactNode, context, promises);
 
-    // props内のDisactElementもレンダリング
-    const renderedProps: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(rest)) {
-      if (value && typeof value === "object" && "type" in value) {
-        // DisactElementの場合、レンダリング
-        renderedProps[key] = render(value as DisactNode, context, promises);
-      } else {
-        renderedProps[key] = value;
-      }
-    }
-
     return {
       type: "intrinsic",
       name: element.name,
-      props: renderedProps,
+      props: rest,
       children: renderedChildren && toArray(renderedChildren),
     };
   }

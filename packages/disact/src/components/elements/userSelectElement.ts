@@ -1,13 +1,13 @@
 import {
-  type APIChannelSelectComponent,
+  type APIUserSelectComponent,
   ComponentType,
   SelectMenuDefaultValueType,
 } from "discord-api-types/v10";
 import * as z from "zod";
-import { removeUndefined } from "../utils/removeUndefined";
-import { snowflakeSchema } from "../utils/snowflakeSchema";
+import { removeUndefined } from "../../utils/removeUndefined";
+import { snowflakeSchema } from "../../utils/snowflakeSchema";
 
-export type ChannelSelectElement = {
+export type UserSelectElement = {
   id?: number;
   customId: string;
   placeholder?: string;
@@ -17,15 +17,14 @@ export type ChannelSelectElement = {
   required?: boolean;
   defaultValues?: Array<{
     id: string;
-    type: "channel";
+    type: "user";
   }>;
-  channelTypes?: number[];
 };
 
-export const channelSelectElementSchema = z
+export const userSelectElementSchema = z
   .object({
     type: z.literal("intrinsic"),
-    name: z.literal("channelSelect"),
+    name: z.literal("userSelect"),
     props: z.object({
       id: z.optional(z.number().int().min(0)),
       customId: z.string().max(100),
@@ -39,19 +38,18 @@ export const channelSelectElementSchema = z
           .array(
             z.object({
               id: snowflakeSchema,
-              type: z.literal("channel"),
+              type: z.literal("user"),
             }),
           )
           .max(25),
       ),
-      channelTypes: z.optional(z.array(z.number().int())),
     }),
     children: z.null(),
   })
   .transform(
-    (obj): APIChannelSelectComponent =>
+    (obj): APIUserSelectComponent =>
       removeUndefined({
-        type: ComponentType.ChannelSelect as const,
+        type: ComponentType.UserSelect as const,
         id: obj.props.id,
         custom_id: obj.props.customId,
         placeholder: obj.props.placeholder,
@@ -61,8 +59,7 @@ export const channelSelectElementSchema = z
         required: obj.props.required,
         default_values: obj.props.defaultValues?.map((item) => ({
           id: item.id,
-          type: SelectMenuDefaultValueType.Channel as const,
+          type: SelectMenuDefaultValueType.User as const,
         })),
-        channel_types: obj.props.channelTypes,
       }),
   );
