@@ -79,6 +79,8 @@
     "oxc/only-used-in-recursion": "error",
     "oxc/uninvoked-array-callback": "error",
     "typescript/await-thenable": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-import-type-side-effects": "error",
     "typescript/no-array-delete": "error",
     "typescript/no-base-to-string": "error",
     "typescript/no-duplicate-enum-values": "error",
@@ -121,7 +123,10 @@
     "vitest/no-disabled-tests": "error",
     "vitest/no-export": "error",
     "vitest/no-focused-tests": "error",
-    "vitest/no-standalone-expect": "error",
+    "vitest/no-standalone-expect": ["error", {
+      // Extend Test Contextで誤検知されるので
+      "additionalTestBlockFunctions": ["test"]
+    }],
     "vitest/require-to-throw-message": "error",
     "vitest/valid-describe-callback": "error",
     "vitest/valid-expect": "error",
