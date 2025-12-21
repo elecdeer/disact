@@ -39,10 +39,7 @@ const test = base.extend<TestContext>({
 });
 
 describe("createDisactApp", () => {
-  test("初回レンダリング時に commit が呼ばれる", async ({
-    mockSession,
-    commitSpy,
-  }) => {
+  test("初回レンダリング時に commit が呼ばれる", async ({ mockSession, commitSpy }) => {
     const app = createDisactApp();
 
     const Component = () => (
@@ -68,11 +65,7 @@ describe("createDisactApp", () => {
     });
   });
 
-  test("差分がある場合に commit が呼ばれる", async ({
-    mockSession,
-    commitSpy,
-    currentPayload,
-  }) => {
+  test("差分がある場合に commit が呼ばれる", async ({ mockSession, commitSpy, currentPayload }) => {
     // 初期状態を設定
     currentPayload.value = {
       type: 17,
@@ -141,10 +134,7 @@ describe("createDisactApp", () => {
     expect(commitSpy).not.toHaveBeenCalled();
   });
 
-  test("Suspense で複数のチャンクが処理される", async ({
-    mockSession,
-    commitSpy,
-  }) => {
+  test("Suspense で複数のチャンクが処理される", async ({ mockSession, commitSpy }) => {
     const { promise, resolve } = Promise.withResolvers<string>();
 
     const AsyncData = () => {
@@ -197,14 +187,9 @@ describe("createDisactApp", () => {
     });
   });
 
-  test("複数の更新で差分がある場合のみ commit する", async ({
-    mockSession,
-    commitSpy,
-  }) => {
-    const { promise: promise1, resolve: resolve1 } =
-      Promise.withResolvers<string>();
-    const { promise: promise2, resolve: resolve2 } =
-      Promise.withResolvers<string>();
+  test("複数の更新で差分がある場合のみ commit する", async ({ mockSession, commitSpy }) => {
+    const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
+    const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
     const AsyncData1 = () => {
       const data = use(promise1);

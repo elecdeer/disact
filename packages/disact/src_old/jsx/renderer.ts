@@ -1,14 +1,6 @@
 import type { JSX } from "../jsx-runtime";
-import {
-  type FunctionComponent,
-  isDisactElement,
-  type PropType,
-} from "./jsx-internal";
-import {
-  mdastToMarkdown,
-  transformToMdast,
-  traverseMarkdown,
-} from "./markdown";
+import { type FunctionComponent, isDisactElement, type PropType } from "./jsx-internal";
+import { mdastToMarkdown, transformToMdast, traverseMarkdown } from "./markdown";
 
 export type RendererConfig = {
   // TODO:
@@ -24,10 +16,7 @@ export const createRenderer = (_config: RendererConfig) => {
     const result: { [key: string]: any } = Array.isArray(obj) ? [] : {};
     const promises: Promise<void>[] = [];
 
-    const renderChildElement = async (
-      componentFunc: FunctionComponent,
-      props: PropType,
-    ) => {
+    const renderChildElement = async (componentFunc: FunctionComponent, props: PropType) => {
       const resolved = await combinedContextRunner(async () => {
         return await componentFunc(props);
       });
@@ -55,9 +44,7 @@ export const createRenderer = (_config: RendererConfig) => {
       const value = obj[key as keyof typeof obj] as unknown;
       if (isDisactElement(value) && typeof value._jsxType === "function") {
         promises.push(
-          Promise.resolve(
-            renderChildElement(value._jsxType, value._props),
-          ).then((resolved) => {
+          Promise.resolve(renderChildElement(value._jsxType, value._props)).then((resolved) => {
             if (resolved !== undefined) {
               result[key] = resolved;
             }
@@ -65,13 +52,13 @@ export const createRenderer = (_config: RendererConfig) => {
         );
       } else if (typeof value === "object" && value !== null) {
         promises.push(
-          Promise.resolve(
-            traverseElementAndRender(value, combinedContextRunner),
-          ).then((resolved) => {
-            if (resolved !== undefined) {
-              result[key] = resolved;
-            }
-          }),
+          Promise.resolve(traverseElementAndRender(value, combinedContextRunner)).then(
+            (resolved) => {
+              if (resolved !== undefined) {
+                result[key] = resolved;
+              }
+            },
+          ),
         );
       } else {
         result[key] = value;
@@ -88,9 +75,7 @@ export const createRenderer = (_config: RendererConfig) => {
     return result;
   };
 
-  const render = async (
-    element: JSX.Element,
-  ): Promise<object | string | undefined | null> => {
+  const render = async (element: JSX.Element): Promise<object | string | undefined | null> => {
     const result = await traverseElementAndRender(element);
 
     return traverseMarkdown(result, (node) => {

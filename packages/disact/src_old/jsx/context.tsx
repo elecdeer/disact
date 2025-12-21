@@ -1,11 +1,7 @@
 /** @jsxImportSource ../ */
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import type {
-  DisactJSX,
-  DisactJSXElement,
-  FunctionComponent,
-} from "./jsx-internal";
+import type { DisactJSX, DisactJSXElement, FunctionComponent } from "./jsx-internal";
 
 export type Context<T> = FunctionComponent<{
   children: DisactJSX.Element | Promise<DisactJSX.Element>;

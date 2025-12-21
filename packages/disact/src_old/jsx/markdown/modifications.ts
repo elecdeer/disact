@@ -3,9 +3,7 @@ import { toArray } from "../../util/toArray";
 import { mapChildren } from "./markdown";
 import { type IntrinsicsNode, phrasingContentTypes } from "./types";
 
-export const transformEmphasisNode = (
-  element: IntrinsicsNode<"i">,
-): [mdast.Emphasis] => {
+export const transformEmphasisNode = (element: IntrinsicsNode<"i">): [mdast.Emphasis] => {
   const children = toArray(element.props.children ?? []);
 
   return [
@@ -16,9 +14,7 @@ export const transformEmphasisNode = (
   ];
 };
 
-export const transformStrongNode = (
-  element: IntrinsicsNode<"b">,
-): [mdast.Strong] => {
+export const transformStrongNode = (element: IntrinsicsNode<"b">): [mdast.Strong] => {
   const children = toArray(element.props.children ?? []);
 
   return [
@@ -29,9 +25,7 @@ export const transformStrongNode = (
   ];
 };
 
-export const transformDeleteNode = (
-  element: IntrinsicsNode<"s">,
-): [mdast.Delete] => {
+export const transformDeleteNode = (element: IntrinsicsNode<"s">): [mdast.Delete] => {
   const children = toArray(element.props.children ?? []);
 
   return [

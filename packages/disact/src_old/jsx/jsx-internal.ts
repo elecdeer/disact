@@ -90,15 +90,10 @@ export const jsx = (
 
 export const jsxs = jsx;
 
-export const FragmentInternal = ({
-  children,
-}: {
-  children: DisactJSX.Element[];
-}) => ([] as DisactJSX.Element[]).concat(children);
+export const FragmentInternal = ({ children }: { children: DisactJSX.Element[] }) =>
+  ([] as DisactJSX.Element[]).concat(children);
 
-export const isDisactElement = (
-  element: unknown,
-): element is DisactJSXElement => {
+export const isDisactElement = (element: unknown): element is DisactJSXElement => {
   return (
     typeof element === "object" &&
     element !== null &&

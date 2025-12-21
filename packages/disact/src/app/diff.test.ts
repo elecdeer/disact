@@ -8,9 +8,7 @@ describe("isDifferentPayloadElement", () => {
       const payload: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(payload, payload)).toBe(false);
@@ -20,17 +18,13 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(false);
@@ -48,23 +42,17 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_2", label: "World" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_2", label: "World" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);
@@ -75,9 +63,7 @@ describe("isDifferentPayloadElement", () => {
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);
@@ -89,17 +75,13 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "World" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "World" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);
@@ -109,17 +91,13 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 2, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 2, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);
@@ -129,9 +107,7 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
@@ -199,9 +175,7 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
@@ -244,9 +218,7 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
@@ -284,9 +256,7 @@ describe("isDifferentPayloadElement", () => {
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);
@@ -296,17 +266,13 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "Hello" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "Hello" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(false);
@@ -318,29 +284,21 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "First" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "First" }],
         },
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_2", label: "Second" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_2", label: "Second" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "First" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "First" }],
         },
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_2", label: "Second" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_2", label: "Second" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(false);
@@ -350,29 +308,21 @@ describe("isDifferentPayloadElement", () => {
       const prev: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "First" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "First" }],
         },
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_2", label: "Second" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_2", label: "Second" }],
         },
       ];
       const next: PayloadElements = [
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_1", label: "First" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_1", label: "First" }],
         },
         {
           type: 1,
-          components: [
-            { type: 2, style: 1, custom_id: "btn_2", label: "Changed" },
-          ],
+          components: [{ type: 2, style: 1, custom_id: "btn_2", label: "Changed" }],
         },
       ];
       expect(isDifferentPayloadElement(prev, next)).toBe(true);

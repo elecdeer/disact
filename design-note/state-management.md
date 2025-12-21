@@ -499,11 +499,13 @@ onClick={async (ctx) => {
 ```
 
 **実装案1: ハンドラー終了時にバッチング（推奨）**
+
 - ハンドラー内のすべてのsetter呼び出しを収集
 - ハンドラー終了後に一括で永続化 + 1回だけ再レンダリング
 - シンプルで効率的
 
 **実装案2: マイクロタスクでバッチング**
+
 - Reactのような自動バッチング
 - より複雑だが、柔軟
 
@@ -698,6 +700,7 @@ Discord Interactionには署名検証が含まれています：
    - パスワード、トークン、秘密鍵は絶対にNG
 
 2. **権限チェックはサーバー側で実施**
+
    ```typescript
    onClick={async (ctx) => {
      // ❌ customIdの値を信頼してはいけない
@@ -785,6 +788,7 @@ function Dashboard() {
 ### どちらの方式を使うべきか
 
 #### 案A（customId）を使う場合
+
 - ✅ ページ番号、カウンター、UI状態
 - ✅ 一時的な状態（セッション間で保持不要）
 - ✅ シンプルな状態（プリミティブ型）
@@ -794,6 +798,7 @@ function Dashboard() {
 **例**: ページネーション、ソート順、展開/折りたたみ状態
 
 #### 案B（外部ストレージ）を使う場合
+
 - ✅ ユーザー情報、設定、権限
 - ✅ 永続化が必要な状態
 - ✅ 複雑なオブジェクト、配列
@@ -805,6 +810,7 @@ function Dashboard() {
 ### 状態管理のパターン
 
 #### パターン1: customIdのみ（最もシンプル）
+
 ```typescript
 function SimplePagination() {
   const [page, setPage] = useState("page", 0);
@@ -821,6 +827,7 @@ function SimplePagination() {
 ```
 
 #### パターン2: onClick + 外部ストレージ
+
 ```typescript
 // ExternalStore定義
 const nameStore = createExternalStore({
@@ -850,6 +857,7 @@ function ProfileEditor() {
 ```
 
 #### パターン3: ハイブリッド（柔軟性が高い）
+
 ```typescript
 // ExternalStore定義
 const userDataStore = createExternalStore({
@@ -891,6 +899,7 @@ function AdvancedUI() {
 ### パフォーマンス最適化
 
 1. **事前ロード**: 必要なstoreをまとめてロード
+
    ```typescript
    await Promise.all([
      nameStore.get(),
@@ -900,6 +909,7 @@ function AdvancedUI() {
    ```
 
 2. **バッチング**: 複数の更新を1回にまとめる
+
    ```typescript
    // 自動的にバッチングされる
    await setName("Jane");
@@ -908,12 +918,14 @@ function AdvancedUI() {
    ```
 
 3. **部分更新**: 変更があったstoreのみ永続化
+
    ```typescript
    // 内部で自動的に最適化
    // 変更されたstoreのみストレージに書き込む
    ```
 
 4. **customIdの最適化**: 不要な情報を削減
+
    ```typescript
    // ❌ 長すぎる
    customId: "very-long-component-name:counter:12345:12346"
@@ -925,28 +937,33 @@ function AdvancedUI() {
 ## 実装ロードマップ
 
 ### Phase 1: 基本的なuseReducerの実装
+
 - [ ] customIdのパース/生成ロジック
 - [ ] useReducer Hook本体
 - [ ] レンダリングコンテキストでの値管理
 - [ ] テスト
 
 ### Phase 2: handleInteractionの実装
+
 - [ ] Interactionからの値復元
 - [ ] 再レンダリング
 - [ ] Hydration検証
 - [ ] Discord APIとの連携
 
 ### Phase 3: useStateの実装
+
 - [ ] useReducerベースの実装
 - [ ] シンタックスシュガー
 
 ### Phase 4: atomWithStorageの実装
+
 - [ ] Storageインターフェース
 - [ ] useAtom Hook
 - [ ] 非同期読み込み（事前ロード）
 - [ ] Suspense統合（オプション）
 
 ### Phase 5: 最適化と拡張
+
 - [ ] 一括永続化
 - [ ] カスタムシリアライザー
 - [ ] エラーハンドリング

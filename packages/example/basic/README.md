@@ -100,10 +100,10 @@ src/
 
 ## 環境変数
 
-| 変数名 | 必須 | 説明 |
-|--------|------|------|
-| `DISCORD_PUBLIC_KEY` | Yes | Discord ApplicationのPublic Key |
-| `PORT` | No | サーバーのポート番号（デフォルト: 3000） |
+| 変数名               | 必須 | 説明                                     |
+| -------------------- | ---- | ---------------------------------------- |
+| `DISCORD_PUBLIC_KEY` | Yes  | Discord ApplicationのPublic Key          |
+| `PORT`               | No   | サーバーのポート番号（デフォルト: 3000） |
 
 ## 参考資料
 

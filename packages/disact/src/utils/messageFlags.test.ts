@@ -12,15 +12,11 @@ describe("buildMessageFlags", () => {
   });
 
   test("単一フラグ: suppressNotifications", () => {
-    expect(messageFlags({ suppressNotifications: true })).toBe(
-      MessageFlags.SuppressNotifications,
-    );
+    expect(messageFlags({ suppressNotifications: true })).toBe(MessageFlags.SuppressNotifications);
   });
 
   test("単一フラグ: isComponentsV2", () => {
-    expect(messageFlags({ isComponentsV2: true })).toBe(
-      MessageFlags.IsComponentsV2,
-    );
+    expect(messageFlags({ isComponentsV2: true })).toBe(MessageFlags.IsComponentsV2);
   });
 
   test("複数フラグの組み合わせ: ephemeral と suppressNotifications", () => {
@@ -28,9 +24,7 @@ describe("buildMessageFlags", () => {
       ephemeral: true,
       suppressNotifications: true,
     });
-    expect(flags).toBe(
-      MessageFlags.Ephemeral | MessageFlags.SuppressNotifications,
-    );
+    expect(flags).toBe(MessageFlags.Ephemeral | MessageFlags.SuppressNotifications);
     // 64 | 4096 = 4160
     expect(flags).toBe(4160);
   });
@@ -76,12 +70,8 @@ describe("buildMessageFlags", () => {
     // 各フラグを個別にテスト
     expect(messageFlags({ crossposted: true })).toBe(MessageFlags.Crossposted);
     expect(messageFlags({ isCrosspost: true })).toBe(MessageFlags.IsCrosspost);
-    expect(messageFlags({ suppressEmbeds: true })).toBe(
-      MessageFlags.SuppressEmbeds,
-    );
-    expect(messageFlags({ sourceMessageDeleted: true })).toBe(
-      MessageFlags.SourceMessageDeleted,
-    );
+    expect(messageFlags({ suppressEmbeds: true })).toBe(MessageFlags.SuppressEmbeds);
+    expect(messageFlags({ sourceMessageDeleted: true })).toBe(MessageFlags.SourceMessageDeleted);
     expect(messageFlags({ urgent: true })).toBe(MessageFlags.Urgent);
     expect(messageFlags({ hasThread: true })).toBe(MessageFlags.HasThread);
     expect(messageFlags({ ephemeral: true })).toBe(MessageFlags.Ephemeral);
@@ -92,16 +82,10 @@ describe("buildMessageFlags", () => {
     expect(messageFlags({ shouldShowLinkNotDiscordWarning: true })).toBe(
       MessageFlags.ShouldShowLinkNotDiscordWarning,
     );
-    expect(messageFlags({ suppressNotifications: true })).toBe(
-      MessageFlags.SuppressNotifications,
-    );
-    expect(messageFlags({ isVoiceMessage: true })).toBe(
-      MessageFlags.IsVoiceMessage,
-    );
+    expect(messageFlags({ suppressNotifications: true })).toBe(MessageFlags.SuppressNotifications);
+    expect(messageFlags({ isVoiceMessage: true })).toBe(MessageFlags.IsVoiceMessage);
     expect(messageFlags({ hasSnapshot: true })).toBe(MessageFlags.HasSnapshot);
-    expect(messageFlags({ isComponentsV2: true })).toBe(
-      MessageFlags.IsComponentsV2,
-    );
+    expect(messageFlags({ isComponentsV2: true })).toBe(MessageFlags.IsComponentsV2);
   });
 
   test("すべてのフラグを有効にする", () => {

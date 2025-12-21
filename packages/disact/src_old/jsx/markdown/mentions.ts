@@ -4,9 +4,7 @@ import type { IntrinsicsNode } from "./types";
 //TODO: sanitizeが必要？
 // idに `>hoge<@1111>` などが入っているとまずい
 
-export const transformUserNode = (
-  element: IntrinsicsNode<"user">,
-): [mdast.Html] => {
+export const transformUserNode = (element: IntrinsicsNode<"user">): [mdast.Html] => {
   return [
     {
       type: "html",
@@ -15,9 +13,7 @@ export const transformUserNode = (
   ];
 };
 
-export const transformChannelNode = (
-  element: IntrinsicsNode<"channel">,
-): [mdast.Html] => {
+export const transformChannelNode = (element: IntrinsicsNode<"channel">): [mdast.Html] => {
   return [
     {
       type: "html",
@@ -26,9 +22,7 @@ export const transformChannelNode = (
   ];
 };
 
-export const transformRoleNode = (
-  element: IntrinsicsNode<"role">,
-): [mdast.Html] => {
+export const transformRoleNode = (element: IntrinsicsNode<"role">): [mdast.Html] => {
   return [
     {
       type: "html",
@@ -48,9 +42,7 @@ export const transformSlashCommandNode = (
   ];
 };
 
-export const transformGuildNavigationNode = (
-  element: IntrinsicsNode<"guildNav">,
-): [mdast.Html] => {
+export const transformGuildNavigationNode = (element: IntrinsicsNode<"guildNav">): [mdast.Html] => {
   return [
     {
       type: "html",

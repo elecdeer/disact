@@ -1,9 +1,7 @@
 import type * as mdast from "mdast";
 import type { IntrinsicsNode } from "./types";
 
-export const transformTimeNode = (
-  element: IntrinsicsNode<"time">,
-): [mdast.Html] => {
+export const transformTimeNode = (element: IntrinsicsNode<"time">): [mdast.Html] => {
   // < をエスケープさせないためにmdast.Htmlを使用する
 
   if (element.props.format === undefined) {

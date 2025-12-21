@@ -64,8 +64,7 @@ export const messageFlags = (flags: MessageFlagsInput): number => {
   if (flags.loading) result |= MessageFlags.Loading;
   if (flags.failedToMentionSomeRolesInThread)
     result |= MessageFlags.FailedToMentionSomeRolesInThread;
-  if (flags.shouldShowLinkNotDiscordWarning)
-    result |= MessageFlags.ShouldShowLinkNotDiscordWarning;
+  if (flags.shouldShowLinkNotDiscordWarning) result |= MessageFlags.ShouldShowLinkNotDiscordWarning;
   if (flags.suppressNotifications) result |= MessageFlags.SuppressNotifications;
   if (flags.isVoiceMessage) result |= MessageFlags.IsVoiceMessage;
   if (flags.hasSnapshot) result |= MessageFlags.HasSnapshot;

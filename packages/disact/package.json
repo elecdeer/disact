@@ -2,6 +2,9 @@
   "name": "disact",
   "version": "0.0.1",
   "description": "",
+  "keywords": [],
+  "license": "MIT",
+  "author": "elecdeer",
   "type": "module",
   "exports": {
     ".": {
@@ -22,15 +25,6 @@
     "lint": "biome check ./src",
     "test": "vitest --project disact run"
   },
-  "devDependencies": {
-    "@monorepo/tsconfig": "workspace:*",
-    "@types/mdast": "catalog:",
-    "@types/node": "catalog:",
-    "ts-dedent": "catalog:"
-  },
-  "keywords": [],
-  "author": "elecdeer",
-  "license": "MIT",
   "dependencies": {
     "@disact/engine": "workspace:*",
     "discord-api-types": "^0.38.31",
@@ -39,5 +33,11 @@
     "ofetch": "^1.4.1",
     "type-fest": "^5.1.0",
     "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@monorepo/tsconfig": "workspace:*",
+    "@types/mdast": "catalog:",
+    "@types/node": "catalog:",
+    "ts-dedent": "catalog:"
   }
 }

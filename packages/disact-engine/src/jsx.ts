@@ -39,11 +39,7 @@ export const jsx = (
 
 export const jsxDEV = jsx;
 
-export const Fragment = ({
-  children,
-}: {
-  children: DisactElement[];
-}): DisactNode => children;
+export const Fragment = ({ children }: { children: DisactElement[] }): DisactNode => children;
 
 export const Suspense = ({
   fallback,

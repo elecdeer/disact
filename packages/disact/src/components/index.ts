@@ -40,9 +40,7 @@ export type IntrinsicElements = {
 
 export type PayloadElements = APIMessageTopLevelComponent[];
 
-export const toMessageComponentsPayload = (
-  element: RenderedElement,
-): PayloadElements => {
+export const toMessageComponentsPayload = (element: RenderedElement): PayloadElements => {
   if (element.type === "intrinsic") {
     return messageComponentsRootElementSchema.parse(element).children;
   }

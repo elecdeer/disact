@@ -1,10 +1,5 @@
 import { runInContext } from "./context";
-import type {
-  DisactElement,
-  DisactNode,
-  RenderedElement,
-  RenderResult,
-} from "./element";
+import type { DisactElement, DisactNode, RenderedElement, RenderResult } from "./element";
 import { createPromiseTracker } from "./promiseTracker";
 
 export const renderToReadableStream = <Context>(
@@ -186,11 +181,7 @@ const isPromise = (value: unknown): value is Promise<unknown> => {
 const renderChildrenArray = <Context>(
   elements: DisactNode[],
   context: Context,
-  renderFn: (
-    element: DisactNode,
-    context: Context,
-    promises?: Promise<unknown>[],
-  ) => RenderResult,
+  renderFn: (element: DisactNode, context: Context, promises?: Promise<unknown>[]) => RenderResult,
   promises: Promise<unknown>[] = [],
 ): RenderedElement[] => {
   return elements

@@ -20,18 +20,10 @@ import {
   transformSlashCommandNode,
   transformUserNode,
 } from "./mentions";
-import {
-  transformDeleteNode,
-  transformEmphasisNode,
-  transformStrongNode,
-} from "./modifications";
+import { transformDeleteNode, transformEmphasisNode, transformStrongNode } from "./modifications";
 import { transformParagraphNode } from "./paragraph";
 import { transformTimeNode } from "./time";
-import {
-  type ElementTypeToMdastNodeMap,
-  type IntrinsicsNode,
-  rootContentTypes,
-} from "./types";
+import { type ElementTypeToMdastNodeMap, type IntrinsicsNode, rootContentTypes } from "./types";
 
 export const mdastToMarkdown = (root: mdast.Root): string => {
   return toMarkdown(root, {
@@ -74,9 +66,7 @@ export const traverseMarkdown = (
 
 export const transformToMdast = (element: object): mdast.Root => {
   if ("type" in element && element.type === "markdown") {
-    return transformNode(element as IntrinsicsNode, [
-      "markdown",
-    ])[0] as mdast.Root;
+    return transformNode(element as IntrinsicsNode, ["markdown"])[0] as mdast.Root;
   }
 
   throw new MdastSemanticError("Expected root element");
@@ -164,13 +154,9 @@ const transformNode = (
     case "role":
       return transformRoleNode(element as IntrinsicsNode<"role">);
     case "slashCommand":
-      return transformSlashCommandNode(
-        element as IntrinsicsNode<"slashCommand">,
-      );
+      return transformSlashCommandNode(element as IntrinsicsNode<"slashCommand">);
     case "guildNav":
-      return transformGuildNavigationNode(
-        element as IntrinsicsNode<"guildNav">,
-      );
+      return transformGuildNavigationNode(element as IntrinsicsNode<"guildNav">);
 
     case "emoji":
       return transformEmojiNode(element as IntrinsicsNode<"emoji">);

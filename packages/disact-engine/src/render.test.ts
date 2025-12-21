@@ -54,10 +54,7 @@ function h(
 /**
  * Suspense要素を作成するヘルパー関数
  */
-function Suspense(props: {
-  fallback: DisactNode;
-  children: DisactNode;
-}): DisactElement {
+function Suspense(props: { fallback: DisactNode; children: DisactNode }): DisactElement {
   return {
     type: "suspense",
     props,
@@ -77,9 +74,7 @@ describe("renderToReadableStream", () => {
   };
 
   // ストリームから結果を読み取るヘルパー関数
-  const readStreamToCompletion = async (
-    stream: ReadableStream,
-  ): Promise<RenderedElement[]> => {
+  const readStreamToCompletion = async (stream: ReadableStream): Promise<RenderedElement[]> => {
     const reader = stream.getReader();
     const chunks: RenderedElement[] = [];
 
@@ -188,13 +183,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should filter out null and undefined children", async () => {
-      const element = h("div", null, [
-        "Valid text",
-        null,
-        undefined,
-        "Another valid text",
-        "",
-      ]);
+      const element = h("div", null, ["Valid text", null, undefined, "Another valid text", ""]);
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -235,9 +224,8 @@ describe("renderToReadableStream", () => {
       const InnerComponent: FunctionComponent<{ text: string }> = ({ text }) =>
         h("span", null, text);
 
-      const OuterComponent: FunctionComponent<{ message: string }> = ({
-        message,
-      }) => h("div", null, h(InnerComponent, { text: message }));
+      const OuterComponent: FunctionComponent<{ message: string }> = ({ message }) =>
+        h("div", null, h(InnerComponent, { text: message }));
 
       const element = h(OuterComponent, {
         message: "Hello from nested component",
@@ -256,9 +244,7 @@ describe("renderToReadableStream", () => {
             type: "intrinsic",
             name: "span",
             props: {},
-            children: [
-              { type: "text", content: "Hello from nested component" },
-            ],
+            children: [{ type: "text", content: "Hello from nested component" }],
           },
         ],
       });
@@ -306,9 +292,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle FC returning conditional FC based on props", async () => {
-      const PrimaryButton: FunctionComponent<{ children: string }> = ({
-        children,
-      }) =>
+      const PrimaryButton: FunctionComponent<{ children: string }> = ({ children }) =>
         h(
           "button",
           {
@@ -317,9 +301,7 @@ describe("renderToReadableStream", () => {
           children,
         );
 
-      const SecondaryButton: FunctionComponent<{ children: string }> = ({
-        children,
-      }) =>
+      const SecondaryButton: FunctionComponent<{ children: string }> = ({ children }) =>
         h(
           "button",
           {
@@ -331,8 +313,7 @@ describe("renderToReadableStream", () => {
       const AdaptiveButton: FunctionComponent<{
         isPrimary: boolean;
         text: string;
-      }> = ({ isPrimary, text }) =>
-        h(isPrimary ? PrimaryButton : SecondaryButton, {}, text);
+      }> = ({ isPrimary, text }) => h(isPrimary ? PrimaryButton : SecondaryButton, {}, text);
 
       // Test primary variant
       const primaryElement = h(AdaptiveButton, {
@@ -557,9 +538,7 @@ describe("renderToReadableStream", () => {
             type: "intrinsic",
             name: "main",
             props: {},
-            children: [
-              { type: "text", content: "Are you sure you want to continue?" },
-            ],
+            children: [{ type: "text", content: "Are you sure you want to continue?" }],
           },
           {
             type: "intrinsic",
@@ -743,11 +722,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle nested Fragment pattern", async () => {
-      const Fragment = ({
-        children,
-      }: {
-        children: DisactElement[];
-      }): DisactNode => children;
+      const Fragment = ({ children }: { children: DisactElement[] }): DisactNode => children;
 
       const containerElement = h(
         "article",
@@ -756,10 +731,7 @@ describe("renderToReadableStream", () => {
           h(
             "header",
             null,
-            h(Fragment, {}, [
-              h("h1", null, "Main Title"),
-              h("p", null, "Subtitle"),
-            ]),
+            h(Fragment, {}, [h("h1", null, "Main Title"), h("p", null, "Subtitle")]),
           ),
           h("main", null, "Main content"),
         ]),
@@ -1105,8 +1077,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should render normally when child doesn't throw a Promise", async () => {
-      const NormalComponent: FunctionComponent = () =>
-        h("div", null, "Normal content");
+      const NormalComponent: FunctionComponent = () => h("div", null, "Normal content");
 
       const element = Suspense({
         fallback: "Loading...",
@@ -1141,9 +1112,7 @@ describe("renderToReadableStream", () => {
       const stream = renderToReadableStream(element, mockContext);
 
       // エラーが投げられた場合はストリームエラーになる
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Test error",
-      );
+      await expect(readStreamToCompletion(stream)).rejects.toThrow("Test error");
     });
 
     it("should handle Suspense as non-root element", async () => {
@@ -1217,11 +1186,7 @@ describe("renderToReadableStream", () => {
       };
 
       const Child: FunctionComponent = () =>
-        h("span", null, [
-          "Child prefix: ",
-          h(GrandChild, {}),
-          " - Child suffix",
-        ]);
+        h("span", null, ["Child prefix: ", h(GrandChild, {}), " - Child suffix"]);
 
       const element = Suspense({
         fallback: "Loading grandchild...",
@@ -1264,10 +1229,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle multiple async components", async () => {
-      const { promise: promise1, resolve: resolve1 } =
-        Promise.withResolvers<string>();
-      const { promise: promise2, resolve: resolve2 } =
-        Promise.withResolvers<string>();
+      const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
+      const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
       const AsyncComponent1: FunctionComponent = () => {
         const result = use(promise1);
@@ -1371,16 +1334,12 @@ describe("renderToReadableStream", () => {
       const stream = renderToReadableStream(element, mockContext);
 
       // 拒否されたPromiseの場合はエラーがストリームに伝播される
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Promise rejected",
-      );
+      await expect(readStreamToCompletion(stream)).rejects.toThrow("Promise rejected");
     });
 
     it("should handle parallel Suspense boundaries", async () => {
-      const { promise: promise1, resolve: resolve1 } =
-        Promise.withResolvers<string>();
-      const { promise: promise2, resolve: resolve2 } =
-        Promise.withResolvers<string>();
+      const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
+      const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
       const AsyncComponent1: FunctionComponent = () => {
         const result = use(promise1);
@@ -1431,10 +1390,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should stream intermediate results when Promises resolve individually", async () => {
-      const { promise: promise1, resolve: resolve1 } =
-        Promise.withResolvers<string>();
-      const { promise: promise2, resolve: resolve2 } =
-        Promise.withResolvers<string>();
+      const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
+      const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
       const AsyncComponent1: FunctionComponent = () => {
         const result = use(promise1);
@@ -1532,10 +1489,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle different resolution timing correctly", async () => {
-      const { promise: fastPromise, resolve: resolveFast } =
-        Promise.withResolvers<string>();
-      const { promise: slowPromise, resolve: resolveSlow } =
-        Promise.withResolvers<string>();
+      const { promise: fastPromise, resolve: resolveFast } = Promise.withResolvers<string>();
+      const { promise: slowPromise, resolve: resolveSlow } = Promise.withResolvers<string>();
 
       const FastComponent: FunctionComponent = () => {
         const result = use(fastPromise);
@@ -1648,8 +1603,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should enqueue only once when multiple Suspense boundaries share the same Promise", async () => {
-      const { promise: sharedPromise, resolve: resolveShared } =
-        Promise.withResolvers<string>();
+      const { promise: sharedPromise, resolve: resolveShared } = Promise.withResolvers<string>();
 
       const AsyncComponent1: FunctionComponent = () => {
         const result = use(sharedPromise);
@@ -1714,10 +1668,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle mixed shared and unique Promises correctly", async () => {
-      const { promise: sharedPromise, resolve: resolveShared } =
-        Promise.withResolvers<string>();
-      const { promise: uniquePromise, resolve: resolveUnique } =
-        Promise.withResolvers<string>();
+      const { promise: sharedPromise, resolve: resolveShared } = Promise.withResolvers<string>();
+      const { promise: uniquePromise, resolve: resolveUnique } = Promise.withResolvers<string>();
 
       const SharedComponent1: FunctionComponent = () => {
         const result = use(sharedPromise);
@@ -1814,8 +1766,7 @@ describe("renderToReadableStream", () => {
 
   describe("ネストしたSuspense機能", () => {
     it("should handle basic nested Suspense with inner component being async", async () => {
-      const { promise: innerPromise, resolve: resolveInner } =
-        Promise.withResolvers<string>();
+      const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
       const InnerAsyncComponent: FunctionComponent = () => {
         const result = use(innerPromise);
@@ -1879,8 +1830,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle nested Suspense with outer component being async", async () => {
-      const { promise: outerPromise, resolve: resolveOuter } =
-        Promise.withResolvers<string>();
+      const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
 
       const OuterAsyncComponent: FunctionComponent = () => {
         const result = use(outerPromise);
@@ -1942,10 +1892,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle nested Suspense with both components being async", async () => {
-      const { promise: outerPromise, resolve: resolveOuter } =
-        Promise.withResolvers<string>();
-      const { promise: innerPromise, resolve: resolveInner } =
-        Promise.withResolvers<string>();
+      const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
+      const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
       const InnerAsyncComponent: FunctionComponent = () => {
         const result = use(innerPromise);
@@ -2023,10 +1971,8 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle nested Suspense with inner component resolving first", async () => {
-      const { promise: outerPromise, resolve: resolveOuter } =
-        Promise.withResolvers<string>();
-      const { promise: innerPromise, resolve: resolveInner } =
-        Promise.withResolvers<string>();
+      const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
+      const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
       const InnerAsyncComponent: FunctionComponent = () => {
         const result = use(innerPromise);
@@ -2066,17 +2012,10 @@ describe("renderToReadableStream", () => {
 
       // 内側だけが解決されても、外側がまだ未解決なのでチャンクは送信されない
       // Promise.raceでタイムアウトを使って確認
-      const timeoutPromise = new Promise((resolve) =>
-        setTimeout(() => resolve("timeout"), 50),
-      );
-      const secondChunkPromise = reader
-        .read()
-        .then((chunk) => ({ type: "chunk", chunk }));
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve("timeout"), 50));
+      const secondChunkPromise = reader.read().then((chunk) => ({ type: "chunk", chunk }));
 
-      const raceResult = await Promise.race([
-        timeoutPromise,
-        secondChunkPromise,
-      ]);
+      const raceResult = await Promise.race([timeoutPromise, secondChunkPromise]);
       expect(raceResult).toBe("timeout"); // チャンクではなくタイムアウトが先に発生
 
       // 外側のPromiseを解決
@@ -2145,11 +2084,7 @@ describe("renderToReadableStream", () => {
       };
 
       const WrapperComponent: FunctionComponent = () =>
-        h("div", null, [
-          "Wrapper start - ",
-          h(NestedComponent, {}),
-          " - Wrapper end",
-        ]);
+        h("div", null, ["Wrapper start - ", h(NestedComponent, {}), " - Wrapper end"]);
 
       const element = h(WrapperComponent, {});
 
@@ -2286,9 +2221,7 @@ describe("renderToReadableStream", () => {
 
       const stream = renderToReadableStream(element, mockContext);
 
-      await expect(readStreamToCompletion(stream)).rejects.toThrow(
-        "Uncaught error",
-      );
+      await expect(readStreamToCompletion(stream)).rejects.toThrow("Uncaught error");
     });
 
     it("should handle nested ErrorBoundary with inner error", async () => {
@@ -2387,8 +2320,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should not catch errors when child renders successfully", async () => {
-      const NormalComponent: FunctionComponent = () =>
-        h("span", null, "Normal content");
+      const NormalComponent: FunctionComponent = () => h("span", null, "Normal content");
 
       const ErrorBoundary = (props: {
         fallback: (error: Error) => DisactNode;
@@ -2614,8 +2546,7 @@ describe("renderToReadableStream", () => {
         throw outerError;
       };
 
-      const NormalComponent: FunctionComponent = () =>
-        h("span", null, "Inner normal content");
+      const NormalComponent: FunctionComponent = () => h("span", null, "Inner normal content");
 
       const ErrorBoundary = (props: {
         fallback: (error: Error) => DisactNode;

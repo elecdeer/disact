@@ -12,9 +12,7 @@ export type SectionElement = {
   children: DisactNode;
 };
 
-const sectionComponentSchema = z.discriminatedUnion("name", [
-  textDisplayElementSchema,
-]);
+const sectionComponentSchema = z.discriminatedUnion("name", [textDisplayElementSchema]);
 
 const sectionAccessorySchema = z.discriminatedUnion("name", [
   buttonElementSchema,

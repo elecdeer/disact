@@ -56,27 +56,19 @@ export const createSessionFromApplicationCommandInteraction = (
     commit: async (payload: PayloadElements): Promise<void> => {
       if (!hasCommitted) {
         // 初回: POST /interactions/{interaction.id}/{interaction.token}/callback
-        await updateOriginalWebhookMessage(
-          interaction.application_id,
-          interaction.token,
-          {
-            components: payload,
-            flags: messageFlags({
-              isComponentsV2: true,
-              ephemeral,
-            }),
-          },
-        );
+        await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
+          components: payload,
+          flags: messageFlags({
+            isComponentsV2: true,
+            ephemeral,
+          }),
+        });
         hasCommitted = true;
       } else {
         // 2回目以降: PATCH /webhooks/{application.id}/{interaction.token}/messages/@original
-        await updateOriginalWebhookMessage(
-          interaction.application_id,
-          interaction.token,
-          {
-            components: payload,
-          },
-        );
+        await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
+          components: payload,
+        });
       }
       cachedPayload = payload;
     },

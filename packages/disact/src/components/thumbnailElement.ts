@@ -1,7 +1,4 @@
-import {
-  type APIThumbnailComponent,
-  ComponentType,
-} from "discord-api-types/v10";
+import { type APIThumbnailComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../utils/removeUndefined";
 

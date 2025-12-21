@@ -4,9 +4,7 @@ export type IntrinsicElementName = string;
 export type PropsBase = Record<PropertyKey, unknown>;
 
 // biome-ignore lint/suspicious/noExplicitAny: 右側はanyにせざるを得ない
-export type FunctionComponent<P extends PropsBase = any> = (
-  props: P,
-) => DisactNode;
+export type FunctionComponent<P extends PropsBase = any> = (props: P) => DisactNode;
 
 export type DevSource = {
   fileName: string;
@@ -28,12 +26,7 @@ export type DisactElement =
  *
  * FCの返り値やchildrenとして使える型
  */
-export type DisactNode =
-  | DisactElement
-  | string
-  | null
-  | undefined
-  | DisactNode[];
+export type DisactNode = DisactElement | string | null | undefined | DisactNode[];
 
 type DisactElementBase = {
   _devSource?: DevSource;

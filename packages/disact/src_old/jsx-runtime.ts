@@ -1,10 +1,6 @@
 import type { DisactJSX, FunctionComponent } from "./jsx/jsx-internal";
 
-import {
-  jsx as _jsx,
-  jsxs as _jsxs,
-  FragmentInternal,
-} from "./jsx/jsx-internal";
+import { jsx as _jsx, jsxs as _jsxs, FragmentInternal } from "./jsx/jsx-internal";
 
 export const jsx = (
   type: FunctionComponent | keyof DisactJSX.IntrinsicElements,
@@ -31,6 +27,5 @@ export namespace JSX {
 
   export interface IntrinsicElements extends DisactJSX.IntrinsicElements {}
 
-  export interface ElementChildrenAttribute
-    extends DisactJSX.ElementChildrenAttribute {}
+  export interface ElementChildrenAttribute extends DisactJSX.ElementChildrenAttribute {}
 }

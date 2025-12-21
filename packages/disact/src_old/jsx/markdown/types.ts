@@ -53,9 +53,7 @@ export interface IntrinsicElements {
   // spoiler: AnyObject;
 }
 
-export type IntrinsicsNode<
-  T extends keyof IntrinsicElements = keyof IntrinsicElements,
-> = {
+export type IntrinsicsNode<T extends keyof IntrinsicElements = keyof IntrinsicElements> = {
   type: string;
   props: Omit<IntrinsicElements[T], "children"> & {
     children?: IntrinsicsNode | IntrinsicsNode[];

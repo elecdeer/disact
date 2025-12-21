@@ -30,12 +30,7 @@ const isDifferent = (prev: unknown, next: unknown): boolean => {
   if (prevType !== nextType) return true;
 
   // プリミティブ値の比較
-  if (
-    prevType !== "object" ||
-    nextType !== "object" ||
-    prev === null ||
-    next === null
-  ) {
+  if (prevType !== "object" || nextType !== "object" || prev === null || next === null) {
     return prev !== next;
   }
 

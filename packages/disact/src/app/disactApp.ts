@@ -20,10 +20,7 @@ export const createDisactApp = (): DisactApp => {
         const current = await session.getCurrent();
         const chunkPayload = toMessageComponentsPayload(chunk);
         // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
-        if (
-          current !== null &&
-          !isDifferentPayloadElement(current, chunkPayload)
-        ) {
+        if (current !== null && !isDifferentPayloadElement(current, chunkPayload)) {
           continue;
         }
 

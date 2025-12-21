@@ -1,7 +1,4 @@
-import {
-  createDisactApp,
-  createSessionFromApplicationCommandInteraction,
-} from "disact";
+import { createDisactApp, createSessionFromApplicationCommandInteraction } from "disact";
 import type {
   APIApplicationCommandInteraction,
   APIInteraction,
@@ -19,9 +16,7 @@ import type { Context } from "hono";
  * @param c - Honoのコンテキスト
  * @returns Interactionに対するレスポンス
  */
-export const handleInteraction = async (
-  c: Context,
-): Promise<APIInteractionResponse> => {
+export const handleInteraction = async (c: Context): Promise<APIInteractionResponse> => {
   // ミドルウェアで保存された生のボディを取得
   const rawBody = c.get("rawBody") as string;
   const interaction: APIInteraction = JSON.parse(rawBody);
@@ -71,12 +66,9 @@ const handleApplicationCommand = async (
 ): Promise<void> => {
   try {
     // Sessionを作成
-    const session = createSessionFromApplicationCommandInteraction(
-      interaction,
-      {
-        ephemeral: false,
-      },
-    );
+    const session = createSessionFromApplicationCommandInteraction(interaction, {
+      ephemeral: false,
+    });
 
     // DisactAppを作成
     const app = createDisactApp();
@@ -92,9 +84,7 @@ const handleApplicationCommand = async (
           }
         >
           <textDisplay>✨ Hello from disact!</textDisplay>
-          <textDisplay>
-            実行されたコマンド: /{interaction.data.name}
-          </textDisplay>
+          <textDisplay>実行されたコマンド: /{interaction.data.name}</textDisplay>
           <textDisplay>
             disactを使用してDiscord Message ComponentsをJSXで記述しています！
           </textDisplay>

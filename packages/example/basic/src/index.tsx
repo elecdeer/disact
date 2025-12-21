@@ -20,9 +20,7 @@ const port = Number(process.env.PORT) || 3000;
 
 console.log(`Server starting on port ${port}...`);
 console.log("Environment:");
-console.log(
-  `  DISCORD_PUBLIC_KEY: ${process.env.DISCORD_PUBLIC_KEY ? "Set" : "Not set"}`,
-);
+console.log(`  DISCORD_PUBLIC_KEY: ${process.env.DISCORD_PUBLIC_KEY ? "Set" : "Not set"}`);
 console.log(`  PORT: ${port}`);
 
 serve({

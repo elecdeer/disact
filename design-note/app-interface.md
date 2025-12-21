@@ -646,11 +646,13 @@ const userNameStore = createExternalStore({
 `session.messageId`の有無により、自動的に動作を切り替えます：
 
 #### messageIdがない場合（新規メッセージ作成）
+
 - コンポーネントのレンダリング
 - Interaction responseの生成
 - ハンドラーの収集（メモリ内のみ）
 
 #### messageIdがある場合（既存メッセージ更新）
+
 - 状態の復元（customId + 外部ストレージ）
 - コンポーネントの再構築
 - Hydration検証
@@ -659,6 +661,7 @@ const userNameStore = createExternalStore({
 - Discord APIでメッセージ更新
 
 ### 設計の特徴
+
 - **統一されたAPI**: Application CommandとComponent Interactionで同じメソッドを使用
 - **ステートレス**: リクエストごとに完全に再構築
 - **Hydration**: React SSRと同様の仕組み

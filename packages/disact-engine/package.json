@@ -1,8 +1,11 @@
 {
   "name": "@disact/engine",
-  "private": true,
   "version": "0.0.1",
+  "private": true,
   "description": "",
+  "keywords": [],
+  "license": "MIT",
+  "author": "elecdeer",
   "type": "module",
   "exports": {
     ".": {
@@ -19,8 +22,5 @@
     "@monorepo/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "ts-dedent": "catalog:"
-  },
-  "keywords": [],
-  "author": "elecdeer",
-  "license": "MIT"
+  }
 }

@@ -138,17 +138,12 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       components: [{ type: 10, content: "Hello World" }],
     };
 
-    vi.mocked(getOriginalWebhookMessage).mockResolvedValue(
-      mockMessageResponse as any,
-    );
+    vi.mocked(getOriginalWebhookMessage).mockResolvedValue(mockMessageResponse as any);
 
     const interaction = createMockInteraction();
-    const session = createSessionFromApplicationCommandInteraction(
-      interaction,
-      {
-        alwaysFetch: true,
-      },
-    );
+    const session = createSessionFromApplicationCommandInteraction(interaction, {
+      alwaysFetch: true,
+    });
 
     const payload: PayloadElements = [
       {
@@ -204,17 +199,12 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       components: [{ type: 10, content: "From API" }],
     };
 
-    vi.mocked(getOriginalWebhookMessage).mockResolvedValue(
-      mockMessageResponse as any,
-    );
+    vi.mocked(getOriginalWebhookMessage).mockResolvedValue(mockMessageResponse as any);
 
     const interaction = createMockInteraction();
-    const session = createSessionFromApplicationCommandInteraction(
-      interaction,
-      {
-        alwaysFetch: true,
-      },
-    );
+    const session = createSessionFromApplicationCommandInteraction(interaction, {
+      alwaysFetch: true,
+    });
 
     const payload: PayloadElements = [
       {
@@ -238,12 +228,9 @@ describe("createSessionFromApplicationCommandInteraction", () => {
 
   it("ephemeralオプションは実装されていないが指定可能（将来の拡張用）", async () => {
     const interaction = createMockInteraction();
-    const session = createSessionFromApplicationCommandInteraction(
-      interaction,
-      {
-        ephemeral: true,
-      },
-    );
+    const session = createSessionFromApplicationCommandInteraction(interaction, {
+      ephemeral: true,
+    });
 
     // ephemeralは現在実装されていないが、オプションとして指定可能
     expect(session).toBeDefined();

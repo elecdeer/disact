@@ -31,6 +31,5 @@ export namespace JSX {
 
   export interface IntrinsicElements extends DisactJSX.IntrinsicElements {}
 
-  export interface ElementChildrenAttribute
-    extends DisactJSX.ElementChildrenAttribute {}
+  export interface ElementChildrenAttribute extends DisactJSX.ElementChildrenAttribute {}
 }

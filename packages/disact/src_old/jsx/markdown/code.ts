@@ -3,9 +3,7 @@ import { toArray } from "../../util/toArray";
 import { mapChildren } from "./markdown";
 import type { IntrinsicsNode } from "./types";
 
-export const transformInlineCodeNode = (
-  element: IntrinsicsNode<"code">,
-): [mdast.InlineCode] => {
+export const transformInlineCodeNode = (element: IntrinsicsNode<"code">): [mdast.InlineCode] => {
   const children = toArray(element.props.children ?? []);
 
   return [
@@ -18,9 +16,7 @@ export const transformInlineCodeNode = (
   ];
 };
 
-export const transformCodeBlockNode = (
-  element: IntrinsicsNode<"pre">,
-): [mdast.Code] => {
+export const transformCodeBlockNode = (element: IntrinsicsNode<"pre">): [mdast.Code] => {
   const children = toArray(element.props.children ?? []);
 
   return [

@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a monorepo managed with pnpm workspaces and Turbo that implements a Discord bot framework with JSX-like syntax for markdown rendering.
 
 ### Key Packages
+
 - `packages/disact`: Core library providing JSX runtime and markdown transformation
 - `packages/disact-engine`: Rendering engine for Discord elements
 - `packages/example/basic`: Example usage
@@ -15,16 +16,19 @@ This is a monorepo managed with pnpm workspaces and Turbo that implements a Disc
 ## Common Commands
 
 ### Building
+
 ```bash
 pnpm run build          # Build all packages using Turbo
 ```
 
 ### Linting
+
 ```bash
 pnpm run lint           # Lint all packages using Biome
 ```
 
 ### Running Tests
+
 ```bash
 # Tests use vitest - run from individual package directories
 cd packages/disact && npx vitest
@@ -50,12 +54,14 @@ cd packages/disact-engine && npx vitest
    - Fragment elements for grouping without wrapper elements
 
 ### Key Files
+
 - `packages/disact/src/jsx/renderer.ts`: Main rendering logic
 - `packages/disact/src/jsx/markdown/markdown.ts`: Markdown transformation pipeline
 - `packages/disact-engine/src/render.ts`: Core rendering engine
 - `packages/disact/src/jsx/jsx-internal.ts`: JSX type definitions and utilities
 
 ### Testing
+
 - Tests are located alongside source files (`.test.ts`, `.test.tsx`)
 - Uses vitest for testing framework
 - Test files cover both unit tests and integration scenarios
@@ -72,6 +78,7 @@ cd packages/disact-engine && npx vitest
 When you need to reference discord-api-types type definitions:
 
 1. **Find the package path**:
+
 ```bash
 npm list -r --depth 0 --parseable discord-api-types
 ```

@@ -47,9 +47,7 @@ export const testRender = async <Context = undefined>(
     (async () => {
       for await (const value of stream) {
         // RenderResult を PayloadElement[] に変換
-        const payloads = removeUndefinedValuesDeep(
-          renderResultToPayloads(value),
-        );
+        const payloads = removeUndefinedValuesDeep(renderResultToPayloads(value));
         history.push(payloads);
         result.current = payloads;
 

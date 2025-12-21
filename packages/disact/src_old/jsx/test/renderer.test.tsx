@@ -1,10 +1,6 @@
 /** @jsxImportSource ../../ */
 
-import type {
-  DisactChildElement,
-  DisactChildElements,
-  FunctionComponent,
-} from "jsx/jsx-internal";
+import type { DisactChildElement, DisactChildElements, FunctionComponent } from "jsx/jsx-internal";
 import { describe, expect, test } from "vitest";
 import { createRenderer } from "../renderer";
 
