@@ -1,4 +1,4 @@
-export { Fragment, jsx } from "@disact/engine";
+export { Fragment, jsx, jsx as jsxs } from "@disact/engine";
 
 // Re-export IntrinsicElements under a different name for JSX namespace
 type _IntrinsicElements = import("./components/index.ts").IntrinsicElements;
