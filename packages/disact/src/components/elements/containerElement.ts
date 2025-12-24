@@ -5,6 +5,7 @@ import { removeUndefined } from "../../utils/removeUndefined";
 import { actionRowInMessageElementSchema } from "./actionRowElement";
 import { fileElementSchema } from "./fileElement";
 import { mediaGalleryElementSchema } from "./mediaGalleryElement";
+import { createNamedSlotSchema } from "./schemaUtils";
 import { sectionElementSchema } from "./sectionElement";
 import { separatorElementSchema } from "./separatorElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
@@ -16,7 +17,7 @@ export type ContainerElement = {
   children: DisactNode;
 };
 
-const containerComponentsSchema = z.discriminatedUnion("name", [
+const containerComponentsSchema = z.union([
   actionRowInMessageElementSchema,
   fileElementSchema,
   mediaGalleryElementSchema,
@@ -28,21 +29,24 @@ const containerComponentsSchema = z.discriminatedUnion("name", [
 export const containerElementSchema = z
   .object({
     type: z.literal("intrinsic"),
-    name: z.literal("container"),
+    name: z.literal("message-component"),
     props: z.object({
+      type: z.literal(ComponentType.Container),
       id: z.optional(z.number().int().min(0)),
       accentColor: z.optional(z.number().int().min(0).max(0xffffff)),
       spoiler: z.optional(z.boolean()),
     }),
-    children: z.array(containerComponentsSchema).min(1).max(40),
+    children: z
+      .array(createNamedSlotSchema("components", containerComponentsSchema, { min: 1, max: 40 }))
+      .length(1),
   })
-  .transform(
-    (obj): APIContainerComponent =>
-      removeUndefined({
-        type: ComponentType.Container as const,
-        id: obj.props.id,
-        accent_color: obj.props.accentColor,
-        components: obj.children,
-        spoiler: obj.props.spoiler,
-      }),
-  );
+  .transform((obj): APIContainerComponent => {
+    const components = obj.children[0]!.children;
+    return removeUndefined({
+      type: ComponentType.Container as const,
+      id: obj.props.id,
+      accent_color: obj.props.accentColor,
+      components,
+      spoiler: obj.props.spoiler,
+    });
+  });

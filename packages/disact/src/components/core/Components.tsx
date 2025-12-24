@@ -14,6 +14,6 @@ export type ComponentsProps = MessageComponentsRootElement;
  * </Components>
  * ```
  */
-export const Components = (props: ComponentsProps): DisactNode => {
-  return <components {...props} />;
+export const Components = ({ children }: ComponentsProps): DisactNode => {
+  return <>{children}</>;
 };

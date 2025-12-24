@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { StringSelectElement } from "../elements/stringSelectElement";
 
 export type StringSelectProps = StringSelectElement;
@@ -19,5 +20,5 @@ export type StringSelectProps = StringSelectElement;
  * ```
  */
 export const StringSelect = (props: StringSelectProps): DisactNode => {
-  return <stringSelect {...props} />;
+  return <message-component type={ComponentType.StringSelect} {...props} />;
 };

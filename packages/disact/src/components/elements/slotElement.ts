@@ -16,7 +16,7 @@ export const createSlotSchema = <T extends z.ZodTypeAny>(innerSchema: T) => {
       children: z
         .array(innerSchema)
         .length(1)
-        .transform((arr) => arr[0]),
+        .transform((arr) => arr[0]!),
     })
     .transform((obj) => obj.children);
 };

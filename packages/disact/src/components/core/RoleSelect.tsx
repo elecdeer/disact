@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { RoleSelectElement } from "../elements/roleSelectElement";
 
 export type RoleSelectProps = RoleSelectElement;
@@ -12,5 +13,5 @@ export type RoleSelectProps = RoleSelectElement;
  * ```
  */
 export const RoleSelect = (props: RoleSelectProps): DisactNode => {
-  return <roleSelect {...props} />;
+  return <message-component type={ComponentType.RoleSelect} {...props} />;
 };

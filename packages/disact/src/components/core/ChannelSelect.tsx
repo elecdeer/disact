@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { ChannelSelectElement } from "../elements/channelSelectElement";
 
 export type ChannelSelectProps = ChannelSelectElement;
@@ -12,5 +13,5 @@ export type ChannelSelectProps = ChannelSelectElement;
  * ```
  */
 export const ChannelSelect = (props: ChannelSelectProps): DisactNode => {
-  return <channelSelect {...props} />;
+  return <message-component type={ComponentType.ChannelSelect} {...props} />;
 };

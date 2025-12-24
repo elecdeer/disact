@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { MentionableSelectElement } from "../elements/mentionableSelectElement";
 
 export type MentionableSelectProps = MentionableSelectElement;
@@ -12,5 +13,5 @@ export type MentionableSelectProps = MentionableSelectElement;
  * ```
  */
 export const MentionableSelect = (props: MentionableSelectProps): DisactNode => {
-  return <mentionableSelect {...props} />;
+  return <message-component type={ComponentType.MentionableSelect} {...props} />;
 };

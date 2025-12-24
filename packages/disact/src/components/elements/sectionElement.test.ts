@@ -1,3 +1,4 @@
+import { ComponentType } from "discord-api-types/v10";
 import { describe, expect, test } from "vitest";
 import { sectionElementSchema } from "./sectionElement";
 
@@ -6,8 +7,10 @@ describe("sectionElement", () => {
     expect(
       sectionElementSchema.parse({
         type: "intrinsic",
-        name: "section",
-        props: {},
+        name: "message-component",
+        props: {
+          type: ComponentType.Section,
+        },
         children: [
           {
             type: "intrinsic",
@@ -18,15 +21,23 @@ describe("sectionElement", () => {
             children: [
               {
                 type: "intrinsic",
-                name: "button",
+                name: "message-component",
                 props: {
+                  type: ComponentType.Button,
                   customId: "section_button",
                   style: "primary",
                 },
                 children: [
                   {
-                    type: "text",
-                    content: "アクション",
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [
+                      {
+                        type: "text",
+                        content: "アクション",
+                      },
+                    ],
                   },
                 ],
               },
@@ -41,38 +52,65 @@ describe("sectionElement", () => {
             children: [
               {
                 type: "intrinsic",
-                name: "textDisplay",
-                props: {},
+                name: "message-component",
+                props: {
+                  type: ComponentType.TextDisplay,
+                },
                 children: [
                   {
-                    type: "text",
-                    content: "✨ Hello from disact!",
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [
+                      {
+                        type: "text",
+                        content: "✨ Hello from disact!",
+                      },
+                    ],
                   },
                 ],
               },
               {
                 type: "intrinsic",
-                name: "textDisplay",
-                props: {},
+                name: "message-component",
+                props: {
+                  type: ComponentType.TextDisplay,
+                },
                 children: [
                   {
-                    type: "text",
-                    content: "実行されたコマンド: /",
-                  },
-                  {
-                    type: "text",
-                    content: "test",
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [
+                      {
+                        type: "text",
+                        content: "実行されたコマンド: /",
+                      },
+                      {
+                        type: "text",
+                        content: "test",
+                      },
+                    ],
                   },
                 ],
               },
               {
                 type: "intrinsic",
-                name: "textDisplay",
-                props: {},
+                name: "message-component",
+                props: {
+                  type: ComponentType.TextDisplay,
+                },
                 children: [
                   {
-                    type: "text",
-                    content: "disactを使用してDiscord Message ComponentsをJSXで記述しています！",
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [
+                      {
+                        type: "text",
+                        content: "disactを使用してDiscord Message ComponentsをJSXで記述しています！",
+                      },
+                    ],
                   },
                 ],
               },

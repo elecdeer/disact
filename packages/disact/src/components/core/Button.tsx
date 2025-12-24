@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { ButtonElement } from "../elements/buttonElement";
 
 export type ButtonProps = ButtonElement;
@@ -13,6 +14,10 @@ export type ButtonProps = ButtonElement;
  * </Button>
  * ```
  */
-export const Button = (props: ButtonProps): DisactNode => {
-  return <button {...props} />;
+export const Button = ({ children, ...rest }: ButtonProps): DisactNode => {
+  return (
+    <message-component type={ComponentType.Button} {...rest}>
+      {children ? <slot name="children">{children}</slot> : null}
+    </message-component>
+  );
 };

@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { MediaGalleryElement } from "../elements/mediaGalleryElement";
 
 export type MediaGalleryProps = MediaGalleryElement;
@@ -8,9 +9,9 @@ export type MediaGalleryProps = MediaGalleryElement;
  *
  * @example
  * ```tsx
- * <MediaGallery items={[{ url: "https://example.com/image.png" }]} />
+ * <MediaGallery items={[{ media: { url: "https://example.com/image.png" } }]} />
  * ```
  */
 export const MediaGallery = (props: MediaGalleryProps): DisactNode => {
-  return <mediaGallery {...props} />;
+  return <message-component type={ComponentType.MediaGallery} {...props} />;
 };

@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { ActionRowElement } from "../elements/actionRowElement";
 
 export type ActionRowProps = ActionRowElement;
@@ -14,6 +15,10 @@ export type ActionRowProps = ActionRowElement;
  * </ActionRow>
  * ```
  */
-export const ActionRow = (props: ActionRowProps): DisactNode => {
-  return <actionRow {...props} />;
+export const ActionRow = ({ children, ...rest }: ActionRowProps): DisactNode => {
+  return (
+    <message-component type={ComponentType.ActionRow} {...rest}>
+      <slot name="components">{children}</slot>
+    </message-component>
+  );
 };

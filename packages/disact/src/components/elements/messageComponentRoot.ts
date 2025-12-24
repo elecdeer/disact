@@ -15,7 +15,7 @@ export type MessageComponentsRootElement = {
 export const messageComponentsRootElementSchema = z.object({
   children: z
     .array(
-      z.discriminatedUnion("name", [
+      z.union([
         actionRowInMessageElementSchema,
         containerElementSchema,
         fileElementSchema,

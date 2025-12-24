@@ -1,4 +1,5 @@
 import type { DisactNode } from "@disact/engine";
+import { ComponentType } from "discord-api-types/v10";
 import type { ThumbnailElement } from "../elements/thumbnailElement";
 
 export type ThumbnailProps = ThumbnailElement;
@@ -8,9 +9,9 @@ export type ThumbnailProps = ThumbnailElement;
  *
  * @example
  * ```tsx
- * <Thumbnail url="https://example.com/thumbnail.png" />
+ * <Thumbnail media={{ url: "https://example.com/thumbnail.png" }} />
  * ```
  */
 export const Thumbnail = (props: ThumbnailProps): DisactNode => {
-  return <thumbnail {...props} />;
+  return <message-component type={ComponentType.Thumbnail} {...props} />;
 };

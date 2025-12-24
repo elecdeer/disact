@@ -1,7 +1,11 @@
 import type { DisactNode } from "@disact/engine";
-import type { SectionElement } from "../elements/sectionElement";
+import { ComponentType } from "discord-api-types/v10";
 
-export type SectionProps = SectionElement;
+export type SectionProps = {
+  id?: number;
+  accessory: DisactNode;
+  children: DisactNode;
+};
 
 /**
  * Section - セクションコンポーネント
@@ -15,8 +19,19 @@ export type SectionProps = SectionElement;
  */
 export const Section = ({ accessory, children, ...rest }: SectionProps): DisactNode => {
   return (
-    <section {...rest} accessory={<slot>{accessory}</slot>}>
-      {children}
-    </section>
+    <message-component type={ComponentType.Section} {...rest}>
+      <slot name="accessory">{accessory}</slot>
+      <slot name="components">{children}</slot>
+    </message-component>
   );
 };
+
+/*
+ * transformTo
+ * {
+ *   type: ComponentType.Section,
+ *   id: 885,
+ *   components: [{...}, {...}],
+ *   accessory: {...}
+ * }
+ */

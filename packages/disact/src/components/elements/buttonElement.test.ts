@@ -22,7 +22,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "test-button",
+        "disabled": false,
+        "label": "Click me",
+        "style": 1,
+        "type": 2,
+      }
+    `);
   });
 
   test("secondary buttonをラベル付きで変換", () => {
@@ -45,7 +53,16 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "secondary-btn",
+        "disabled": false,
+        "id": 123,
+        "label": "Secondary",
+        "style": 2,
+        "type": 2,
+      }
+    `);
   });
 
   test("success buttonをラベル付きで変換", () => {
@@ -67,7 +84,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "success-btn",
+        "disabled": false,
+        "label": "Success",
+        "style": 3,
+        "type": 2,
+      }
+    `);
   });
 
   test("danger buttonをラベル付きで変換", () => {
@@ -90,7 +115,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "danger-btn",
+        "disabled": true,
+        "label": "Danger",
+        "style": 4,
+        "type": 2,
+      }
+    `);
   });
 
   test("link buttonを変換", () => {
@@ -112,7 +145,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "disabled": false,
+        "label": "Visit",
+        "style": 5,
+        "type": 2,
+        "url": "https://example.com",
+      }
+    `);
   });
 
   test("premium buttonを変換", () => {
@@ -134,7 +175,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "disabled": false,
+        "label": "Premium",
+        "sku_id": "1234567890",
+        "style": 6,
+        "type": 2,
+      }
+    `);
   });
 
   test("ラベルなしのbuttonを変換", () => {
@@ -149,7 +198,14 @@ describe("buttonElement", () => {
       children: undefined,
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "no-label",
+        "disabled": false,
+        "style": 1,
+        "type": 2,
+      }
+    `);
   });
 
   test("複数のtext要素を結合", () => {
@@ -175,7 +231,15 @@ describe("buttonElement", () => {
       ],
     });
 
-    expect(result).toMatchInlineSnapshot();
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "custom_id": "multi-text",
+        "disabled": false,
+        "label": "Click me",
+        "style": 1,
+        "type": 2,
+      }
+    `);
   });
 
   test("不正なname値でエラー", () => {
@@ -190,7 +254,7 @@ describe("buttonElement", () => {
         },
         children: [{ type: "text", content: "Test" }],
       });
-    }).toThrow("Expected");
+    }).toThrow("Invalid input");
   });
 
   test("80文字を超えるラベルでエラー", () => {
@@ -212,7 +276,7 @@ describe("buttonElement", () => {
           },
         ],
       });
-    }).toThrow("String must contain at most 80 character(s)");
+    }).toThrow("Too big");
   });
 
   test("customIdが100文字を超えるとエラー", () => {
@@ -234,7 +298,7 @@ describe("buttonElement", () => {
           },
         ],
       });
-    }).toThrow("String must contain at most 100 character(s)");
+    }).toThrow("Too big");
   });
 
   test("link buttonのURLが512文字を超えるとエラー", () => {
@@ -256,6 +320,6 @@ describe("buttonElement", () => {
           },
         ],
       });
-    }).toThrow("String must contain at most 512 character(s)");
+    }).toThrow("Too big");
   });
 });

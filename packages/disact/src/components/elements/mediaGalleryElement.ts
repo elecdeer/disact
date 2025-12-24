@@ -1,6 +1,7 @@
 import { type APIMediaGalleryComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
+import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
 export type MediaGalleryElement = {
   id?: number;
@@ -21,27 +22,22 @@ const mediaGalleryItemSchema = z.object({
   }),
 });
 
-export const mediaGalleryElementSchema = z
-  .object({
-    type: z.literal("intrinsic"),
-    name: z.literal("mediaGallery"),
-    props: z.object({
-      id: z.optional(z.number().int().min(0)),
-      items: z.array(mediaGalleryItemSchema).min(1).max(10),
+export const mediaGalleryElementSchema = createPropsOnlyComponentSchema(
+  ComponentType.MediaGallery,
+  z.object({
+    id: z.optional(z.number().int().min(0)),
+    items: z.array(mediaGalleryItemSchema).min(1).max(10),
+  }),
+  (props): APIMediaGalleryComponent =>
+    removeUndefined({
+      type: ComponentType.MediaGallery as const,
+      id: props.id,
+      items: props.items.map((item) =>
+        removeUndefined({
+          media: item.media,
+          description: item.description ?? null,
+          spoiler: item.spoiler,
+        }),
+      ),
     }),
-    children: z.null(),
-  })
-  .transform(
-    (obj): APIMediaGalleryComponent =>
-      removeUndefined({
-        type: ComponentType.MediaGallery as const,
-        id: obj.props.id,
-        items: obj.props.items.map((item) =>
-          removeUndefined({
-            media: item.media,
-            description: item.description ?? null,
-            spoiler: item.spoiler,
-          }),
-        ),
-      }),
-  );
+);
