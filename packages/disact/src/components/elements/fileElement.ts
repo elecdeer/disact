@@ -3,14 +3,6 @@ import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type FileElement = {
-  id?: number;
-  spoiler?: boolean;
-  file: {
-    url: string;
-  };
-};
-
 const unfurledMediaSchema = z.object({
   url: z.string().max(2048),
 });

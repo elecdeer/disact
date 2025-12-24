@@ -1,13 +1,7 @@
-import type { DisactNode } from "@disact/engine";
-import { type APITextDisplayComponent, ComponentType } from "discord-api-types/v10";
+import { ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { createSingleSlotComponentSchema, extractTextContent } from "./schemaUtils";
-
-export type TextDisplayElement = {
-  id?: number;
-  children: DisactNode;
-};
 
 const textNodeSchema = z.object({
   type: z.literal("text"),

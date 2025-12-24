@@ -1,4 +1,3 @@
-import type { DisactNode } from "@disact/engine";
 import { type APIContainerComponent, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
@@ -9,13 +8,6 @@ import { createNamedSlotSchema } from "./schemaUtils";
 import { sectionElementSchema } from "./sectionElement";
 import { separatorElementSchema } from "./separatorElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
-
-export type ContainerElement = {
-  id?: number;
-  accentColor?: number;
-  spoiler?: boolean;
-  children: DisactNode;
-};
 
 const containerComponentsSchema = z.union([
   actionRowInMessageElementSchema,

@@ -8,20 +8,6 @@ import { removeUndefined } from "../../utils/removeUndefined";
 import { snowflakeSchema } from "../../utils/snowflakeSchema";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type MentionableSelectElement = {
-  id?: number;
-  customId: string;
-  placeholder?: string;
-  minValues?: number;
-  maxValues?: number;
-  disabled?: boolean;
-  required?: boolean;
-  defaultValues?: Array<{
-    id: string;
-    type: "user" | "role";
-  }>;
-};
-
 export const mentionableSelectElementSchema = createPropsOnlyComponentSchema(
   ComponentType.MentionableSelect,
   z.object({

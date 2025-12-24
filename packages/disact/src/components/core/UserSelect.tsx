@@ -1,8 +1,19 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { UserSelectElement } from "../elements/userSelectElement";
+import type { FC } from "../..";
 
-export type UserSelectProps = UserSelectElement;
+export type UserSelectProps = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: {
+    id: string;
+    type: "user";
+  }[];
+};
 
 /**
  * UserSelect - ユーザー選択メニューコンポーネント
@@ -12,6 +23,6 @@ export type UserSelectProps = UserSelectElement;
  * <UserSelect customId="user-select" placeholder="ユーザーを選択" />
  * ```
  */
-export const UserSelect = (props: UserSelectProps): DisactNode => {
+export const UserSelect: FC<UserSelectProps> = (props) => {
   return <message-component type={ComponentType.UserSelect} {...props} />;
 };

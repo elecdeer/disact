@@ -1,4 +1,3 @@
-import type { DisactNode } from "@disact/engine";
 import {
   type APIActionRowComponent,
   type APIComponentInMessageActionRow,
@@ -13,11 +12,6 @@ import { roleSelectElementSchema } from "./roleSelectElement";
 import { createNamedSlotSchema } from "./schemaUtils";
 import { stringSelectElementSchema } from "./stringSelectElement";
 import { userSelectElementSchema } from "./userSelectElement";
-
-export type ActionRowElement = {
-  id?: number;
-  children: DisactNode;
-};
 
 export const actionRowInMessageElementSchema = z
   .object({

@@ -1,19 +1,8 @@
-import type { DisactNode } from "@disact/engine";
 import { type APIButtonComponent, ButtonStyle, ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { snowflakeSchema } from "../../utils/snowflakeSchema";
 import { createNamedSlotSchema, extractTextContent } from "./schemaUtils";
-
-export type ButtonElement = {
-  id?: number;
-  children?: DisactNode;
-  disabled?: boolean;
-} & (
-  | { style: "primary" | "secondary" | "success" | "danger"; customId: string }
-  | { style: "link"; url: string }
-  | { style: "premium"; skuId: string }
-);
 
 const textNodeSchema = z.object({
   type: z.literal("text"),
@@ -54,9 +43,7 @@ export const buttonElementSchema = z
     type: z.literal("intrinsic"),
     name: z.literal("message-component"),
     props: buttonPropsSchema,
-    children: z.optional(
-      z.array(createNamedSlotSchema("children", textNodeSchema)).length(1),
-    ),
+    children: z.optional(z.array(createNamedSlotSchema("children", textNodeSchema)).length(1)),
   })
   .transform((obj): APIButtonComponent => {
     const label =

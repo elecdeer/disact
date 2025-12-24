@@ -3,17 +3,6 @@ import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type MediaGalleryElement = {
-  id?: number;
-  items: Array<{
-    description?: string;
-    spoiler?: boolean;
-    media: {
-      url: string;
-    };
-  }>;
-};
-
 const mediaGalleryItemSchema = z.object({
   description: z.optional(z.string().min(1).max(1024)),
   spoiler: z.optional(z.boolean()),

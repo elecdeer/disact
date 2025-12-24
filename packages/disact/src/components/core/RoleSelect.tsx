@@ -1,8 +1,19 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { RoleSelectElement } from "../elements/roleSelectElement";
+import type { FC } from "../..";
 
-export type RoleSelectProps = RoleSelectElement;
+export type RoleSelectProps = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: {
+    id: string;
+    type: "role";
+  }[];
+};
 
 /**
  * RoleSelect - ロール選択メニューコンポーネント
@@ -12,6 +23,6 @@ export type RoleSelectProps = RoleSelectElement;
  * <RoleSelect customId="role-select" placeholder="ロールを選択" />
  * ```
  */
-export const RoleSelect = (props: RoleSelectProps): DisactNode => {
+export const RoleSelect: FC<RoleSelectProps> = (props) => {
   return <message-component type={ComponentType.RoleSelect} {...props} />;
 };

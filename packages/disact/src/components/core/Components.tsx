@@ -1,7 +1,8 @@
-import type { DisactNode } from "@disact/engine";
-import type { MessageComponentsRootElement } from "../elements/messageComponentRoot";
+import type { DisactNode, FC } from "../..";
 
-export type ComponentsProps = MessageComponentsRootElement;
+export type ComponentsProps = {
+  children: DisactNode;
+};
 
 /**
  * Components - メッセージコンポーネントのルート要素
@@ -14,6 +15,6 @@ export type ComponentsProps = MessageComponentsRootElement;
  * </Components>
  * ```
  */
-export const Components = ({ children }: ComponentsProps): DisactNode => {
+export const Components: FC<ComponentsProps> = ({ children }) => {
   return <>{children}</>;
 };

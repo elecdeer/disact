@@ -72,7 +72,7 @@ describe("separatorElement", () => {
         },
         children: null,
       });
-    }).toThrow();
+    }).toThrow("aaa");
   });
 
   test("childrenがnull以外でエラー", () => {

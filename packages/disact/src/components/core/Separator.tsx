@@ -1,8 +1,11 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { SeparatorElement } from "../elements/separatorElement";
+import type { FC } from "../..";
 
-export type SeparatorProps = SeparatorElement;
+export type SeparatorProps = {
+  id?: number;
+  spacing?: number | null;
+  divider?: boolean;
+};
 
 /**
  * Separator - 区切り線コンポーネント
@@ -12,6 +15,6 @@ export type SeparatorProps = SeparatorElement;
  * <Separator />
  * ```
  */
-export const Separator = (props: SeparatorProps = {}): DisactNode => {
+export const Separator: FC<SeparatorProps> = (props = {}) => {
   return <message-component type={ComponentType.Separator} {...props} />;
 };

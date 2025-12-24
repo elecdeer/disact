@@ -1,8 +1,13 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { FileElement } from "../elements/fileElement";
+import type { FC } from "../..";
 
-export type FileProps = FileElement;
+export type FileProps = {
+  id?: number;
+  spoiler?: boolean;
+  file: {
+    url: string;
+  };
+};
 
 /**
  * File - ファイルコンポーネント
@@ -12,6 +17,6 @@ export type FileProps = FileElement;
  * <File file={{ url: "https://example.com/file.png" }} />
  * ```
  */
-export const File = (props: FileProps): DisactNode => {
+export const File: FC<FileProps> = (props) => {
   return <message-component type={ComponentType.File} {...props} />;
 };

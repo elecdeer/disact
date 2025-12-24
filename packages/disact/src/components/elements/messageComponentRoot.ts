@@ -1,4 +1,3 @@
-import type { DisactNode } from "@disact/engine";
 import * as z from "zod";
 import { actionRowInMessageElementSchema } from "./actionRowElement";
 import { containerElementSchema } from "./containerElement";
@@ -7,10 +6,6 @@ import { mediaGalleryElementSchema } from "./mediaGalleryElement";
 import { sectionElementSchema } from "./sectionElement";
 import { separatorElementSchema } from "./separatorElement";
 import { textDisplayElementSchema } from "./textDisplayElement";
-
-export type MessageComponentsRootElement = {
-  children: DisactNode;
-};
 
 export const messageComponentsRootElementSchema = z.object({
   children: z

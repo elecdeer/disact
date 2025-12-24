@@ -1,8 +1,19 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { MentionableSelectElement } from "../elements/mentionableSelectElement";
+import type { FC } from "../..";
 
-export type MentionableSelectProps = MentionableSelectElement;
+export type MentionableSelectProps = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: {
+    id: string;
+    type: "user" | "role";
+  }[];
+};
 
 /**
  * MentionableSelect - メンション可能対象選択メニューコンポーネント
@@ -12,6 +23,6 @@ export type MentionableSelectProps = MentionableSelectElement;
  * <MentionableSelect customId="mentionable-select" placeholder="選択してください" />
  * ```
  */
-export const MentionableSelect = (props: MentionableSelectProps): DisactNode => {
+export const MentionableSelect: FC<MentionableSelectProps> = (props) => {
   return <message-component type={ComponentType.MentionableSelect} {...props} />;
 };

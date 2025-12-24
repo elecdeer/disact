@@ -1,8 +1,15 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { ButtonElement } from "../elements/buttonElement";
+import type { DisactNode, FC } from "../..";
 
-export type ButtonProps = ButtonElement;
+export type ButtonProps = {
+  id?: number;
+  children?: DisactNode;
+  disabled?: boolean;
+} & (
+  | { style: "primary" | "secondary" | "success" | "danger"; customId: string }
+  | { style: "link"; url: string }
+  | { style: "premium"; skuId: string }
+);
 
 /**
  * Button - クリック可能なボタンコンポーネント
@@ -14,7 +21,7 @@ export type ButtonProps = ButtonElement;
  * </Button>
  * ```
  */
-export const Button = ({ children, ...rest }: ButtonProps): DisactNode => {
+export const Button: FC<ButtonProps> = ({ children, ...rest }) => {
   return (
     <message-component type={ComponentType.Button} {...rest}>
       {children ? <slot name="children">{children}</slot> : null}

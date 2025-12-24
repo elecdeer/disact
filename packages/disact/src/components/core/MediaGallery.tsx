@@ -1,8 +1,17 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { MediaGalleryElement } from "../elements/mediaGalleryElement";
 
-export type MediaGalleryProps = MediaGalleryElement;
+import type { FC } from "../..";
+
+export type MediaGalleryProps = {
+  id?: number;
+  items: {
+    description?: string;
+    spoiler?: boolean;
+    media: {
+      url: string;
+    };
+  }[];
+};
 
 /**
  * MediaGallery - メディアギャラリーコンポーネント
@@ -12,6 +21,6 @@ export type MediaGalleryProps = MediaGalleryElement;
  * <MediaGallery items={[{ media: { url: "https://example.com/image.png" } }]} />
  * ```
  */
-export const MediaGallery = (props: MediaGalleryProps): DisactNode => {
+export const MediaGallery: FC<MediaGalleryProps> = (props) => {
   return <message-component type={ComponentType.MediaGallery} {...props} />;
 };

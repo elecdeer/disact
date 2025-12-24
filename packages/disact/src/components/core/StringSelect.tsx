@@ -1,8 +1,25 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { StringSelectElement } from "../elements/stringSelectElement";
+import type { FC } from "../..";
 
-export type StringSelectProps = StringSelectElement;
+export type StringSelectProps = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  options: Array<{
+    label: string;
+    value: string;
+    description?: string;
+    default?: boolean;
+    emoji?: {
+      id?: string;
+      name: string;
+    };
+  }>;
+};
 
 /**
  * StringSelect - 文字列選択メニューコンポーネント
@@ -19,6 +36,6 @@ export type StringSelectProps = StringSelectElement;
  * />
  * ```
  */
-export const StringSelect = (props: StringSelectProps): DisactNode => {
+export const StringSelect: FC<StringSelectProps> = (props) => {
   return <message-component type={ComponentType.StringSelect} {...props} />;
 };

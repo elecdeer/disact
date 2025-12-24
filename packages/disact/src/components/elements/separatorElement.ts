@@ -3,12 +3,6 @@ import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type SeparatorElement = {
-  id?: number;
-  spacing?: number | null;
-  divider?: boolean;
-};
-
 export const separatorElementSchema = createPropsOnlyComponentSchema(
   ComponentType.Separator,
   z.object({

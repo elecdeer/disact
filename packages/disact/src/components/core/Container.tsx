@@ -1,8 +1,13 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { ContainerElement } from "../elements/containerElement";
 
-export type ContainerProps = ContainerElement;
+import type { DisactNode, FC } from "../..";
+
+export type ContainerProps = {
+  id?: number;
+  accentColor?: number;
+  spoiler?: boolean;
+  children: DisactNode;
+};
 
 /**
  * Container - コンテナコンポーネント
@@ -14,7 +19,7 @@ export type ContainerProps = ContainerElement;
  * </Container>
  * ```
  */
-export const Container = ({ children, ...rest }: ContainerProps): DisactNode => {
+export const Container: FC<ContainerProps> = ({ children, ...rest }) => {
   return (
     <message-component type={ComponentType.Container} {...rest}>
       <slot name="components">{children}</slot>

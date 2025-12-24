@@ -8,20 +8,6 @@ import { removeUndefined } from "../../utils/removeUndefined";
 import { snowflakeSchema } from "../../utils/snowflakeSchema";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type UserSelectElement = {
-  id?: number;
-  customId: string;
-  placeholder?: string;
-  minValues?: number;
-  maxValues?: number;
-  disabled?: boolean;
-  required?: boolean;
-  defaultValues?: Array<{
-    id: string;
-    type: "user";
-  }>;
-};
-
 export const userSelectElementSchema = createPropsOnlyComponentSchema(
   ComponentType.UserSelect,
   z.object({

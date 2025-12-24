@@ -1,3 +1,5 @@
+import type { DisactNode, PropsBase } from "@disact/engine";
+
 export type {
   DisactElement,
   DisactNode,
@@ -16,7 +18,10 @@ export { Components, type ComponentsProps } from "./components/core/Components";
 export { Container, type ContainerProps } from "./components/core/Container";
 export { File, type FileProps } from "./components/core/File";
 export { MediaGallery, type MediaGalleryProps } from "./components/core/MediaGallery";
-export { MentionableSelect, type MentionableSelectProps } from "./components/core/MentionableSelect";
+export {
+  MentionableSelect,
+  type MentionableSelectProps,
+} from "./components/core/MentionableSelect";
 export { RoleSelect, type RoleSelectProps } from "./components/core/RoleSelect";
 export { Section, type SectionProps } from "./components/core/Section";
 export { Separator, type SeparatorProps } from "./components/core/Separator";
@@ -24,6 +29,9 @@ export { StringSelect, type StringSelectProps } from "./components/core/StringSe
 export { TextDisplay, type TextDisplayProps } from "./components/core/TextDisplay";
 export { Thumbnail, type ThumbnailProps } from "./components/core/Thumbnail";
 export { UserSelect, type UserSelectProps } from "./components/core/UserSelect";
+
+// TODO: 場所は要検討
+export type FC<P extends PropsBase = {}> = (props: P) => DisactNode;
 
 export type {
   ApplicationCommandInteraction,

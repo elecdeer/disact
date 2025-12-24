@@ -17,26 +17,6 @@ export const stringSelectOptionSchema = z.object({
   ),
 });
 
-export type StringSelectElement = {
-  id?: number;
-  customId: string;
-  placeholder?: string;
-  minValues?: number;
-  maxValues?: number;
-  disabled?: boolean;
-  required?: boolean;
-  options: Array<{
-    label: string;
-    value: string;
-    description?: string;
-    default?: boolean;
-    emoji?: {
-      id?: string;
-      name: string;
-    };
-  }>;
-};
-
 export const stringSelectElementSchema = createPropsOnlyComponentSchema(
   ComponentType.StringSelect,
   z.object({

@@ -1,8 +1,10 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { TextDisplayElement } from "../elements/textDisplayElement";
+import type { DisactNode, FC } from "../..";
 
-export type TextDisplayProps = TextDisplayElement;
+export type TextDisplayProps = {
+  id?: number;
+  children: DisactNode;
+};
 
 /**
  * TextDisplay - テキスト表示コンポーネント
@@ -12,7 +14,7 @@ export type TextDisplayProps = TextDisplayElement;
  * <TextDisplay>Hello, World!</TextDisplay>
  * ```
  */
-export const TextDisplay = ({ children, ...rest }: TextDisplayProps): DisactNode => {
+export const TextDisplay: FC<TextDisplayProps> = ({ children, ...rest }) => {
   return (
     <message-component type={ComponentType.TextDisplay} {...rest}>
       <slot name="children">{children}</slot>

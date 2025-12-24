@@ -1,8 +1,20 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { ChannelSelectElement } from "../elements/channelSelectElement";
+import type { FC } from "../..";
 
-export type ChannelSelectProps = ChannelSelectElement;
+export type ChannelSelectProps = {
+  id?: number;
+  customId: string;
+  placeholder?: string;
+  minValues?: number;
+  maxValues?: number;
+  disabled?: boolean;
+  required?: boolean;
+  defaultValues?: {
+    id: string;
+    type: "channel";
+  }[];
+  channelTypes?: number[];
+};
 
 /**
  * ChannelSelect - チャンネル選択メニューコンポーネント
@@ -12,6 +24,6 @@ export type ChannelSelectProps = ChannelSelectElement;
  * <ChannelSelect customId="channel-select" placeholder="チャンネルを選択" />
  * ```
  */
-export const ChannelSelect = (props: ChannelSelectProps): DisactNode => {
+export const ChannelSelect: FC<ChannelSelectProps> = (props) => {
   return <message-component type={ComponentType.ChannelSelect} {...props} />;
 };

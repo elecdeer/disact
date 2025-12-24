@@ -1,8 +1,14 @@
-import type { DisactNode } from "@disact/engine";
 import { ComponentType } from "discord-api-types/v10";
-import type { ThumbnailElement } from "../elements/thumbnailElement";
+import type { FC } from "../..";
 
-export type ThumbnailProps = ThumbnailElement;
+export type ThumbnailProps = {
+  id?: number;
+  description?: string;
+  spoiler?: boolean;
+  media: {
+    url: string;
+  };
+};
 
 /**
  * Thumbnail - サムネイルコンポーネント
@@ -12,6 +18,6 @@ export type ThumbnailProps = ThumbnailElement;
  * <Thumbnail media={{ url: "https://example.com/thumbnail.png" }} />
  * ```
  */
-export const Thumbnail = (props: ThumbnailProps): DisactNode => {
+export const Thumbnail: FC<ThumbnailProps> = (props) => {
   return <message-component type={ComponentType.Thumbnail} {...props} />;
 };

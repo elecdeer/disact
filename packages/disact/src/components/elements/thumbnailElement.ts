@@ -3,15 +3,6 @@ import * as z from "zod";
 import { removeUndefined } from "../../utils/removeUndefined";
 import { createPropsOnlyComponentSchema } from "./schemaUtils";
 
-export type ThumbnailElement = {
-  id?: number;
-  description?: string;
-  spoiler?: boolean;
-  media: {
-    url: string;
-  };
-};
-
 export const thumbnailElementSchema = createPropsOnlyComponentSchema(
   ComponentType.Thumbnail,
   z.object({
