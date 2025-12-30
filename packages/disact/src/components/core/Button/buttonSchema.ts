@@ -51,11 +51,6 @@ export const buttonElementSchema = z
         ? extractTextContent(obj.children[0]!.children)
         : undefined;
 
-    // Validate label length if present
-    if (label !== undefined) {
-      z.string().max(80).parse(label);
-    }
-
     const shared = {
       type: ComponentType.Button as const,
       id: obj.props.id,
@@ -95,4 +90,15 @@ export const buttonElementSchema = z
           sku_id: obj.props.skuId,
         });
     }
-  });
+  })
+  .refine(
+    (data) => {
+      if ("label" in data && data.label !== undefined) {
+        return data.label.length <= 80;
+      }
+      return true;
+    },
+    {
+      message: "Label must be 80 characters or less",
+    },
+  );

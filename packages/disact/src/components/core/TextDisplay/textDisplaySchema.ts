@@ -17,12 +17,17 @@ export const textDisplayElementSchema = createSingleSlotComponentSchema(
   textNodeSchema,
   ({ props, slotContent }) => {
     const content = extractTextContent(slotContent);
-    // Validate content length
-    z.string().min(1).max(4000).parse(content);
     return removeUndefined({
       type: ComponentType.TextDisplay as const,
       id: props.id,
       content,
     });
+  },
+).refine(
+  (data) => {
+    return data.content.length >= 1 && data.content.length <= 4000;
+  },
+  {
+    message: "Content must be between 1 and 4000 characters",
   },
 );
