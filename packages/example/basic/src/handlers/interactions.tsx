@@ -19,6 +19,9 @@ import {
   InteractionResponseType,
 } from "discord-api-types/v10";
 import type { Context } from "hono";
+import { getLogger } from "@logtape/logtape";
+
+const logger = getLogger(["example", "handlers"]);
 
 /**
  * Discord Interactionを処理するハンドラー
@@ -31,13 +34,14 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
   const rawBody = c.get("rawBody") as string;
   const interaction: APIInteraction = JSON.parse(rawBody);
 
-  console.log("Interaction受信:", {
+  logger.info("Received interaction", {
     type: interaction.type,
     id: interaction.id,
   });
 
   // PING (Type 1) への応答
   if (interaction.type === DiscordInteractionType.Ping) {
+    logger.debug("Responding to PING");
     return {
       type: InteractionResponseType.Pong,
     };
@@ -48,6 +52,7 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
     // 非同期でメッセージを送信
     void handleApplicationCommand(interaction);
 
+    logger.debug("Returning deferred response");
     // まずDeferredレスポンスを即座に返す（3秒制限を守るため）
     return {
       type: InteractionResponseType.DeferredChannelMessageWithSource,
@@ -55,7 +60,7 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
   }
 
   // その他のInteractionタイプ（今後実装予定）
-  console.warn("未対応のInteractionタイプ:", interaction.type);
+  logger.warn("Unsupported interaction type", { type: interaction.type });
   return {
     type: InteractionResponseType.ChannelMessageWithSource,
     data: {
@@ -75,6 +80,11 @@ const handleApplicationCommand = async (
   interaction: APIApplicationCommandInteraction,
 ): Promise<void> => {
   try {
+    logger.info("Processing application command", {
+      commandName: interaction.data.name,
+      interactionId: interaction.id,
+    });
+
     // Sessionを作成
     const session = createSessionFromApplicationCommandInteraction(interaction, {
       ephemeral: false,
@@ -132,8 +142,13 @@ const handleApplicationCommand = async (
     // これにより自動的にDiscord APIにメッセージが送信される
     await app.connect(session, element);
 
-    console.log("メッセージの送信が完了しました");
+    logger.info("Application command processed successfully", {
+      commandName: interaction.data.name,
+    });
   } catch (error) {
-    console.error("APPLICATION_COMMAND処理中にエラーが発生:", error);
+    logger.error("Failed to process application command", {
+      error,
+      commandName: interaction.data.name,
+    });
   }
 };

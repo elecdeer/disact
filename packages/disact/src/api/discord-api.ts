@@ -10,8 +10,11 @@ import type {
   RESTPostAPIInteractionCallbackResult,
 } from "discord-api-types/v10";
 import { ofetch } from "ofetch";
+import { getDisactLogger } from "../utils/logger";
 
 const API_BASE_URL = "https://discord.com/api/v10";
+
+const logger = getDisactLogger("api");
 
 /**
  * Create an interaction response
@@ -23,7 +26,7 @@ export const createInteractionResponse = async (
   body: RESTPostAPIInteractionCallbackJSONBody,
 ): Promise<RESTPostAPIInteractionCallbackResult> => {
   try {
-    console.log("Sending interaction response:", JSON.stringify(body, null, 2));
+    logger.debug("Sending interaction response", { interactionId, body });
     return await ofetch(
       `${API_BASE_URL}/interactions/${interactionId}/${interactionToken}/callback`,
       {
@@ -32,10 +35,12 @@ export const createInteractionResponse = async (
       },
     );
   } catch (error) {
-    console.error("Discord API Error:", error);
-    if (error && typeof error === "object" && "data" in error) {
-      console.error("Error details:", JSON.stringify(error.data, null, 2));
-    }
+    logger.error("Discord API request failed", {
+      error,
+      errorData: error && typeof error === "object" && "data" in error ? error.data : undefined,
+      endpoint: "createInteractionResponse",
+      interactionId,
+    });
     throw error;
   }
 };

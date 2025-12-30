@@ -17,6 +17,9 @@
     "build": "tsdown",
     "test": "vitest --project disact-engine run"
   },
+  "dependencies": {
+    "@logtape/logtape": "catalog:"
+  },
   "devDependencies": {
     "@monorepo/tsconfig": "workspace:*",
     "@types/node": "catalog:",

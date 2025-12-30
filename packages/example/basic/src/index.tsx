@@ -1,7 +1,14 @@
 import { serve } from "@hono/node-server";
+import { getLogger } from "@logtape/logtape";
 import { Hono } from "hono";
+import { configureLogging } from "./config/logging.js";
 import { handleInteraction } from "./handlers/interactions.js";
 import { verifyDiscordRequest } from "./middleware/verify.js";
+
+const logger = getLogger(["example", "server"]);
+
+// logtape設定を初期化（アプリケーション起動時）
+await configureLogging();
 
 const app = new Hono();
 
@@ -18,15 +25,17 @@ app.post("/interactions", verifyDiscordRequest(), async (c) => {
 
 const port = Number(process.env.PORT) || 3000;
 
-console.log(`Server starting on port ${port}...`);
-console.log("Environment:");
-console.log(`  DISCORD_PUBLIC_KEY: ${process.env.DISCORD_PUBLIC_KEY ? "Set" : "Not set"}`);
-console.log(`  PORT: ${port}`);
+logger.info("Starting Discord bot server", {
+  port,
+  hasPublicKey: !!process.env.DISCORD_PUBLIC_KEY,
+});
 
 serve({
   fetch: app.fetch,
   port,
 });
 
-console.log(`Server is running on http://localhost:${port}`);
-console.log(`Webhook URL: http://localhost:${port}/interactions`);
+logger.info("Server started successfully", {
+  port,
+  webhookUrl: `http://localhost:${port}/interactions`,
+});

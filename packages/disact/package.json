@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@disact/engine": "workspace:*",
+    "@logtape/logtape": "catalog:",
     "discord-api-types": "^0.38.31",
     "mdast-util-gfm-strikethrough": "catalog:",
     "mdast-util-to-markdown": "catalog:",

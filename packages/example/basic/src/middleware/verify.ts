@@ -1,5 +1,8 @@
 import { verifyKey } from "discord-interactions";
 import type { MiddlewareHandler } from "hono";
+import { getLogger } from "@logtape/logtape";
+
+const logger = getLogger(["example", "middleware"]);
 
 /**
  * Discord Interaction webhook署名検証ミドルウェア
@@ -14,7 +17,7 @@ export const verifyDiscordRequest = (): MiddlewareHandler => {
     const publicKey = process.env.DISCORD_PUBLIC_KEY;
 
     if (!publicKey) {
-      console.error("DISCORD_PUBLIC_KEY環境変数が設定されていません");
+      logger.error("DISCORD_PUBLIC_KEY environment variable not set");
       return c.text("Internal Server Error", 500);
     }
 
@@ -22,7 +25,7 @@ export const verifyDiscordRequest = (): MiddlewareHandler => {
     const timestamp = c.req.header("X-Signature-Timestamp");
 
     if (!signature || !timestamp) {
-      console.warn("署名ヘッダーが見つかりません");
+      logger.warn("Missing signature headers");
       return c.text("Unauthorized", 401);
     }
 
@@ -33,16 +36,19 @@ export const verifyDiscordRequest = (): MiddlewareHandler => {
       const isValid = await verifyKey(body, signature, timestamp, publicKey);
 
       if (!isValid) {
-        console.warn("署名検証に失敗しました");
+        logger.warn("Signature verification failed", {
+          timestampAge: Date.now() - Number(timestamp) * 1000,
+        });
         return c.text("Unauthorized", 401);
       }
 
+      logger.debug("Signature verified successfully");
       // 検証成功：bodyを再利用できるようにコンテキストに保存
       c.set("rawBody", body);
 
       await next();
     } catch (error) {
-      console.error("署名検証中にエラーが発生しました:", error);
+      logger.error("Error during signature verification", { error });
       return c.text("Unauthorized", 401);
     }
   };

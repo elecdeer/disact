@@ -1,5 +1,4 @@
 import type { APIMessageTopLevelComponent } from "discord-api-types/v10";
-import { ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 import { actionRowInMessageElementSchema } from "../ActionRow/actionRowSchema";
 import { containerElementSchema } from "../Container/containerSchema";
@@ -40,20 +39,10 @@ export const componentsRenderResultSchema = z
     }
 
     if (Array.isArray(renderResult)) {
-      // Fragment の場合: 各要素をパースして結合
-      return renderResult.flatMap((parsed) => {
-        // Container の場合は components を展開
-        if ("components" in parsed && parsed.type === ComponentType.Container) {
-          return parsed.components;
-        }
-        return [parsed];
-      });
+      // Fragment の場合: 各要素をそのまま返す
+      return renderResult;
     }
 
-    // 単一要素の場合
-    // Container の場合は components を展開
-    if ("components" in renderResult && renderResult.type === ComponentType.Container) {
-      return renderResult.components;
-    }
+    // 単一要素の場合: 配列にラップして返す
     return [renderResult];
   });

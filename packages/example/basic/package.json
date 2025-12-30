@@ -21,6 +21,7 @@
     "hono": "^4.6.14"
   },
   "devDependencies": {
+    "@logtape/logtape": "catalog:",
     "@monorepo/tsconfig": "workspace:*",
     "vite-node": "catalog:"
   }

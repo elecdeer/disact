@@ -4,6 +4,10 @@
  * コンポーネント内からアクセス可能にする
  */
 
+import { getEngineLogger } from "./utils/logger";
+
+const logger = getEngineLogger("context");
+
 // 現在レンダリング中のcontextを保持するグローバル変数
 let currentRenderingContext: unknown = null;
 
@@ -13,8 +17,10 @@ let currentRenderingContext: unknown = null;
  */
 export const getCurrentContext = <T = unknown>(): T => {
   if (currentRenderingContext === null) {
+    logger.error("getCurrentContext called outside render context");
     throw new Error("getCurrentContext can only be called during rendering");
   }
+  logger.trace("Context accessed");
   return currentRenderingContext as T;
 };
 
@@ -23,6 +29,7 @@ export const getCurrentContext = <T = unknown>(): T => {
  * runInContextの実行開始時に呼び出される
  */
 const setCurrentContext = <T>(context: T): void => {
+  logger.trace("Setting render context");
   currentRenderingContext = context;
 };
 
@@ -31,6 +38,7 @@ const setCurrentContext = <T>(context: T): void => {
  * runInContextの実行終了時に呼び出される
  */
 const clearCurrentContext = (): void => {
+  logger.trace("Clearing render context");
   currentRenderingContext = null;
 };
 
@@ -42,9 +50,11 @@ const clearCurrentContext = (): void => {
 export const runInContext = <T, R>(context: T, callback: () => R): R => {
   // ネストチェック
   if (currentRenderingContext !== null) {
+    logger.error("Attempted to nest runInContext calls");
     throw new Error("runInContext cannot be nested");
   }
 
+  logger.debug("Running in context");
   setCurrentContext(context);
   try {
     return callback();

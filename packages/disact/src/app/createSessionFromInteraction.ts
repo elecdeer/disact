@@ -5,8 +5,11 @@ import {
   updateOriginalWebhookMessage,
 } from "../api/discord-api";
 import type { PayloadElements } from "../components/index.ts";
+import { getDisactLogger } from "../utils/logger";
 import { messageFlags } from "../utils/messageFlags";
 import type { Session } from "./session";
+
+const logger = getDisactLogger("session");
 
 /**
  * Application Command Interactionの型
@@ -49,6 +52,13 @@ export const createSessionFromApplicationCommandInteraction = (
   const ephemeral = options?.ephemeral ?? false;
   const alwaysFetch = options?.alwaysFetch ?? false;
 
+  logger.debug("Creating session from interaction", {
+    interactionId: interaction.id,
+    commandName: interaction.data.name,
+    ephemeral,
+    alwaysFetch,
+  });
+
   let hasCommitted = false;
   let cachedPayload: PayloadElements | null = null;
 
@@ -56,6 +66,9 @@ export const createSessionFromApplicationCommandInteraction = (
     commit: async (payload: PayloadElements): Promise<void> => {
       if (!hasCommitted) {
         // 初回: POST /interactions/{interaction.id}/{interaction.token}/callback
+        logger.info("Committing initial interaction response", {
+          interactionId: interaction.id,
+        });
         await createInteractionResponse(interaction.id, interaction.token, {
           type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
           data: {
@@ -69,23 +82,32 @@ export const createSessionFromApplicationCommandInteraction = (
         hasCommitted = true;
       } else {
         // 2回目以降: PATCH /webhooks/{application.id}/{interaction.token}/messages/@original
+        logger.debug("Updating interaction response", {
+          interactionId: interaction.id,
+        });
         await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
           components: payload,
         });
       }
       cachedPayload = payload;
+      logger.trace("Session state updated", { hasCommitted });
     },
 
     getCurrent: async (): Promise<PayloadElements | null> => {
       if (!hasCommitted) {
+        logger.trace("getCurrent called before first commit");
         return null;
       }
 
       if (!alwaysFetch) {
+        logger.trace("Returning cached payload");
         return cachedPayload;
       }
 
       // alwaysFetchがtrueの場合、APIから取得
+      logger.debug("Fetching current state from API", {
+        interactionId: interaction.id,
+      });
       const response = await getOriginalWebhookMessage(
         interaction.application_id,
         interaction.token,
