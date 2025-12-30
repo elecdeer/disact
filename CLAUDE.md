@@ -25,14 +25,20 @@ pnpm run build          # Build all packages using Turbo
 
 ```bash
 pnpm run lint           # Lint all packages using oxlint
+
+# Lint a specific file
+pnpm run lint packages/disact/src/components/elements/schemaUtils.ts
 ```
 
 ### Running Tests
 
 ```bash
 # Tests use vitest - run from individual package directories
-cd packages/disact && npx vitest
-cd packages/disact-engine && npx vitest
+pnpm run test --project disact
+pnpm run test --project disact-engine
+
+# Run a specific test file from the root directory
+pnpm run test packages/disact/src/components/core/TextDisplay/textDisplaySchema.test.ts
 ```
 
 ## Code Architecture
