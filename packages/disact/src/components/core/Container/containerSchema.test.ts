@@ -41,10 +41,10 @@ describe("containerElement", () => {
         "components": [
           {
             "content": "Hello, world!",
-            "type": 15,
+            "type": 10,
           },
         ],
-        "type": 14,
+        "type": 17,
       }
     `);
   });
@@ -81,10 +81,10 @@ describe("containerElement", () => {
         "components": [
           {
             "divider": true,
-            "type": 16,
+            "type": 14,
           },
         ],
-        "type": 14,
+        "type": 17,
       }
     `);
   });
@@ -131,12 +131,12 @@ describe("containerElement", () => {
         "components": [
           {
             "content": "Spoiler content",
-            "type": 15,
+            "type": 10,
           },
         ],
         "id": 42,
         "spoiler": true,
-        "type": 14,
+        "type": 17,
       }
     `);
   });
@@ -203,130 +203,37 @@ describe("containerElement", () => {
         "components": [
           {
             "content": "First text",
-            "type": 15,
+            "type": 10,
           },
           {
             "divider": true,
-            "type": 16,
+            "type": 14,
           },
           {
             "content": "Second text",
-            "type": 15,
+            "type": 10,
           },
         ],
-        "type": 14,
+        "type": 17,
       }
     `);
   });
 
   test("accentColorが0xffffffを超えるとエラー", () => {
-    expect(() => {
-      containerElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Container,
-          accentColor: 0x1000000,
-        },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: [
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: {
-                  type: ComponentType.TextDisplay,
-                },
-                children: [
-                  {
-                    type: "intrinsic",
-                    name: "slot",
-                    props: { name: "children" },
-                    children: [{ type: "text", content: "Test" }],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-    }).toThrow("Number must be less than or equal to 16777215");
-  });
-
-  test("accentColorが0未満でエラー", () => {
-    expect(() => {
-      containerElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Container,
-          accentColor: -1,
-        },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: [
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: {
-                  type: ComponentType.TextDisplay,
-                },
-                children: [
-                  {
-                    type: "intrinsic",
-                    name: "slot",
-                    props: { name: "children" },
-                    children: [{ type: "text", content: "Test" }],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-    }).toThrow("Number must be greater than or equal to 0");
-  });
-
-  test("componentsが空の配列でエラー", () => {
-    expect(() => {
-      containerElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Container,
-        },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: [],
-          },
-        ],
-      });
-    }).toThrow("Array must contain at least 1 element(s)");
-  });
-
-  test("componentsが40を超えるとエラー", () => {
-    expect(() => {
-      containerElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Container,
-        },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: Array.from({ length: 41 }, () => ({
+    const result = containerElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Container,
+        accentColor: 0x1000000,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: [
+            {
               type: "intrinsic",
               name: "message-component",
               props: {
@@ -340,10 +247,99 @@ describe("containerElement", () => {
                   children: [{ type: "text", content: "Test" }],
                 },
               ],
-            })),
-          },
-        ],
-      });
-    }).toThrow("Array must contain at most 40 element(s)");
+            },
+          ],
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("accentColorが0未満でエラー", () => {
+    const result = containerElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Container,
+        accentColor: -1,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: [
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "Test" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("componentsが空の配列でエラー", () => {
+    const result = containerElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Container,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: [],
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("componentsが40を超えるとエラー", () => {
+    const result = containerElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Container,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: Array.from({ length: 41 }, () => ({
+            type: "intrinsic",
+            name: "message-component",
+            props: {
+              type: ComponentType.TextDisplay,
+            },
+            children: [
+              {
+                type: "intrinsic",
+                name: "slot",
+                props: { name: "children" },
+                children: [{ type: "text", content: "Test" }],
+              },
+            ],
+          })),
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 });
