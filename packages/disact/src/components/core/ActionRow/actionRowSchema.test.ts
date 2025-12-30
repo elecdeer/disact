@@ -17,12 +17,24 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "button1",
-              style: "primary",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.Button,
+                customId: "button1",
+                style: "primary",
+              },
+              children: null,
             },
             {
-              customId: "button2",
-              style: "secondary",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.Button,
+                customId: "button2",
+                style: "secondary",
+              },
+              children: null,
             },
           ],
         },
@@ -34,12 +46,14 @@ describe("actionRowInMessageElement", () => {
         "components": [
           {
             "custom_id": "button1",
-            "style": "primary",
+            "disabled": false,
+            "style": 1,
             "type": 2,
           },
           {
             "custom_id": "button2",
-            "style": "secondary",
+            "disabled": false,
+            "style": 2,
             "type": 2,
           },
         ],
@@ -62,11 +76,17 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "select1",
-              options: [
-                { label: "Option 1", value: "1" },
-                { label: "Option 2", value: "2" },
-              ],
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.StringSelect,
+                customId: "select1",
+                options: [
+                  { label: "Option 1", value: "1" },
+                  { label: "Option 2", value: "2" },
+                ],
+              },
+              children: null,
             },
           ],
         },
@@ -110,8 +130,14 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "user-select",
-              placeholder: "Select users",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.UserSelect,
+                customId: "user-select",
+                placeholder: "Select users",
+              },
+              children: null,
             },
           ],
         },
@@ -146,8 +172,14 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "role-select",
-              placeholder: "Select roles",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.RoleSelect,
+                customId: "role-select",
+                placeholder: "Select roles",
+              },
+              children: null,
             },
           ],
         },
@@ -182,8 +214,14 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "mentionable-select",
-              placeholder: "Select users or roles",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.MentionableSelect,
+                customId: "mentionable-select",
+                placeholder: "Select users or roles",
+              },
+              children: null,
             },
           ],
         },
@@ -218,8 +256,14 @@ describe("actionRowInMessageElement", () => {
           props: { name: "components" },
           children: [
             {
-              customId: "channel-select",
-              placeholder: "Select channels",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.ChannelSelect,
+                customId: "channel-select",
+                placeholder: "Select channels",
+              },
+              children: null,
             },
           ],
         },
@@ -254,11 +298,36 @@ describe("actionRowInMessageElement", () => {
           name: "slot",
           props: { name: "components" },
           children: [
-            { customId: "btn1", style: "primary" },
-            { customId: "btn2", style: "secondary" },
-            { customId: "btn3", style: "success" },
-            { customId: "btn4", style: "danger" },
-            { style: "link", url: "https://example.com" },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn1", style: "primary" },
+              children: null,
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn2", style: "secondary" },
+              children: null,
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn3", style: "success" },
+              children: null,
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn4", style: "danger" },
+              children: null,
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, style: "link", url: "https://example.com" },
+              children: null,
+            },
           ],
         },
       ],
@@ -269,26 +338,31 @@ describe("actionRowInMessageElement", () => {
         "components": [
           {
             "custom_id": "btn1",
-            "style": "primary",
+            "disabled": false,
+            "style": 1,
             "type": 2,
           },
           {
             "custom_id": "btn2",
-            "style": "secondary",
+            "disabled": false,
+            "style": 2,
             "type": 2,
           },
           {
             "custom_id": "btn3",
-            "style": "success",
+            "disabled": false,
+            "style": 3,
             "type": 2,
           },
           {
             "custom_id": "btn4",
-            "style": "danger",
+            "disabled": false,
+            "style": 4,
             "type": 2,
           },
           {
-            "style": "link",
+            "disabled": false,
+            "style": 5,
             "type": 2,
             "url": "https://example.com",
           },
@@ -333,12 +407,42 @@ describe("actionRowInMessageElement", () => {
             name: "slot",
             props: { name: "components" },
             children: [
-              { customId: "btn1", style: "primary" },
-              { customId: "btn2", style: "primary" },
-              { customId: "btn3", style: "primary" },
-              { customId: "btn4", style: "primary" },
-              { customId: "btn5", style: "primary" },
-              { customId: "btn6", style: "primary" },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn1", style: "primary" },
+                children: null,
+              },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn2", style: "primary" },
+                children: null,
+              },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn3", style: "primary" },
+                children: null,
+              },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn4", style: "primary" },
+                children: null,
+              },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn5", style: "primary" },
+                children: null,
+              },
+              {
+                type: "intrinsic",
+                name: "message-component",
+                props: { type: ComponentType.Button, customId: "btn6", style: "primary" },
+                children: null,
+              },
             ],
           },
         ],

@@ -18,8 +18,8 @@ type TestContext = {
 };
 
 const test = base.extend<TestContext>({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  currentPayload: async (_fixtures, use) => {
+  // oxlint-disable-next-line no-empty-pattern
+  currentPayload: async ({}, use) => {
     // 初期状態は null (未コミット)
     const payload: {
       value: PayloadElements | null;

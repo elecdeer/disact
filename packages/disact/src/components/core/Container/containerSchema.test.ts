@@ -17,7 +17,19 @@ describe("containerElement", () => {
           props: { name: "components" },
           children: [
             {
-              content: "Hello, world!",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "Hello, world!" }],
+                },
+              ],
             },
           ],
         },
@@ -51,7 +63,13 @@ describe("containerElement", () => {
           props: { name: "components" },
           children: [
             {
-              divider: true,
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.Separator,
+                divider: true,
+              },
+              children: null,
             },
           ],
         },
@@ -88,7 +106,19 @@ describe("containerElement", () => {
           props: { name: "components" },
           children: [
             {
-              content: "Spoiler content",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "Spoiler content" }],
+                },
+              ],
             },
           ],
         },
@@ -125,13 +155,43 @@ describe("containerElement", () => {
           props: { name: "components" },
           children: [
             {
-              content: "First text",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "First text" }],
+                },
+              ],
             },
             {
-              divider: true,
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.Separator,
+                divider: true,
+              },
+              children: null,
             },
             {
-              content: "Second text",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "Second text" }],
+                },
+              ],
             },
           ],
         },
@@ -175,7 +235,19 @@ describe("containerElement", () => {
             props: { name: "components" },
             children: [
               {
-                content: "Test",
+                type: "intrinsic",
+                name: "message-component",
+                props: {
+                  type: ComponentType.TextDisplay,
+                },
+                children: [
+                  {
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [{ type: "text", content: "Test" }],
+                  },
+                ],
               },
             ],
           },
@@ -200,7 +272,19 @@ describe("containerElement", () => {
             props: { name: "components" },
             children: [
               {
-                content: "Test",
+                type: "intrinsic",
+                name: "message-component",
+                props: {
+                  type: ComponentType.TextDisplay,
+                },
+                children: [
+                  {
+                    type: "intrinsic",
+                    name: "slot",
+                    props: { name: "children" },
+                    children: [{ type: "text", content: "Test" }],
+                  },
+                ],
               },
             ],
           },
@@ -243,7 +327,19 @@ describe("containerElement", () => {
             name: "slot",
             props: { name: "components" },
             children: Array.from({ length: 41 }, () => ({
-              content: "Test",
+              type: "intrinsic",
+              name: "message-component",
+              props: {
+                type: ComponentType.TextDisplay,
+              },
+              children: [
+                {
+                  type: "intrinsic",
+                  name: "slot",
+                  props: { name: "children" },
+                  children: [{ type: "text", content: "Test" }],
+                },
+              ],
             })),
           },
         ],
