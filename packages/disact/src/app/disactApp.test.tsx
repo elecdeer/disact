@@ -59,25 +59,17 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(1);
     });
 
-    expect(commitSpy).toHaveBeenCalledWith({
-      type: 17,
-      components: [
-        {
-          type: 10,
-          content: "Hello World",
-        },
-      ],
-    });
+    expect(commitSpy).toHaveBeenCalledWith([
+      {
+        type: 10,
+        content: "Hello World",
+      },
+    ]);
   });
 
   test("差分がある場合に commit が呼ばれる", async ({ mockSession, commitSpy, currentPayload }) => {
     // 初期状態を設定
-    currentPayload.value = [
-      {
-        type: 17,
-        components: [{ type: 10, content: "Initial" }],
-      },
-    ];
+    currentPayload.value = [{ type: 10, content: "Initial" }];
 
     const app = createDisactApp();
 
@@ -93,15 +85,12 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(1);
     });
 
-    expect(commitSpy).toHaveBeenCalledWith({
-      type: 17,
-      components: [
-        {
-          type: 10,
-          content: "Updated",
-        },
-      ],
-    });
+    expect(commitSpy).toHaveBeenCalledWith([
+      {
+        type: 10,
+        content: "Updated",
+      },
+    ]);
   });
 
   test("差分がない場合に commit が呼ばれない", async ({
@@ -112,13 +101,8 @@ describe("createDisactApp", () => {
     // toPayload の結果と同じ形式で初期状態を設定
     currentPayload.value = [
       {
-        type: 17,
-        components: [
-          {
-            type: 10,
-            content: "Same Content",
-          },
-        ],
+        type: 10,
+        content: "Same Content",
       },
     ];
 
@@ -163,15 +147,12 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(1);
     });
 
-    expect(commitSpy).toHaveBeenCalledWith({
-      type: 17,
-      components: [
-        {
-          type: 10,
-          content: "Loading...",
-        },
-      ],
-    });
+    expect(commitSpy).toHaveBeenCalledWith([
+      {
+        type: 10,
+        content: "Loading...",
+      },
+    ]);
 
     // Promise を解決
     resolve("Loaded data");
@@ -181,15 +162,12 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(2);
     });
 
-    expect(commitSpy).toHaveBeenLastCalledWith({
-      type: 17,
-      components: [
-        {
-          type: 10,
-          content: "Loaded data",
-        },
-      ],
-    });
+    expect(commitSpy).toHaveBeenLastCalledWith([
+      {
+        type: 10,
+        content: "Loaded data",
+      },
+    ]);
   });
 
   test("複数の更新で差分がある場合のみ commit する", async ({ mockSession, commitSpy }) => {
@@ -237,13 +215,10 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(3);
     });
 
-    expect(commitSpy).toHaveBeenLastCalledWith({
-      type: 17,
-      components: [
-        { type: 10, content: "Data 1" },
-        { type: 10, content: "Data 2" },
-      ],
-    });
+    expect(commitSpy).toHaveBeenLastCalledWith([
+      { type: 10, content: "Data 1" },
+      { type: 10, content: "Data 2" },
+    ]);
   });
 
   test("ボタンとテキストを含む複雑なコンポーネントをレンダリングできる", async ({
@@ -272,33 +247,30 @@ describe("createDisactApp", () => {
       expect(commitSpy).toHaveBeenCalledTimes(1);
     });
 
-    expect(commitSpy).toHaveBeenCalledWith({
-      type: 17,
-      components: [
-        {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              style: 1,
-              custom_id: "btn_click",
-              label: "Click me",
-              disabled: false,
-            },
-            {
-              type: 2,
-              style: 2,
-              custom_id: "btn_cancel",
-              label: "Cancel",
-              disabled: false,
-            },
-          ],
-        },
-        {
-          type: 10,
-          content: "Choose an action",
-        },
-      ],
-    });
+    expect(commitSpy).toHaveBeenCalledWith([
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 1,
+            custom_id: "btn_click",
+            label: "Click me",
+            disabled: false,
+          },
+          {
+            type: 2,
+            style: 2,
+            custom_id: "btn_cancel",
+            label: "Cancel",
+            disabled: false,
+          },
+        ],
+      },
+      {
+        type: 10,
+        content: "Choose an action",
+      },
+    ]);
   });
 });

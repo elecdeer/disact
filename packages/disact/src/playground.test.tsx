@@ -31,23 +31,18 @@ describe("test", () => {
         {
           "components": [
             {
-              "components": [
-                {
-                  "custom_id": "btn_click",
-                  "disabled": false,
-                  "label": "Click me",
-                  "style": 1,
-                  "type": 2,
-                },
-              ],
-              "type": 1,
-            },
-            {
-              "content": "hello alice",
-              "type": 10,
+              "custom_id": "btn_click",
+              "disabled": false,
+              "label": "Click me",
+              "style": 1,
+              "type": 2,
             },
           ],
-          "type": 17,
+          "type": 1,
+        },
+        {
+          "content": "hello alice",
+          "type": 10,
         },
       ]
     `);
@@ -79,13 +74,8 @@ describe("test", () => {
     expect(result.current).toMatchInlineSnapshot(`
       [
         {
-          "components": [
-            {
-              "content": "Loading...",
-              "type": 10,
-            },
-          ],
-          "type": 17,
+          "content": "Loading...",
+          "type": 10,
         },
       ]
     `);
@@ -102,13 +92,8 @@ describe("test", () => {
     expect(result.current).toMatchInlineSnapshot(`
       [
         {
-          "components": [
-            {
-              "content": "Loaded data",
-              "type": 10,
-            },
-          ],
-          "type": 17,
+          "content": "Loaded data",
+          "type": 10,
         },
       ]
     `);

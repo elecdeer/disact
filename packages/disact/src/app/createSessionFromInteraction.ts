@@ -1,5 +1,9 @@
 import type { APIApplicationCommandInteraction } from "discord-api-types/v10";
-import { getOriginalWebhookMessage, updateOriginalWebhookMessage } from "../api/discord-api";
+import {
+  createInteractionResponse,
+  getOriginalWebhookMessage,
+  updateOriginalWebhookMessage,
+} from "../api/discord-api";
 import type { PayloadElements } from "../components/index.ts";
 import { messageFlags } from "../utils/messageFlags";
 import type { Session } from "./session";
@@ -52,12 +56,15 @@ export const createSessionFromApplicationCommandInteraction = (
     commit: async (payload: PayloadElements): Promise<void> => {
       if (!hasCommitted) {
         // 初回: POST /interactions/{interaction.id}/{interaction.token}/callback
-        await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
-          components: payload,
-          flags: messageFlags({
-            isComponentsV2: true,
-            ephemeral,
-          }),
+        await createInteractionResponse(interaction.id, interaction.token, {
+          type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+          data: {
+            components: payload,
+            flags: messageFlags({
+              isComponentsV2: true,
+              ephemeral,
+            }),
+          },
         });
         hasCommitted = true;
       } else {

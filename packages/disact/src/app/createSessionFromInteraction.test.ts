@@ -75,7 +75,7 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     expect(updateOriginalWebhookMessage).toHaveBeenCalledWith(
       interaction.application_id,
       interaction.token,
-      payload2,
+      { components: payload2 },
     );
   });
 
@@ -113,7 +113,7 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     expect(updateOriginalWebhookMessage).toHaveBeenLastCalledWith(
       interaction.application_id,
       interaction.token,
-      payload2,
+      { components: payload2 },
     );
   });
 

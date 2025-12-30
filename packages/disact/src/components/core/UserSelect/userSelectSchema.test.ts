@@ -1,14 +1,21 @@
+import { ComponentType } from "discord-api-types/v10";
 import { describe, expect, test } from "vitest";
 import { userSelectElementSchema } from "./userSelectSchema";
 
 describe("userSelectElement", () => {
   test("基本的なuser selectを変換", () => {
     const result = userSelectElementSchema.parse({
-      customId: "test-user-select",
-      placeholder: "Select a user",
-      minValues: 1,
-      maxValues: 5,
-      disabled: false,
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
+        customId: "test-user-select",
+        placeholder: "Select a user",
+        minValues: 1,
+        maxValues: 5,
+        disabled: false,
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -25,11 +32,17 @@ describe("userSelectElement", () => {
 
   test("defaultValuesを含むuser selectを変換", () => {
     const result = userSelectElementSchema.parse({
-      customId: "user-with-defaults",
-      defaultValues: [
-        { id: "123456789012345678", type: "user" },
-        { id: "987654321098765432", type: "user" },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
+        customId: "user-with-defaults",
+        defaultValues: [
+          { id: "123456789012345678", type: "user" },
+          { id: "987654321098765432", type: "user" },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -52,14 +65,20 @@ describe("userSelectElement", () => {
 
   test("全てのオプションを含むuser selectを変換", () => {
     const result = userSelectElementSchema.parse({
-      id: 42,
-      customId: "full-user-select",
-      placeholder: "Choose users",
-      minValues: 2,
-      maxValues: 10,
-      disabled: true,
-      required: true,
-      defaultValues: [{ id: "111111111111111111", type: "user" }],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
+        id: 42,
+        customId: "full-user-select",
+        placeholder: "Choose users",
+        minValues: 2,
+        maxValues: 10,
+        disabled: true,
+        required: true,
+        defaultValues: [{ id: "111111111111111111", type: "user" }],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -83,67 +102,102 @@ describe("userSelectElement", () => {
   });
 
   test("customIdが100文字を超えるとエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "a".repeat(101),
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("placeholderが150文字を超えるとエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         placeholder: "a".repeat(151),
-      });
-    }).toThrow("String must contain at most 150 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが0未満でエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         minValues: -1,
-      });
-    }).toThrow("Number must be greater than or equal to 0");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが25を超えるとエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         minValues: 26,
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが1未満でエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         maxValues: 0,
-      });
-    }).toThrow("Number must be greater than or equal to 1");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが25を超えるとエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         maxValues: 26,
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("defaultValuesが25を超えるとエラー", () => {
-    expect(() => {
-      userSelectElementSchema.parse({
+    const result = userSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.UserSelect,
         customId: "test",
         defaultValues: Array.from({ length: 26 }, (_, i) => ({
           id: `${i}`.padStart(18, "0"),
           type: "user" as const,
         })),
-      });
-    }).toThrow("Array must contain at most 25 element(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });

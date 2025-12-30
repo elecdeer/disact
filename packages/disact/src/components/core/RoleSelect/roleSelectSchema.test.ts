@@ -1,14 +1,21 @@
+import { ComponentType } from "discord-api-types/v10";
 import { describe, expect, test } from "vitest";
 import { roleSelectElementSchema } from "./roleSelectSchema";
 
 describe("roleSelectElement", () => {
   test("基本的なrole selectを変換", () => {
     const result = roleSelectElementSchema.parse({
-      customId: "test-role-select",
-      placeholder: "Select a role",
-      minValues: 1,
-      maxValues: 5,
-      disabled: false,
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
+        customId: "test-role-select",
+        placeholder: "Select a role",
+        minValues: 1,
+        maxValues: 5,
+        disabled: false,
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -25,11 +32,17 @@ describe("roleSelectElement", () => {
 
   test("defaultValuesを含むrole selectを変換", () => {
     const result = roleSelectElementSchema.parse({
-      customId: "role-with-defaults",
-      defaultValues: [
-        { id: "123456789012345678", type: "role" },
-        { id: "987654321098765432", type: "role" },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
+        customId: "role-with-defaults",
+        defaultValues: [
+          { id: "123456789012345678", type: "role" },
+          { id: "987654321098765432", type: "role" },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -52,14 +65,20 @@ describe("roleSelectElement", () => {
 
   test("全てのオプションを含むrole selectを変換", () => {
     const result = roleSelectElementSchema.parse({
-      id: 42,
-      customId: "full-role-select",
-      placeholder: "Choose roles",
-      minValues: 2,
-      maxValues: 10,
-      disabled: true,
-      required: true,
-      defaultValues: [{ id: "111111111111111111", type: "role" }],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
+        id: 42,
+        customId: "full-role-select",
+        placeholder: "Choose roles",
+        minValues: 2,
+        maxValues: 10,
+        disabled: true,
+        required: true,
+        defaultValues: [{ id: "111111111111111111", type: "role" }],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -83,67 +102,102 @@ describe("roleSelectElement", () => {
   });
 
   test("customIdが100文字を超えるとエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "a".repeat(101),
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("placeholderが150文字を超えるとエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         placeholder: "a".repeat(151),
-      });
-    }).toThrow("String must contain at most 150 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが0未満でエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         minValues: -1,
-      });
-    }).toThrow("Number must be greater than or equal to 0");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが25を超えるとエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         minValues: 26,
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが1未満でエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         maxValues: 0,
-      });
-    }).toThrow("Number must be greater than or equal to 1");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが25を超えるとエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         maxValues: 26,
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("defaultValuesが25を超えるとエラー", () => {
-    expect(() => {
-      roleSelectElementSchema.parse({
+    const result = roleSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.RoleSelect,
         customId: "test",
         defaultValues: Array.from({ length: 26 }, (_, i) => ({
           id: `${i}`.padStart(18, "0"),
           type: "role" as const,
         })),
-      });
-    }).toThrow("Array must contain at most 25 element(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });

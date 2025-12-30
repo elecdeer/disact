@@ -24,7 +24,6 @@ describe("actionRowInMessageElement", () => {
                 customId: "button1",
                 style: "primary",
               },
-              children: null,
             },
             {
               type: "intrinsic",
@@ -34,7 +33,6 @@ describe("actionRowInMessageElement", () => {
                 customId: "button2",
                 style: "secondary",
               },
-              children: null,
             },
           ],
         },
@@ -302,31 +300,26 @@ describe("actionRowInMessageElement", () => {
               type: "intrinsic",
               name: "message-component",
               props: { type: ComponentType.Button, customId: "btn1", style: "primary" },
-              children: null,
             },
             {
               type: "intrinsic",
               name: "message-component",
               props: { type: ComponentType.Button, customId: "btn2", style: "secondary" },
-              children: null,
             },
             {
               type: "intrinsic",
               name: "message-component",
               props: { type: ComponentType.Button, customId: "btn3", style: "success" },
-              children: null,
             },
             {
               type: "intrinsic",
               name: "message-component",
               props: { type: ComponentType.Button, customId: "btn4", style: "danger" },
-              children: null,
             },
             {
               type: "intrinsic",
               name: "message-component",
               props: { type: ComponentType.Button, style: "link", url: "https://example.com" },
-              children: null,
             },
           ],
         },
@@ -374,79 +367,71 @@ describe("actionRowInMessageElement", () => {
   });
 
   test("componentsが空の配列でエラー", () => {
-    expect(() => {
-      actionRowInMessageElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.ActionRow,
+    const result = actionRowInMessageElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.ActionRow,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: [],
         },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: [],
-          },
-        ],
-      });
-    }).toThrow("Array must contain at least 1 element(s)");
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("componentsが5つを超えるとエラー", () => {
-    expect(() => {
-      actionRowInMessageElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.ActionRow,
+    const result = actionRowInMessageElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.ActionRow,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "components" },
+          children: [
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn1", style: "primary" },
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn2", style: "primary" },
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn3", style: "primary" },
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn4", style: "primary" },
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn5", style: "primary" },
+            },
+            {
+              type: "intrinsic",
+              name: "message-component",
+              props: { type: ComponentType.Button, customId: "btn6", style: "primary" },
+            },
+          ],
         },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "components" },
-            children: [
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn1", style: "primary" },
-                children: null,
-              },
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn2", style: "primary" },
-                children: null,
-              },
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn3", style: "primary" },
-                children: null,
-              },
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn4", style: "primary" },
-                children: null,
-              },
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn5", style: "primary" },
-                children: null,
-              },
-              {
-                type: "intrinsic",
-                name: "message-component",
-                props: { type: ComponentType.Button, customId: "btn6", style: "primary" },
-                children: null,
-              },
-            ],
-          },
-        ],
-      });
-    }).toThrow("Array must contain at most 5 element(s)");
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 });

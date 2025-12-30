@@ -1,15 +1,22 @@
+import { ComponentType } from "discord-api-types/v10";
 import { describe, expect, test } from "vitest";
 import { stringSelectElementSchema } from "./stringSelectSchema";
 
 describe("stringSelectElement", () => {
   test("基本的なstring selectを変換", () => {
     const result = stringSelectElementSchema.parse({
-      customId: "test-string-select",
-      placeholder: "Select an option",
-      options: [
-        { label: "Option 1", value: "opt1" },
-        { label: "Option 2", value: "opt2" },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
+        customId: "test-string-select",
+        placeholder: "Select an option",
+        options: [
+          { label: "Option 1", value: "opt1" },
+          { label: "Option 2", value: "opt2" },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -33,19 +40,25 @@ describe("stringSelectElement", () => {
 
   test("descriptionを含むoptionsを変換", () => {
     const result = stringSelectElementSchema.parse({
-      customId: "string-with-desc",
-      options: [
-        {
-          label: "Option A",
-          value: "a",
-          description: "This is option A",
-        },
-        {
-          label: "Option B",
-          value: "b",
-          description: "This is option B",
-        },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
+        customId: "string-with-desc",
+        options: [
+          {
+            label: "Option A",
+            value: "a",
+            description: "This is option A",
+          },
+          {
+            label: "Option B",
+            value: "b",
+            description: "This is option B",
+          },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -70,12 +83,18 @@ describe("stringSelectElement", () => {
 
   test("defaultオプションを含むstring selectを変換", () => {
     const result = stringSelectElementSchema.parse({
-      customId: "string-with-default",
-      options: [
-        { label: "First", value: "first", default: true },
-        { label: "Second", value: "second" },
-        { label: "Third", value: "third" },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
+        customId: "string-with-default",
+        options: [
+          { label: "First", value: "first", default: true },
+          { label: "Second", value: "second" },
+          { label: "Third", value: "third" },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -103,19 +122,25 @@ describe("stringSelectElement", () => {
 
   test("emojiを含むoptionsを変換", () => {
     const result = stringSelectElementSchema.parse({
-      customId: "string-with-emoji",
-      options: [
-        {
-          label: "Happy",
-          value: "happy",
-          emoji: { name: "😊" },
-        },
-        {
-          label: "Custom",
-          value: "custom",
-          emoji: { id: "123456789", name: "custom_emoji" },
-        },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
+        customId: "string-with-emoji",
+        options: [
+          {
+            label: "Happy",
+            value: "happy",
+            emoji: { name: "😊" },
+          },
+          {
+            label: "Custom",
+            value: "custom",
+            emoji: { id: "123456789", name: "custom_emoji" },
+          },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -145,31 +170,37 @@ describe("stringSelectElement", () => {
 
   test("全てのオプションを含むstring selectを変換", () => {
     const result = stringSelectElementSchema.parse({
-      id: 42,
-      customId: "full-string-select",
-      placeholder: "Choose an option",
-      minValues: 2,
-      maxValues: 3,
-      disabled: true,
-      required: true,
-      options: [
-        {
-          label: "First Option",
-          value: "first",
-          description: "The first option",
-          default: true,
-          emoji: { name: "1️⃣" },
-        },
-        {
-          label: "Second Option",
-          value: "second",
-          description: "The second option",
-        },
-        {
-          label: "Third Option",
-          value: "third",
-        },
-      ],
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
+        id: 42,
+        customId: "full-string-select",
+        placeholder: "Choose an option",
+        minValues: 2,
+        maxValues: 3,
+        disabled: true,
+        required: true,
+        options: [
+          {
+            label: "First Option",
+            value: "first",
+            description: "The first option",
+            default: true,
+            emoji: { name: "1️⃣" },
+          },
+          {
+            label: "Second Option",
+            value: "second",
+            description: "The second option",
+          },
+          {
+            label: "Third Option",
+            value: "third",
+          },
+        ],
+      },
+      children: null,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -207,84 +238,127 @@ describe("stringSelectElement", () => {
   });
 
   test("customIdが100文字を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "a".repeat(101),
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("placeholderが150文字を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         placeholder: "a".repeat(151),
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("String must contain at most 150 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("optionsが空の配列でエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [],
-      });
-    }).toThrow("Array must contain at least 1 element(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("optionsが25を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: Array.from({ length: 26 }, (_, i) => ({
           label: `Option ${i}`,
           value: `opt${i}`,
         })),
-      });
-    }).toThrow("Array must contain at most 25 element(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("option labelが空文字列でエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [{ label: "", value: "test" }],
-      });
-    }).toThrow("String must contain at least 1 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("option labelが100文字を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [{ label: "a".repeat(101), value: "test" }],
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("option valueが空文字列でエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [{ label: "Test", value: "" }],
-      });
-    }).toThrow("String must contain at least 1 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("option valueが100文字を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [{ label: "Test", value: "a".repeat(101) }],
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("option descriptionが100文字を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         options: [
           {
@@ -293,47 +367,69 @@ describe("stringSelectElement", () => {
             description: "a".repeat(101),
           },
         ],
-      });
-    }).toThrow("String must contain at most 100 character(s)");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが0未満でエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         minValues: -1,
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("Number must be greater than or equal to 0");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("minValuesが25を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         minValues: 26,
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが1未満でエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         maxValues: 0,
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("Number must be greater than or equal to 1");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("maxValuesが25を超えるとエラー", () => {
-    expect(() => {
-      stringSelectElementSchema.parse({
+    const result = stringSelectElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.StringSelect,
         customId: "test",
         maxValues: 26,
         options: [{ label: "Test", value: "test" }],
-      });
-    }).toThrow("Number must be less than or equal to 25");
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });
