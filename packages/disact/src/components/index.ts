@@ -1,7 +1,6 @@
-import type { DisactNode, RenderedElement } from "@disact/engine";
+import type { DisactNode, RenderResult } from "@disact/engine";
 import type { APIMessageTopLevelComponent } from "discord-api-types/v10";
-import { ComponentType } from "discord-api-types/v10";
-import { messageComponentsRootElementSchema } from "./elements/messageComponentRoot";
+import { componentsRenderResultSchema } from "./core/Components/componentsSchema";
 
 export type IntrinsicElements = {
   slot: { children: DisactNode; name: string };
@@ -11,20 +10,12 @@ export type IntrinsicElements = {
 
 export type PayloadElements = APIMessageTopLevelComponent[];
 
-export const toMessageComponentsPayload = (element: RenderedElement): PayloadElements => {
-  if (element.type === "intrinsic") {
-    const parsed = messageComponentsRootElementSchema.parse(element);
-
-    // Containerの場合はcomponentsを返す
-    if ("components" in parsed && parsed.type === ComponentType.Container) {
-      return parsed.components;
-    }
-
-    // それ以外のトップレベルコンポーネントは配列にラップして返す
-    return [parsed];
-  }
-
-  throw new Error(
-    `Invalid root element type: ${element.type}. Only intrinsic elements are allowed at root level.`,
-  );
+/**
+ * レンダリングされた要素を Discord API のメッセージコンポーネント配列に変換
+ *
+ * @param renderResult - レンダリング結果（単一要素、配列、または null）
+ * @returns Discord API のメッセージコンポーネント配列
+ */
+export const toMessageComponentsPayload = (renderResult: RenderResult): PayloadElements => {
+  return componentsRenderResultSchema.parse(renderResult);
 };

@@ -13,10 +13,6 @@ export const createDisactApp = (): DisactApp => {
 
     void (async () => {
       for await (const chunk of stream) {
-        if (chunk === null || Array.isArray(chunk)) {
-          throw new Error("Unexpected chunk format");
-        }
-
         const current = await session.getCurrent();
         const chunkPayload = toMessageComponentsPayload(chunk);
         // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
