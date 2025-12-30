@@ -1,3 +1,4 @@
+import type { RESTGetAPIWebhookWithTokenMessageResult } from "discord-api-types/v10";
 import { describe, expect, it, vi } from "vitest";
 import type { PayloadElements } from "../components";
 import {
@@ -119,10 +120,16 @@ describe("createSessionFromApplicationCommandInteraction", () => {
   it("commit後のgetCurrentでメッセージを取得する", async () => {
     const { getOriginalWebhookMessage } = await import("../api/discord-api");
 
-    const mockMessageResponse = {
+    const mockMessageResponse: Partial<RESTGetAPIWebhookWithTokenMessageResult> = {
       id: "message-id",
       channel_id: "channel-id",
-      author: { id: "author-id", username: "bot", discriminator: "0000" },
+      author: {
+        id: "author-id",
+        username: "bot",
+        discriminator: "0000",
+        global_name: null,
+        avatar: null,
+      },
       content: "",
       timestamp: new Date().toISOString(),
       edited_timestamp: null,
@@ -134,10 +141,10 @@ describe("createSessionFromApplicationCommandInteraction", () => {
       embeds: [],
       pinned: false,
       type: 0,
-      flags: 0,
       components: [{ type: 10, content: "Hello World" }],
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- テストでは部分的なモックオブジェクトを使用
     vi.mocked(getOriginalWebhookMessage).mockResolvedValue(mockMessageResponse as any);
 
     const interaction = createMockInteraction();
@@ -195,10 +202,11 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     const { getOriginalWebhookMessage } = await import("../api/discord-api");
     vi.mocked(getOriginalWebhookMessage).mockClear();
 
-    const mockMessageResponse = {
+    const mockMessageResponse: Partial<RESTGetAPIWebhookWithTokenMessageResult> = {
       components: [{ type: 10, content: "From API" }],
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- テストでは部分的なモックオブジェクトを使用
     vi.mocked(getOriginalWebhookMessage).mockResolvedValue(mockMessageResponse as any);
 
     const interaction = createMockInteraction();

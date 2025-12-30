@@ -310,7 +310,7 @@ describe("schemaUtils", () => {
 
   describe("extractTextContent", () => {
     test("text要素を結合", () => {
-      const textNodes = [
+      const textNodes: Array<{ type: "text"; content: string }> = [
         { type: "text", content: "Hello" },
         { type: "text", content: " " },
         { type: "text", content: "World" },

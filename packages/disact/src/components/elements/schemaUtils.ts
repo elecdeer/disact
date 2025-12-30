@@ -66,10 +66,10 @@ export const createPropsOnlyComponentSchema = <
 >(
   componentType: TComponentType,
   propsSchema: TPropsSchema,
-  transformFn: (props: z.infer<TPropsSchema> & { type: TComponentType }) => TOutput,
+  transformFn: (props: z.output<TPropsSchema> & { type: TComponentType }) => TOutput,
 ) => {
   return createMessageComponentSchemaBase(componentType, propsSchema, z.null()).transform((obj) =>
-    transformFn(obj.props),
+    transformFn(obj.props as z.output<TPropsSchema> & { type: TComponentType }),
   );
 };
 
@@ -152,8 +152,8 @@ export const createSingleSlotComponentSchema = <
   slotName: string,
   slotContentSchema: TSlotContentSchema,
   transformFn: (data: {
-    props: z.infer<TPropsSchema> & { type: TComponentType };
-    slotContent: z.infer<TSlotContentSchema>[];
+    props: z.output<TPropsSchema> & { type: TComponentType };
+    slotContent: z.output<TSlotContentSchema>[];
   }) => TOutput,
   options?: { optional?: boolean },
 ) => {
@@ -165,8 +165,11 @@ export const createSingleSlotComponentSchema = <
   return createMessageComponentSchemaBase(componentType, propsSchema, childrenSchema).transform(
     (obj) => {
       const slotContent =
-        options?.optional && obj.children === undefined ? [] : obj.children[0]!.children;
-      return transformFn({ props: obj.props, slotContent });
+        options?.optional && obj.children === undefined ? [] : obj.children?.[0]?.children ?? [];
+      return transformFn({
+        props: obj.props as z.output<TPropsSchema> & { type: TComponentType },
+        slotContent,
+      });
     },
   );
 };

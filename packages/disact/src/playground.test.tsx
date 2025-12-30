@@ -2,6 +2,10 @@
 
 import { Suspense, use } from "@disact/engine";
 import { describe, expect, it } from "vitest";
+import { ActionRow } from "./components/core/ActionRow/ActionRow";
+import { Button } from "./components/core/Button/Button";
+import { Container } from "./components/core/Container/Container";
+import { TextDisplay } from "./components/core/TextDisplay/TextDisplay";
 import { testRender, waitFor } from "./testing";
 
 describe("test", () => {
@@ -9,12 +13,14 @@ describe("test", () => {
     const name = "alice";
     const Component = () => {
       return (
-        <container>
-          <actionRow>
-            <button style="primary">Click me</button>
-          </actionRow>
-          <textDisplay>hello {name}</textDisplay>
-        </container>
+        <Container>
+          <ActionRow>
+            <Button style="primary" customId="btn_click">
+              Click me
+            </Button>
+          </ActionRow>
+          <TextDisplay>hello {name}</TextDisplay>
+        </Container>
       );
     };
 
@@ -27,6 +33,7 @@ describe("test", () => {
             {
               "components": [
                 {
+                  "custom_id": "btn_click",
                   "disabled": false,
                   "label": "Click me",
                   "style": 1,
@@ -52,16 +59,16 @@ describe("test", () => {
 
     const AsyncData = () => {
       const data = use(promise);
-      return <textDisplay>{data}</textDisplay>;
+      return <TextDisplay>{data}</TextDisplay>;
     };
 
     const Component = () => {
       return (
-        <container>
-          <Suspense fallback={<textDisplay>Loading...</textDisplay>}>
+        <Container>
+          <Suspense fallback={<TextDisplay>Loading...</TextDisplay>}>
             <AsyncData />
           </Suspense>
-        </container>
+        </Container>
       );
     };
 

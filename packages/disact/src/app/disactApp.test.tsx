@@ -2,6 +2,10 @@
 
 import { Suspense, use } from "@disact/engine";
 import { test as base, describe, expect, vi } from "vitest";
+import { ActionRow } from "../components/core/ActionRow/ActionRow";
+import { Button } from "../components/core/Button/Button";
+import { Container } from "../components/core/Container/Container";
+import { TextDisplay } from "../components/core/TextDisplay/TextDisplay";
 import type { PayloadElements } from "../components";
 import { waitFor } from "../testing";
 import { createDisactApp } from "./disactApp";
@@ -14,7 +18,8 @@ type TestContext = {
 };
 
 const test = base.extend<TestContext>({
-  currentPayload: async ({}, use) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  currentPayload: async (_fixtures, use) => {
     // 初期状態は null (未コミット)
     const payload: {
       value: PayloadElements | null;
@@ -43,9 +48,9 @@ describe("createDisactApp", () => {
     const app = createDisactApp();
 
     const Component = () => (
-      <container>
-        <textDisplay>Hello World</textDisplay>
-      </container>
+      <Container>
+        <TextDisplay>Hello World</TextDisplay>
+      </Container>
     );
 
     await app.connect(mockSession, <Component />);
@@ -67,17 +72,19 @@ describe("createDisactApp", () => {
 
   test("差分がある場合に commit が呼ばれる", async ({ mockSession, commitSpy, currentPayload }) => {
     // 初期状態を設定
-    currentPayload.value = {
-      type: 17,
-      components: [{ type: 10, content: "Initial" }],
-    };
+    currentPayload.value = [
+      {
+        type: 17,
+        components: [{ type: 10, content: "Initial" }],
+      },
+    ];
 
     const app = createDisactApp();
 
     const Component = () => (
-      <container>
-        <textDisplay>Updated</textDisplay>
-      </container>
+      <Container>
+        <TextDisplay>Updated</TextDisplay>
+      </Container>
     );
 
     await app.connect(mockSession, <Component />);
@@ -102,27 +109,25 @@ describe("createDisactApp", () => {
     commitSpy,
     currentPayload,
   }) => {
-    // toPayload の結果と同じ形式で初期状態を設定（undefined プロパティも含める）
-    currentPayload.value = {
-      type: 17,
-      id: undefined,
-      accent_color: undefined,
-      spoiler: undefined,
-      components: [
-        {
-          type: 10,
-          id: undefined,
-          content: "Same Content",
-        },
-      ],
-    };
+    // toPayload の結果と同じ形式で初期状態を設定
+    currentPayload.value = [
+      {
+        type: 17,
+        components: [
+          {
+            type: 10,
+            content: "Same Content",
+          },
+        ],
+      },
+    ];
 
     const app = createDisactApp();
 
     const Component = () => (
-      <container>
-        <textDisplay>Same Content</textDisplay>
-      </container>
+      <Container>
+        <TextDisplay>Same Content</TextDisplay>
+      </Container>
     );
 
     await app.connect(mockSession, <Component />);
@@ -139,15 +144,15 @@ describe("createDisactApp", () => {
 
     const AsyncData = () => {
       const data = use(promise);
-      return <textDisplay>{data}</textDisplay>;
+      return <TextDisplay>{data}</TextDisplay>;
     };
 
     const Component = () => (
-      <container>
-        <Suspense fallback={<textDisplay>Loading...</textDisplay>}>
+      <Container>
+        <Suspense fallback={<TextDisplay>Loading...</TextDisplay>}>
           <AsyncData />
         </Suspense>
-      </container>
+      </Container>
     );
 
     const app = createDisactApp();
@@ -193,23 +198,23 @@ describe("createDisactApp", () => {
 
     const AsyncData1 = () => {
       const data = use(promise1);
-      return <textDisplay>{data}</textDisplay>;
+      return <TextDisplay>{data}</TextDisplay>;
     };
 
     const AsyncData2 = () => {
       const data = use(promise2);
-      return <textDisplay>{data}</textDisplay>;
+      return <TextDisplay>{data}</TextDisplay>;
     };
 
     const Component = () => (
-      <container>
-        <Suspense fallback={<textDisplay>Loading 1...</textDisplay>}>
+      <Container>
+        <Suspense fallback={<TextDisplay>Loading 1...</TextDisplay>}>
           <AsyncData1 />
         </Suspense>
-        <Suspense fallback={<textDisplay>Loading 2...</textDisplay>}>
+        <Suspense fallback={<TextDisplay>Loading 2...</TextDisplay>}>
           <AsyncData2 />
         </Suspense>
-      </container>
+      </Container>
     );
 
     const app = createDisactApp();
@@ -248,13 +253,17 @@ describe("createDisactApp", () => {
     const app = createDisactApp();
 
     const Component = () => (
-      <container>
-        <actionRow>
-          <button style="primary">Click me</button>
-          <button style="secondary">Cancel</button>
-        </actionRow>
-        <textDisplay>Choose an action</textDisplay>
-      </container>
+      <Container>
+        <ActionRow>
+          <Button style="primary" customId="btn_click">
+            Click me
+          </Button>
+          <Button style="secondary" customId="btn_cancel">
+            Cancel
+          </Button>
+        </ActionRow>
+        <TextDisplay>Choose an action</TextDisplay>
+      </Container>
     );
 
     await app.connect(mockSession, <Component />);
@@ -272,12 +281,14 @@ describe("createDisactApp", () => {
             {
               type: 2,
               style: 1,
+              custom_id: "btn_click",
               label: "Click me",
               disabled: false,
             },
             {
               type: 2,
               style: 2,
+              custom_id: "btn_cancel",
               label: "Cancel",
               disabled: false,
             },
