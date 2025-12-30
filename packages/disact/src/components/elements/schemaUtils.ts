@@ -1,6 +1,11 @@
 import type { ComponentType } from "discord-api-types/v10";
 import * as z from "zod";
 
+export const messageComponentElementSchema = z.object({
+  type: z.literal("intrinsic"),
+  name: z.literal("message-component"),
+});
+
 /**
  * message-component要素のベーススキーマを作成
  *
@@ -63,8 +68,8 @@ export const createPropsOnlyComponentSchema = <
   propsSchema: TPropsSchema,
   transformFn: (props: z.infer<TPropsSchema> & { type: TComponentType }) => TOutput,
 ) => {
-  return createMessageComponentSchemaBase(componentType, propsSchema, z.null()).transform(
-    (obj) => transformFn(obj.props),
+  return createMessageComponentSchemaBase(componentType, propsSchema, z.null()).transform((obj) =>
+    transformFn(obj.props),
   );
 };
 
@@ -160,9 +165,7 @@ export const createSingleSlotComponentSchema = <
   return createMessageComponentSchemaBase(componentType, propsSchema, childrenSchema).transform(
     (obj) => {
       const slotContent =
-        options?.optional && obj.children === undefined
-          ? []
-          : obj.children[0]!.children;
+        options?.optional && obj.children === undefined ? [] : obj.children[0]!.children;
       return transformFn({ props: obj.props, slotContent });
     },
   );
@@ -184,9 +187,7 @@ export const extractSlotContent = <T>(
   children: Array<{ name: string; props: { name: string }; children: T[] }>,
   slotName: string,
 ): T[] | undefined => {
-  return children.find(
-    (child) => child.name === "slot" && child.props.name === slotName,
-  )?.children;
+  return children.find((child) => child.name === "slot" && child.props.name === slotName)?.children;
 };
 
 /**
@@ -203,9 +204,7 @@ export const extractSlotContent = <T>(
  * ]); // "Hello World"
  * ```
  */
-export const extractTextContent = (
-  textNodes: Array<{ type: "text"; content: string }>,
-): string => {
+export const extractTextContent = (textNodes: Array<{ type: "text"; content: string }>): string => {
   return textNodes.map((node) => node.content).join("");
 };
 
@@ -237,9 +236,7 @@ export const extractSingleSlotTextContent = (
   const slotContent = extractSlotContent(children, slotName);
   if (!slotContent) return undefined;
   return extractTextContent(
-    slotContent.filter(
-      (node): node is { type: "text"; content: string } => node.type === "text",
-    ),
+    slotContent.filter((node): node is { type: "text"; content: string } => node.type === "text"),
   );
 };
 
