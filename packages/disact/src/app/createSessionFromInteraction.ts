@@ -1,9 +1,5 @@
 import type { APIApplicationCommandInteraction } from "discord-api-types/v10";
-import {
-  createInteractionResponse,
-  getOriginalWebhookMessage,
-  updateOriginalWebhookMessage,
-} from "../api/discord-api";
+import { getOriginalWebhookMessage, updateOriginalWebhookMessage } from "../api/discord-api";
 import type { PayloadElements } from "../components/index.ts";
 import { messageFlags } from "../utils/messageFlags";
 import type { Session } from "./session";
