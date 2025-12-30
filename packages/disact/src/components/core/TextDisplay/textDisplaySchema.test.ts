@@ -62,59 +62,56 @@ describe("textDisplayElement", () => {
   });
 
   test("不正なname値でエラー", () => {
-    expect(() => {
-      textDisplayElementSchema.parse({
-        type: "intrinsic",
-        name: "textDisplay",
-        props: {
-          type: ComponentType.TextDisplay,
-        },
-        children: [{ type: "text", content: "Test" }],
-      });
-    }).toThrow();
+    const result = textDisplayElementSchema.safeParse({
+      type: "intrinsic",
+      name: "textDisplay",
+      props: {
+        type: ComponentType.TextDisplay,
+      },
+      children: [{ type: "text", content: "Test" }],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("空文字列でエラー", () => {
-    expect(() => {
-      textDisplayElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.TextDisplay,
+    const result = textDisplayElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.TextDisplay,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "children" },
+          children: [
+            { type: "text", content: "" },
+          ],
         },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "children" },
-            children: [
-              { type: "text", content: "" },
-            ],
-          },
-        ],
-      });
-    }).toThrow();
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("4000文字を超えるとエラー", () => {
-    expect(() => {
-      textDisplayElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.TextDisplay,
+    const result = textDisplayElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.TextDisplay,
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "children" },
+          children: [
+            { type: "text", content: "a".repeat(4001) },
+          ],
         },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "children" },
-            children: [
-              { type: "text", content: "a".repeat(4001) },
-            ],
-          },
-        ],
-      });
-    }).toThrow();
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 });

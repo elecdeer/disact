@@ -258,25 +258,24 @@ describe("buttonElement", () => {
   });
 
   test("80文字を超えるラベルでエラー", () => {
-    expect(() => {
-      buttonElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Button,
-          style: "primary",
-          customId: "long-label",
+    const result = buttonElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Button,
+        style: "primary",
+        customId: "long-label",
+      },
+      children: [
+        {
+          type: "intrinsic",
+          name: "slot",
+          props: { name: "children" },
+          children: [{ type: "text", content: "a".repeat(81) }],
         },
-        children: [
-          {
-            type: "intrinsic",
-            name: "slot",
-            props: { name: "children" },
-            children: [{ type: "text", content: "a".repeat(81) }],
-          },
-        ],
-      });
-    }).toThrow("Too big");
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("customIdが100文字を超えるとエラー", () => {

@@ -49,14 +49,13 @@ describe("schemaUtils", () => {
         z.null(),
       );
 
-      expect(() => {
-        schema.parse({
-          type: "intrinsic",
-          name: "invalid-name",
-          props: { type: ComponentType.Separator },
-          children: null,
-        });
-      }).toThrow();
+      const result = schema.safeParse({
+        type: "intrinsic",
+        name: "invalid-name",
+        props: { type: ComponentType.Separator },
+        children: null,
+      });
+      expect(result.success).toBe(false);
     });
   });
 
@@ -100,14 +99,13 @@ describe("schemaUtils", () => {
         (props) => ({ type: props.type }),
       );
 
-      expect(() => {
-        schema.parse({
-          type: "intrinsic",
-          name: "message-component",
-          props: { type: ComponentType.Separator },
-          children: [{ type: "text", content: "invalid" }],
-        });
-      }).toThrow();
+      const result = schema.safeParse({
+        type: "intrinsic",
+        name: "message-component",
+        props: { type: ComponentType.Separator },
+        children: [{ type: "text", content: "invalid" }],
+      });
+      expect(result.success).toBe(false);
     });
   });
 
@@ -157,24 +155,22 @@ describe("schemaUtils", () => {
       }).not.toThrow();
 
       // エラー: 0個 (min未満)
-      expect(() => {
-        schema.parse({
-          type: "intrinsic",
-          name: "slot",
-          props: { name: "components" },
-          children: [],
-        });
-      }).toThrow();
+      const result1 = schema.safeParse({
+        type: "intrinsic",
+        name: "slot",
+        props: { name: "components" },
+        children: [],
+      });
+      expect(result1.success).toBe(false);
 
       // エラー: 4個 (max超過)
-      expect(() => {
-        schema.parse({
-          type: "intrinsic",
-          name: "slot",
-          props: { name: "components" },
-          children: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
-        });
-      }).toThrow();
+      const result2 = schema.safeParse({
+        type: "intrinsic",
+        name: "slot",
+        props: { name: "components" },
+        children: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
+      });
+      expect(result2.success).toBe(false);
     });
   });
 

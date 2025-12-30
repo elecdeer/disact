@@ -87,60 +87,56 @@ describe("mediaGalleryElement", () => {
   });
 
   test("不正なname値でエラー", () => {
-    expect(() => {
-      mediaGalleryElementSchema.parse({
-        type: "intrinsic",
-        name: "mediaGallery",
-        props: {
-          type: ComponentType.MediaGallery,
-          items: [{ media: { url: "https://example.com/image.png" } }],
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = mediaGalleryElementSchema.safeParse({
+      type: "intrinsic",
+      name: "mediaGallery",
+      props: {
+        type: ComponentType.MediaGallery,
+        items: [{ media: { url: "https://example.com/image.png" } }],
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("childrenがnull以外でエラー", () => {
-    expect(() => {
-      mediaGalleryElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.MediaGallery,
-          items: [{ media: { url: "https://example.com/image.png" } }],
-        },
-        children: [{ type: "text", content: "invalid" }],
-      });
-    }).toThrow();
+    const result = mediaGalleryElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.MediaGallery,
+        items: [{ media: { url: "https://example.com/image.png" } }],
+      },
+      children: [{ type: "text", content: "invalid" }],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("itemsが空でエラー", () => {
-    expect(() => {
-      mediaGalleryElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.MediaGallery,
-          items: [],
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = mediaGalleryElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.MediaGallery,
+        items: [],
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("itemsが10個を超えるとエラー", () => {
-    expect(() => {
-      mediaGalleryElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.MediaGallery,
-          items: Array.from({ length: 11 }, (_, i) => ({
-            media: { url: `https://example.com/image${i}.png` },
-          })),
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = mediaGalleryElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.MediaGallery,
+        items: Array.from({ length: 11 }, (_, i) => ({
+          media: { url: `https://example.com/image${i}.png` },
+        })),
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });

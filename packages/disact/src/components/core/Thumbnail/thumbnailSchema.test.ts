@@ -57,59 +57,55 @@ describe("thumbnailElement", () => {
   });
 
   test("不正なname値でエラー", () => {
-    expect(() => {
-      thumbnailElementSchema.parse({
-        type: "intrinsic",
-        name: "thumbnail",
-        props: {
-          type: ComponentType.Thumbnail,
-          media: { url: "https://example.com/image.png" },
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = thumbnailElementSchema.safeParse({
+      type: "intrinsic",
+      name: "thumbnail",
+      props: {
+        type: ComponentType.Thumbnail,
+        media: { url: "https://example.com/image.png" },
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("childrenがnull以外でエラー", () => {
-    expect(() => {
-      thumbnailElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Thumbnail,
-          media: { url: "https://example.com/image.png" },
-        },
-        children: [{ type: "text", content: "invalid" }],
-      });
-    }).toThrow();
+    const result = thumbnailElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Thumbnail,
+        media: { url: "https://example.com/image.png" },
+      },
+      children: [{ type: "text", content: "invalid" }],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("descriptionが長すぎるとエラー", () => {
-    expect(() => {
-      thumbnailElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Thumbnail,
-          description: "a".repeat(1025),
-          media: { url: "https://example.com/image.png" },
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = thumbnailElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Thumbnail,
+        description: "a".repeat(1025),
+        media: { url: "https://example.com/image.png" },
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("URLが長すぎるとエラー", () => {
-    expect(() => {
-      thumbnailElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Thumbnail,
-          media: { url: "https://example.com/" + "a".repeat(2048) },
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = thumbnailElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Thumbnail,
+        media: { url: `https://example.com/${"a".repeat(2048)}` },
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });

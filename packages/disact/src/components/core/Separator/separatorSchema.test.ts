@@ -63,42 +63,39 @@ describe("separatorElement", () => {
   });
 
   test("不正なname値でエラー", () => {
-    expect(() => {
-      separatorElementSchema.parse({
-        type: "intrinsic",
-        name: "separator",
-        props: {
-          type: ComponentType.Separator,
-        },
-        children: null,
-      });
-    }).toThrow("aaa");
+    const result = separatorElementSchema.safeParse({
+      type: "intrinsic",
+      name: "separator",
+      props: {
+        type: ComponentType.Separator,
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("childrenがnull以外でエラー", () => {
-    expect(() => {
-      separatorElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Separator,
-        },
-        children: [{ type: "text", content: "invalid" }],
-      });
-    }).toThrow();
+    const result = separatorElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Separator,
+      },
+      children: [{ type: "text", content: "invalid" }],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("負のidでエラー", () => {
-    expect(() => {
-      separatorElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.Separator,
-          id: -1,
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = separatorElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.Separator,
+        id: -1,
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });

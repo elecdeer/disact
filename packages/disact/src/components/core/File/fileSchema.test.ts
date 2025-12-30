@@ -54,44 +54,41 @@ describe("fileElement", () => {
   });
 
   test("不正なname値でエラー", () => {
-    expect(() => {
-      fileElementSchema.parse({
-        type: "intrinsic",
-        name: "file",
-        props: {
-          type: ComponentType.File,
-          file: { url: "https://example.com/file.txt" },
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = fileElementSchema.safeParse({
+      type: "intrinsic",
+      name: "file",
+      props: {
+        type: ComponentType.File,
+        file: { url: "https://example.com/file.txt" },
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 
   test("childrenがnull以外でエラー", () => {
-    expect(() => {
-      fileElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.File,
-          file: { url: "https://example.com/file.txt" },
-        },
-        children: [{ type: "text", content: "invalid" }],
-      });
-    }).toThrow();
+    const result = fileElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.File,
+        file: { url: "https://example.com/file.txt" },
+      },
+      children: [{ type: "text", content: "invalid" }],
+    });
+    expect(result.success).toBe(false);
   });
 
   test("URLが長すぎるとエラー", () => {
-    expect(() => {
-      fileElementSchema.parse({
-        type: "intrinsic",
-        name: "message-component",
-        props: {
-          type: ComponentType.File,
-          file: { url: "https://example.com/" + "a".repeat(2048) },
-        },
-        children: null,
-      });
-    }).toThrow();
+    const result = fileElementSchema.safeParse({
+      type: "intrinsic",
+      name: "message-component",
+      props: {
+        type: ComponentType.File,
+        file: { url: `https://example.com/${"a".repeat(2048)}` },
+      },
+      children: null,
+    });
+    expect(result.success).toBe(false);
   });
 });
