@@ -70,10 +70,10 @@ const renderResultToPayloads = (result: RenderResult): PayloadElement[] => {
   }
 
   if (Array.isArray(result)) {
-    return result.map((element) => toMessageComponentsPayload(element));
+    return result.flatMap((element) => toMessageComponentsPayload(element));
   }
 
-  return [toMessageComponentsPayload(result)];
+  return toMessageComponentsPayload(result);
 };
 
 export const removeUndefinedValuesDeep = <T>(val: T): T => {
