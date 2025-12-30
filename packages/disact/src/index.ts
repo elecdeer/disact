@@ -13,7 +13,10 @@ export { ErrorBoundary, Suspense } from "@disact/engine";
 // Core Components
 export { ActionRow, type ActionRowProps } from "./components/core/ActionRow/ActionRow";
 export { Button, type ButtonProps } from "./components/core/Button/Button";
-export { ChannelSelect, type ChannelSelectProps } from "./components/core/ChannelSelect/ChannelSelect";
+export {
+  ChannelSelect,
+  type ChannelSelectProps,
+} from "./components/core/ChannelSelect/ChannelSelect";
 export { Components, type ComponentsProps } from "./components/core/Components/Components";
 export { Container, type ContainerProps } from "./components/core/Container/Container";
 export { File, type FileProps } from "./components/core/File/File";
