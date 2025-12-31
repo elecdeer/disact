@@ -1,5 +1,7 @@
 /** @jsxImportSource . */
 
+// 実装を試行する為のプレイグラウンド用テストファイル
+
 import { Suspense, use } from "@disact/engine";
 import { describe, expect, it } from "vitest";
 import { ActionRow } from "./components/core/ActionRow/ActionRow";
