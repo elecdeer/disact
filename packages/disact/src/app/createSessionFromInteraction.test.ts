@@ -22,6 +22,9 @@ const createMockInteraction = (): ApplicationCommandInteraction =>
     token: "interaction-token-xyz",
     guild_id: "guild-id-789",
     channel_id: "channel-id-abc",
+    data: {
+      name: "test-command",
+    },
   }) as ApplicationCommandInteraction;
 
 describe("createSessionFromApplicationCommandInteraction", () => {
@@ -75,7 +78,7 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     expect(updateOriginalWebhookMessage).toHaveBeenCalledWith(
       interaction.application_id,
       interaction.token,
-      { components: payload2 },
+      { components: payload2, flags: 32768 },
     );
   });
 
@@ -113,7 +116,7 @@ describe("createSessionFromApplicationCommandInteraction", () => {
     expect(updateOriginalWebhookMessage).toHaveBeenLastCalledWith(
       interaction.application_id,
       interaction.token,
-      { components: payload2 },
+      { components: payload2, flags: 32768 },
     );
   });
 

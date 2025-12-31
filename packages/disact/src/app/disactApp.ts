@@ -1,5 +1,10 @@
-import { type DisactElement, renderToReadableStream } from "@disact/engine";
+import {
+  type DisactElement,
+  renderToReadableStream,
+  type RenderLifecycleCallbacks,
+} from "@disact/engine";
 import { toMessageComponentsPayload } from "../components";
+import type { InteractionCallback } from "../hooks/useInteraction";
 import { getDisactLogger } from "../utils/logger";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
@@ -7,13 +12,55 @@ import type { Session } from "./session";
 const logger = getDisactLogger("app");
 
 export type DisactApp = {
-  connect: (session: Session, node: DisactElement) => Promise<void>;
+  connect: <T = unknown>(
+    session: Session<T>,
+    node: DisactElement,
+  ) => Promise<void>;
 };
 
 export const createDisactApp = (): DisactApp => {
-  const connect = async (session: Session, rootElement: DisactElement) => {
+  const connect = async <T = unknown>(
+    session: Session<T>,
+    rootElement: DisactElement,
+  ) => {
     logger.debug("Starting app connection", { hasSession: !!session });
-    const stream = renderToReadableStream(rootElement, {});
+
+    // Interactionコールバック配列を用意
+    const interactionCallbacks: InteractionCallback<T>[] = [];
+
+    // Contextに配列を含める
+    const context = {
+      __interactionCallbacks: interactionCallbacks,
+    };
+
+    // ライフサイクルフックを定義
+    const lifecycleCallbacks: RenderLifecycleCallbacks = {
+      preRender: async () => {
+        // 各レンダリング前にcallback配列をクリア
+        // 最終レンダリングのcallbackのみを保持するため
+        interactionCallbacks.length = 0;
+      },
+      postRenderCycle: async () => {
+        // 全レンダリング完了後、callbackを実行
+        const interaction = session.getInteraction();
+        if (interaction && interactionCallbacks.length > 0) {
+          logger.debug("Executing interaction callbacks", {
+            count: interactionCallbacks.length,
+          });
+
+          for (const callback of interactionCallbacks) {
+            try {
+              await callback(interaction);
+            } catch (error) {
+              logger.error("Interaction callback failed", { error });
+              // エラーが発生しても続行
+            }
+          }
+        }
+      },
+    };
+
+    const stream = renderToReadableStream(rootElement, context, lifecycleCallbacks);
 
     void (async () => {
       let chunkCount = 0;

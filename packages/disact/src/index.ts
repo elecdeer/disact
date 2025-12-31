@@ -45,3 +45,7 @@ export { createSessionFromApplicationCommandInteraction } from "./app/createSess
 export type { DisactApp } from "./app/disactApp";
 export { createDisactApp } from "./app/disactApp";
 export type { Session } from "./app/session";
+
+// Hooks
+export { useInteraction } from "./hooks";
+export type { InteractionCallback, InteractionCallbacksContext } from "./hooks";

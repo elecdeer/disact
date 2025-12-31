@@ -5,9 +5,22 @@ import { getEngineLogger } from "./utils/logger";
 
 const logger = getEngineLogger("render");
 
+/**
+ * レンダリングライフサイクルフック
+ */
+export type RenderLifecycleCallbacks = {
+  /** 各レンダリング開始前に呼ばれる */
+  preRender?: () => void | Promise<void>;
+  /** 各レンダリング直後に呼ばれる */
+  postRender?: () => void | Promise<void>;
+  /** 全レンダリングサイクル完了後（controller.close()直前）に呼ばれる */
+  postRenderCycle?: () => void | Promise<void>;
+};
+
 export const renderToReadableStream = <Context>(
   element: DisactElement,
   context: Context,
+  callbacks?: RenderLifecycleCallbacks,
 ): ReadableStream<RenderResult> => {
   return new ReadableStream<RenderResult>({
     async start(controller) {
@@ -24,15 +37,29 @@ export const renderToReadableStream = <Context>(
           __promiseTracker: promiseTracker,
         };
 
+        // preRenderフック呼び出し
+        if (callbacks?.preRender) {
+          await callbacks.preRender();
+        }
+
         const initialResult = runInContext(contextWithTracker, () =>
           render(element, contextWithTracker, promises),
         );
+
+        // postRenderフック呼び出し
+        if (callbacks?.postRender) {
+          await callbacks.postRender();
+        }
 
         // Suspenseがない場合は即座に結果を返す
         if (promises.length === 0) {
           logger.debug("No suspense detected, completing immediately", {
             result: initialResult,
           });
+          // postRenderCycleフック呼び出し
+          if (callbacks?.postRenderCycle) {
+            await callbacks.postRenderCycle();
+          }
           controller.enqueue(initialResult);
           controller.close();
           return;
@@ -47,10 +74,28 @@ export const renderToReadableStream = <Context>(
         if (promiseTracker.areAllResolved()) {
           // すべてのPromiseがすでに解決されている場合、再レンダリングして結果を返す
           logger.debug("All promises resolved immediately, re-rendering");
+
+          // preRenderフック呼び出し
+          if (callbacks?.preRender) {
+            await callbacks.preRender();
+          }
+
           const finalResult = runInContext(contextWithTracker, () =>
             render(element, contextWithTracker),
           );
+
+          // postRenderフック呼び出し
+          if (callbacks?.postRender) {
+            await callbacks.postRender();
+          }
+
           logger.debug("Final render result", { result: finalResult });
+
+          // postRenderCycleフック呼び出し
+          if (callbacks?.postRenderCycle) {
+            await callbacks.postRenderCycle();
+          }
+
           controller.enqueue(finalResult);
           controller.close();
           return;
@@ -69,11 +114,21 @@ export const renderToReadableStream = <Context>(
           });
           await promiseTracker.waitForAnyResolution();
 
+          // preRenderフック呼び出し
+          if (callbacks?.preRender) {
+            await callbacks.preRender();
+          }
+
           // 再レンダリングして現在の結果を送信（新しいPromiseも収集）
           const newPromises: Promise<unknown>[] = [];
           const currentResult = runInContext(contextWithTracker, () =>
             render(element, contextWithTracker, newPromises),
           );
+
+          // postRenderフック呼び出し
+          if (callbacks?.postRender) {
+            await callbacks.postRender();
+          }
 
           // 新しいPromiseが発生した場合（ネストしたSuspenseなど）は追跡に追加
           if (newPromises.length > 0) {
@@ -92,6 +147,12 @@ export const renderToReadableStream = <Context>(
         }
 
         logger.info("Render stream completed", { totalChunks: chunkIndex });
+
+        // postRenderCycleフック呼び出し
+        if (callbacks?.postRenderCycle) {
+          await callbacks.postRenderCycle();
+        }
+
         controller.close();
       } catch (error) {
         logger.error("Render stream failed", { error });

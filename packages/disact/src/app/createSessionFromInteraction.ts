@@ -50,7 +50,7 @@ export type CreateSessionFromInteractionOptions = {
 export const createSessionFromApplicationCommandInteraction = (
   interaction: ApplicationCommandInteraction,
   options?: CreateSessionFromInteractionOptions,
-): Session => {
+): Session<ApplicationCommandInteraction> => {
   const ephemeral = options?.ephemeral ?? false;
   const alwaysFetch = options?.alwaysFetch ?? false;
   const deferred = options?.deferred ?? false;
@@ -131,6 +131,10 @@ export const createSessionFromApplicationCommandInteraction = (
       }
 
       return null;
+    },
+
+    getInteraction: (): ApplicationCommandInteraction => {
+      return interaction;
     },
   };
 };
