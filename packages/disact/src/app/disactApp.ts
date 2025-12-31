@@ -3,6 +3,7 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
+import type { APIInteraction } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import type { InteractionCallback } from "../hooks/useInteraction";
 import { getDisactLogger } from "../utils/logger";
@@ -12,14 +13,14 @@ import type { Session } from "./session";
 const logger = getDisactLogger("app");
 
 export type DisactApp = {
-  connect: <T = unknown>(
+  connect: <T = APIInteraction>(
     session: Session<T>,
     node: DisactElement,
   ) => Promise<void>;
 };
 
 export const createDisactApp = (): DisactApp => {
-  const connect = async <T = unknown>(
+  const connect = async <T = APIInteraction>(
     session: Session<T>,
     rootElement: DisactElement,
   ) => {

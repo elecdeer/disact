@@ -1,16 +1,17 @@
 import { getCurrentContext } from "@disact/engine";
+import type { APIInteraction } from "discord-api-types/v10";
 
 /**
  * Interactionコールバックの型
  */
-export type InteractionCallback<T = unknown> = (
+export type InteractionCallback<T = APIInteraction> = (
   interaction: T,
 ) => void | Promise<void>;
 
 /**
  * Interactionコールバックを保持するContext型
  */
-export type InteractionCallbacksContext<T = unknown> = {
+export type InteractionCallbacksContext<T = APIInteraction> = {
   __interactionCallbacks?: InteractionCallback<T>[];
   [key: string]: unknown;
 };
@@ -31,7 +32,7 @@ export type InteractionCallbacksContext<T = unknown> = {
  * };
  * ```
  */
-export const useInteraction = <T = unknown>(
+export const useInteraction = <T = APIInteraction>(
   callback: InteractionCallback<T>,
 ): void => {
   const context = getCurrentContext<InteractionCallbacksContext<T>>();
