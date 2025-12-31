@@ -86,8 +86,10 @@ const handleApplicationCommand = async (
     });
 
     // Sessionを作成
+    // ハンドラーで既にDeferredレスポンスを返しているため、deferred: trueを指定
     const session = createSessionFromApplicationCommandInteraction(interaction, {
       ephemeral: false,
+      deferred: true,
     });
 
     // DisactAppを作成

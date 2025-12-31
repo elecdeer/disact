@@ -25,6 +25,8 @@ export type CreateSessionFromInteractionOptions = {
   ephemeral?: boolean;
   /** getOriginalを毎回fetchするか、キャッシュを返すか (デフォルト: false) */
   alwaysFetch?: boolean;
+  /** 既にDeferredレスポンスが返されているか (デフォルト: false) */
+  deferred?: boolean;
 };
 
 /**
@@ -51,15 +53,19 @@ export const createSessionFromApplicationCommandInteraction = (
 ): Session => {
   const ephemeral = options?.ephemeral ?? false;
   const alwaysFetch = options?.alwaysFetch ?? false;
+  const deferred = options?.deferred ?? false;
 
   logger.debug("Creating session from interaction", {
     interactionId: interaction.id,
     commandName: interaction.data.name,
     ephemeral,
     alwaysFetch,
+    deferred,
   });
 
-  let hasCommitted = false;
+  // deferredがtrueの場合は、既にDeferredレスポンスが返されているため
+  // 最初から updateOriginalWebhookMessage を使用する
+  let hasCommitted = deferred;
   let cachedPayload: PayloadElements | null = null;
 
   return {
@@ -87,6 +93,10 @@ export const createSessionFromApplicationCommandInteraction = (
         });
         await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
           components: payload,
+          flags: messageFlags({
+            isComponentsV2: true,
+            ephemeral,
+          }),
         });
       }
       cachedPayload = payload;
