@@ -1,4 +1,5 @@
-import { ansiColorFormatter, configure, getConsoleSink } from "@logtape/logtape";
+import { configure, getConsoleSink } from "@logtape/logtape";
+import { getPrettyFormatter } from "@logtape/pretty";
 
 /**
  * logtapeのログ設定を初期化
@@ -8,7 +9,14 @@ export const configureLogging = async (): Promise<void> => {
   await configure({
     sinks: {
       console: getConsoleSink({
-        formatter: ansiColorFormatter,
+        formatter: getPrettyFormatter({
+          timestamp: "time",
+          properties: true,
+          inspectOptions: {
+            depth: 10, // 深くネストされたオブジェクトも表示（デフォルトは2）
+            colors: true, // 色付きで表示
+          },
+        }),
       }),
     },
     filters: {},

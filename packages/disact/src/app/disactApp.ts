@@ -19,19 +19,37 @@ export const createDisactApp = (): DisactApp => {
       let chunkCount = 0;
       for await (const chunk of stream) {
         chunkCount++;
-        logger.trace("Processing render chunk", { chunkCount });
+        logger.debug("Processing render chunk", {
+          chunkCount,
+          chunk,
+        });
 
         const current = await session.getCurrent();
+        logger.debug("Current session state", {
+          hasCurrent: current !== null,
+          current,
+        });
+
         const chunkPayload = toMessageComponentsPayload(chunk);
+        logger.debug("Converted to payload", {
+          chunkCount,
+          payload: chunkPayload,
+        });
+
         // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
         if (current !== null && !isDifferentPayloadElement(current, chunkPayload)) {
-          logger.debug("Skipping chunk (no diff detected)", { chunkCount });
+          logger.debug("Skipping chunk (no diff detected)", {
+            chunkCount,
+            current,
+            payload: chunkPayload,
+          });
           continue;
         }
 
-        logger.debug("Committing chunk to session", {
+        logger.info("Committing chunk to session", {
           chunkCount,
           isInitial: current === null,
+          payload: chunkPayload,
         });
         await session.commit(chunkPayload);
       }

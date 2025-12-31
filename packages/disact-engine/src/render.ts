@@ -30,7 +30,9 @@ export const renderToReadableStream = <Context>(
 
         // Suspenseがない場合は即座に結果を返す
         if (promises.length === 0) {
-          logger.debug("No suspense detected, completing immediately");
+          logger.debug("No suspense detected, completing immediately", {
+            result: initialResult,
+          });
           controller.enqueue(initialResult);
           controller.close();
           return;
@@ -48,13 +50,14 @@ export const renderToReadableStream = <Context>(
           const finalResult = runInContext(contextWithTracker, () =>
             render(element, contextWithTracker),
           );
+          logger.debug("Final render result", { result: finalResult });
           controller.enqueue(finalResult);
           controller.close();
           return;
         }
 
         // まだ未解決のPromiseがある場合は、fallbackを先に送信
-        logger.debug("Sending initial fallback result");
+        logger.debug("Sending initial fallback result", { result: initialResult });
         controller.enqueue(initialResult);
 
         // 各Promiseが個別に解決されるたびに中間結果を送信
@@ -80,7 +83,10 @@ export const renderToReadableStream = <Context>(
             promiseTracker.trackPromises(newPromises);
           }
 
-          logger.debug("Sending intermediate result", { chunkIndex });
+          logger.debug("Sending intermediate result", {
+            chunkIndex,
+            result: currentResult,
+          });
           controller.enqueue(currentResult);
           chunkIndex++;
         }
@@ -126,12 +132,17 @@ const render = <Context>(
     const { children, ...rest } = element.props;
     const renderedChildren = render(children as DisactNode, context, promises);
 
-    return {
-      type: "intrinsic",
+    const result = {
+      type: "intrinsic" as const,
       name: element.name,
       props: rest,
       children: renderedChildren && toArray(renderedChildren),
     };
+    logger.trace("Intrinsic element rendered", {
+      name: element.name,
+      result,
+    });
+    return result;
   }
 
   if (element.type === "suspense") {

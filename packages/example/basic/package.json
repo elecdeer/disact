@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@logtape/logtape": "catalog:",
+    "@logtape/pretty": "catalog:",
     "@monorepo/tsconfig": "workspace:*",
     "vite-node": "catalog:"
   }

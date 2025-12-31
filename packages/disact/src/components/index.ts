@@ -1,6 +1,9 @@
 import type { DisactNode, RenderResult } from "@disact/engine";
 import type { APIMessageTopLevelComponent } from "discord-api-types/v10";
 import { componentsRenderResultSchema } from "./core/Components/componentsSchema";
+import { getDisactLogger } from "../utils/logger";
+
+const logger = getDisactLogger("components");
 
 export type IntrinsicElements = {
   slot: { children: DisactNode; name: string };
@@ -17,5 +20,16 @@ export type PayloadElements = APIMessageTopLevelComponent[];
  * @returns Discord API のメッセージコンポーネント配列
  */
 export const toMessageComponentsPayload = (renderResult: RenderResult): PayloadElements => {
-  return componentsRenderResultSchema.parse(renderResult);
+  logger.debug("Converting RenderResult to payload", {
+    renderResult,
+  });
+
+  const payload = componentsRenderResultSchema.parse(renderResult);
+
+  logger.debug("Payload conversion completed", {
+    payload,
+    componentCount: payload.length,
+  });
+
+  return payload;
 };
