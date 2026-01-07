@@ -1,4 +1,7 @@
-import type { APIApplicationCommandInteraction } from "discord-api-types/v10";
+import type {
+  APIApplicationCommandInteraction,
+  APIMessageComponentInteraction,
+} from "discord-api-types/v10";
 import {
   createInteractionResponse,
   getOriginalWebhookMessage,
@@ -16,6 +19,12 @@ const logger = getDisactLogger("session");
  * discord-api-types/v10のAPIApplicationCommandInteractionを使用
  */
 export type ApplicationCommandInteraction = APIApplicationCommandInteraction;
+
+/**
+ * Message Component Interactionの型
+ * discord-api-types/v10のAPIMessageComponentInteractionを使用
+ */
+export type MessageComponentInteraction = APIMessageComponentInteraction;
 
 /**
  * Application Command InteractionからSessionを作成する際のオプション
@@ -134,6 +143,120 @@ export const createSessionFromApplicationCommandInteraction = (
     },
 
     getInteraction: (): ApplicationCommandInteraction => {
+      return interaction;
+    },
+  };
+};
+
+/**
+ * Message Component InteractionからSessionを作成する
+ *
+ * Message Component Interactionは既にユーザーのボタンクリック等で発生しているため、
+ * 初回から updateOriginalWebhookMessage を使用してメッセージを更新する。
+ *
+ * @param interaction - Discord APIから受け取ったMessage Component Interaction
+ * @param options - Session作成オプション
+ * @returns Session オブジェクト
+ *
+ * @example
+ * ```typescript
+ * const session = createSessionFromMessageComponentInteraction(interaction, {
+ *   ephemeral: false,
+ *   alwaysFetch: false,
+ * });
+ *
+ * await session.commit(payload);
+ * const current = await session.getCurrent();
+ * ```
+ */
+export const createSessionFromMessageComponentInteraction = (
+  interaction: MessageComponentInteraction,
+  options?: CreateSessionFromInteractionOptions,
+): Session<MessageComponentInteraction> => {
+  const ephemeral = options?.ephemeral ?? false;
+  const alwaysFetch = options?.alwaysFetch ?? false;
+  const deferred = options?.deferred ?? false;
+
+  logger.debug("Creating session from message component interaction", {
+    interactionId: interaction.id,
+    customId: interaction.data.custom_id,
+    ephemeral,
+    alwaysFetch,
+    deferred,
+  });
+
+  // deferredがtrueの場合は、既にDeferredレスポンスが返されているため
+  // 最初から updateOriginalWebhookMessage を使用する
+  let hasCommitted = deferred;
+  let cachedPayload: PayloadElements | null = null;
+
+  return {
+    commit: async (payload: PayloadElements): Promise<void> => {
+      if (!hasCommitted) {
+        // 初回: POST /interactions/{interaction.id}/{interaction.token}/callback
+        // Message Component の場合は UPDATE_MESSAGE (type: 7) を使用
+        logger.info("Committing initial message component response", {
+          interactionId: interaction.id,
+        });
+        await createInteractionResponse(interaction.id, interaction.token, {
+          type: 7, // UPDATE_MESSAGE
+          data: {
+            components: payload,
+            flags: messageFlags({
+              isComponentsV2: true,
+              ephemeral,
+            }),
+          },
+        });
+        hasCommitted = true;
+      } else {
+        // 2回目以降: PATCH /webhooks/{application.id}/{interaction.token}/messages/@original
+        logger.debug("Updating message component response", {
+          interactionId: interaction.id,
+        });
+        await updateOriginalWebhookMessage(interaction.application_id, interaction.token, {
+          components: payload,
+          flags: messageFlags({
+            isComponentsV2: true,
+            ephemeral,
+          }),
+        });
+      }
+      cachedPayload = payload;
+      logger.trace("Session state updated", { hasCommitted });
+    },
+
+    getCurrent: async (): Promise<PayloadElements | null> => {
+      if (!hasCommitted) {
+        logger.trace("getCurrent called before first commit");
+        return null;
+      }
+
+      if (!alwaysFetch) {
+        logger.trace("Returning cached payload");
+        return cachedPayload;
+      }
+
+      // alwaysFetchがtrueの場合、APIから取得
+      logger.debug("Fetching current state from API", {
+        interactionId: interaction.id,
+      });
+      const response = await getOriginalWebhookMessage(
+        interaction.application_id,
+        interaction.token,
+      );
+
+      if (response.components) {
+        // MessageResponse.components を PayloadElement として返す
+        const payload = response.components as unknown as PayloadElements;
+        cachedPayload = payload;
+        return payload;
+      }
+
+      return null;
+    },
+
+    getInteraction: (): MessageComponentInteraction => {
       return interaction;
     },
   };

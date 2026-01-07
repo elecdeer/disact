@@ -38,9 +38,13 @@ export type FC<P extends PropsBase = {}> = (props: P) => DisactNode;
 
 export type {
   ApplicationCommandInteraction,
+  MessageComponentInteraction,
   CreateSessionFromInteractionOptions,
 } from "./app/createSessionFromInteraction";
-export { createSessionFromApplicationCommandInteraction } from "./app/createSessionFromInteraction";
+export {
+  createSessionFromApplicationCommandInteraction,
+  createSessionFromMessageComponentInteraction,
+} from "./app/createSessionFromInteraction";
 // DisactApp
 export type { DisactApp } from "./app/disactApp";
 export { createDisactApp } from "./app/disactApp";

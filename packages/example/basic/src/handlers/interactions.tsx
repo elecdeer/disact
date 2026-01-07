@@ -8,9 +8,11 @@ import {
   TextDisplay,
   createDisactApp,
   createSessionFromApplicationCommandInteraction,
+  createSessionFromMessageComponentInteraction,
 } from "disact";
 import type {
   APIApplicationCommandInteraction,
+  APIMessageComponentInteraction,
   APIInteraction,
   APIInteractionResponse,
 } from "discord-api-types/v10";
@@ -59,6 +61,18 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
     };
   }
 
+  // MESSAGE_COMPONENT (Type 3) への応答
+  if (interaction.type === DiscordInteractionType.MessageComponent) {
+    // 非同期でメッセージを更新
+    void handleMessageComponent(interaction);
+
+    logger.debug("Returning deferred update response");
+    // まずDeferredレスポンスを即座に返す（3秒制限を守るため）
+    return {
+      type: InteractionResponseType.DeferredMessageUpdate,
+    };
+  }
+
   // その他のInteractionタイプ（今後実装予定）
   logger.warn("Unsupported interaction type", { type: interaction.type });
   return {
@@ -68,6 +82,55 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
     },
   };
 };
+
+/**
+ * 共通のMessage Components要素を生成
+ *
+ * @param title - タイトル
+ * @returns JSX要素
+ */
+const createMessageComponents = (title: string) => (
+  <Components>
+    <Section
+      accessory={
+        <Button customId="section_button" style="primary">
+          アクション
+        </Button>
+      }
+    >
+      <TextDisplay>✨ {title}</TextDisplay>
+      <TextDisplay>
+        disactを使用してDiscord Message ComponentsをJSXで記述しています！
+      </TextDisplay>
+    </Section>
+
+    <Separator />
+
+    <ActionRow>
+      <Button customId="button_primary" style="primary">
+        Primary Button
+      </Button>
+      <Button customId="button_success" style="success">
+        Success Button
+      </Button>
+      <Button customId="button_danger" style="danger">
+        Danger Button
+      </Button>
+    </ActionRow>
+
+    <ActionRow>
+      <StringSelect
+        customId="string_select"
+        placeholder="オプションを選択..."
+        options={[
+          { label: "オプション 1", value: "option_1" },
+          { label: "オプション 2", value: "option_2" },
+          { label: "オプション 3", value: "option_3" },
+        ]}
+      />
+    </ActionRow>
+  </Components>
+);
 
 /**
  * APPLICATION_COMMAND Interactionを処理
@@ -95,49 +158,9 @@ const handleApplicationCommand = async (
     // DisactAppを作成
     const app = createDisactApp();
 
-    // disactを使用してMessage Componentsを定義
-    const element = (
-      <Components>
-        <Section
-          accessory={
-            <Button customId="section_button" style="primary">
-              アクション
-            </Button>
-          }
-        >
-          <TextDisplay>✨ Hello from disact!</TextDisplay>
-          <TextDisplay>実行されたコマンド: /{interaction.data.name}</TextDisplay>
-          <TextDisplay>
-            disactを使用してDiscord Message ComponentsをJSXで記述しています！
-          </TextDisplay>
-        </Section>
-
-        <Separator />
-
-        <ActionRow>
-          <Button customId="button_primary" style="primary">
-            Primary Button
-          </Button>
-          <Button customId="button_success" style="success">
-            Success Button
-          </Button>
-          <Button customId="button_danger" style="danger">
-            Danger Button
-          </Button>
-        </ActionRow>
-
-        <ActionRow>
-          <StringSelect
-            customId="string_select"
-            placeholder="オプションを選択..."
-            options={[
-              { label: "オプション 1", value: "option_1" },
-              { label: "オプション 2", value: "option_2" },
-              { label: "オプション 3", value: "option_3" },
-            ]}
-          />
-        </ActionRow>
-      </Components>
+    // 共通のMessage Componentsを生成
+    const element = createMessageComponents(
+      `Hello from disact! (コマンド: /${interaction.data.name})`,
     );
 
     // JSXをレンダリングしてSessionに接続
@@ -151,6 +174,52 @@ const handleApplicationCommand = async (
     logger.error("Failed to process application command", {
       error,
       commandName: interaction.data.name,
+    });
+  }
+};
+
+/**
+ * MESSAGE_COMPONENT Interactionを処理
+ *
+ * disactAppとSessionを使用してMessage Componentsを更新します。
+ *
+ * @param interaction - Interactionデータ
+ */
+const handleMessageComponent = async (
+  interaction: APIMessageComponentInteraction,
+): Promise<void> => {
+  try {
+    logger.info("Processing message component", {
+      customId: interaction.data.custom_id,
+      interactionId: interaction.id,
+    });
+
+    // Sessionを作成
+    // ハンドラーで既にDeferredレスポンスを返しているため、deferred: trueを指定
+    const session = createSessionFromMessageComponentInteraction(interaction, {
+      ephemeral: false,
+      deferred: true,
+    });
+
+    // DisactAppを作成
+    const app = createDisactApp();
+
+    // 共通のMessage Componentsを生成
+    const element = createMessageComponents(
+      `ボタンがクリックされました！ (customId: ${interaction.data.custom_id})`,
+    );
+
+    // JSXをレンダリングしてSessionに接続
+    // これにより自動的にDiscord APIでメッセージが更新される
+    await app.connect(session, element);
+
+    logger.info("Message component processed successfully", {
+      customId: interaction.data.custom_id,
+    });
+  } catch (error) {
+    logger.error("Failed to process message component", {
+      error,
+      customId: interaction.data.custom_id,
     });
   }
 };
