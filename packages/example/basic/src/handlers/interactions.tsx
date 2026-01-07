@@ -9,6 +9,7 @@ import {
   createDisactApp,
   createSessionFromApplicationCommandInteraction,
   createSessionFromMessageComponentInteraction,
+  useInteraction,
 } from "disact";
 import type {
   APIApplicationCommandInteraction,
@@ -89,48 +90,54 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
  * @param title - タイトル
  * @returns JSX要素
  */
-const createMessageComponents = (title: string) => (
-  <Components>
-    <Section
-      accessory={
-        <Button customId="section_button" style="primary">
-          アクション
+const DemoComponent = ({ title }: { title: string }) => {
+  useInteraction(() => {
+    logger.info("Interaction callback executed for message components", {
+      title,
+    });
+  });
+
+  return (
+    <Components>
+      <Section
+        accessory={
+          <Button customId="section_button" style="primary">
+            アクション
+          </Button>
+        }
+      >
+        <TextDisplay>✨ {title}</TextDisplay>
+        <TextDisplay>disactを使用してDiscord Message ComponentsをJSXで記述しています！</TextDisplay>
+      </Section>
+
+      <Separator />
+
+      <ActionRow>
+        <Button customId="button_primary" style="primary">
+          Primary Button
         </Button>
-      }
-    >
-      <TextDisplay>✨ {title}</TextDisplay>
-      <TextDisplay>
-        disactを使用してDiscord Message ComponentsをJSXで記述しています！
-      </TextDisplay>
-    </Section>
+        <Button customId="button_success" style="success">
+          Success Button
+        </Button>
+        <Button customId="button_danger" style="danger">
+          Danger Button
+        </Button>
+      </ActionRow>
 
-    <Separator />
-
-    <ActionRow>
-      <Button customId="button_primary" style="primary">
-        Primary Button
-      </Button>
-      <Button customId="button_success" style="success">
-        Success Button
-      </Button>
-      <Button customId="button_danger" style="danger">
-        Danger Button
-      </Button>
-    </ActionRow>
-
-    <ActionRow>
-      <StringSelect
-        customId="string_select"
-        placeholder="オプションを選択..."
-        options={[
-          { label: "オプション 1", value: "option_1" },
-          { label: "オプション 2", value: "option_2" },
-          { label: "オプション 3", value: "option_3" },
-        ]}
-      />
-    </ActionRow>
-  </Components>
-);
+      <ActionRow>
+        <StringSelect
+          customId="string_select"
+          placeholder="オプションを選択..."
+          options={[
+            { label: "オプション 1", value: "option_1" },
+            { label: "オプション 2", value: "option_2" },
+            { label: "オプション 3", value: "option_3" },
+          ]}
+        />
+      </ActionRow>
+    </Components>
+  );
+};
 
 /**
  * APPLICATION_COMMAND Interactionを処理
@@ -159,8 +166,8 @@ const handleApplicationCommand = async (
     const app = createDisactApp();
 
     // 共通のMessage Componentsを生成
-    const element = createMessageComponents(
-      `Hello from disact! (コマンド: /${interaction.data.name})`,
+    const element = (
+      <DemoComponent title={`Hello from disact! (コマンド: /${interaction.data.name})`} />
     );
 
     // JSXをレンダリングしてSessionに接続
@@ -205,8 +212,10 @@ const handleMessageComponent = async (
     const app = createDisactApp();
 
     // 共通のMessage Componentsを生成
-    const element = createMessageComponents(
-      `ボタンがクリックされました！ (customId: ${interaction.data.custom_id})`,
+    const element = (
+      <DemoComponent
+        title={`ボタンがクリックされました！ (customId: ${interaction.data.custom_id})`}
+      />
     );
 
     // JSXをレンダリングしてSessionに接続
