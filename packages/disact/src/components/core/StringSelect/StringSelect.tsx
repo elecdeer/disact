@@ -1,5 +1,7 @@
-import { ComponentType } from "discord-api-types/v10";
+import type { APIMessageComponentInteraction } from "discord-api-types/v10";
+import { ComponentType, InteractionType } from "discord-api-types/v10";
 import type { FC } from "../../..";
+import { useInteraction } from "../../../hooks";
 
 export type StringSelectProps = {
   id?: number;
@@ -19,6 +21,10 @@ export type StringSelectProps = {
       name: string;
     };
   }>;
+  onSelect?: (
+    interaction: APIMessageComponentInteraction,
+    values: string[],
+  ) => void | Promise<void>;
 };
 
 /**
@@ -33,9 +39,24 @@ export type StringSelectProps = {
  *     { label: "オプション1", value: "1" },
  *     { label: "オプション2", value: "2" },
  *   ]}
+ *   onSelect={(interaction, values) => {
+ *     console.log('Selected:', values);
+ *   }}
  * />
  * ```
  */
-export const StringSelect: FC<StringSelectProps> = (props) => {
-  return <message-component type={ComponentType.StringSelect} {...props} />;
+export const StringSelect: FC<StringSelectProps> = ({ onSelect, customId, ...props }) => {
+  // onSelectハンドラーを登録
+  useInteraction<APIMessageComponentInteraction>((interaction) => {
+    // このセレクトが選択された場合のみ実行
+    if (
+      interaction.type === InteractionType.MessageComponent &&
+      interaction.data.component_type === ComponentType.StringSelect &&
+      interaction.data.custom_id === customId
+    ) {
+      return onSelect?.(interaction, interaction.data.values);
+    }
+  });
+
+  return <message-component type={ComponentType.StringSelect} customId={customId} {...props} />;
 };
