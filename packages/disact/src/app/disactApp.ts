@@ -3,9 +3,16 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import type { APIInteraction } from "discord-api-types/v10";
+import type {
+  APIInteraction,
+  APIMessageComponentInteraction,
+} from "discord-api-types/v10";
+import { InteractionType } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
+import { defaultSerializer, parseCustomId } from "../hooks/customId";
 import type { InteractionCallback } from "../hooks/useInteraction";
+import type { ReducerContext } from "../hooks/useReducer";
+import { extractCustomIds } from "../utils/extractCustomIds";
 import { getDisactLogger } from "../utils/logger";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
@@ -29,9 +36,60 @@ export const createDisactApp = (): DisactApp => {
     // Interactionコールバック配列を用意
     const interactionCallbacks: InteractionCallback<T>[] = [];
 
-    // Contextに配列を含める
-    const context = {
+    // Reducer状態マップを用意
+    const reducerValues = new Map<string, unknown>();
+
+    // Message Component Interactionの場合、既存メッセージから状態を復元
+    const interaction = session.getInteraction();
+    // interactionがobjectかつ必要なプロパティを持つかチェック
+    const isMessageComponentInteraction =
+      interaction &&
+      typeof interaction === "object" &&
+      "type" in interaction &&
+      interaction.type === InteractionType.MessageComponent &&
+      "message" in interaction &&
+      "data" in interaction;
+
+    if (isMessageComponentInteraction) {
+      // 実行時に type, message, data プロパティの存在を確認済みのため、型アサーションは安全
+      const messageComponentInteraction =
+        interaction as unknown as APIMessageComponentInteraction;
+
+      logger.debug("Restoring state from message component interaction");
+
+      // メッセージから全てのcustomIdを抽出
+      const customIds = extractCustomIds(messageComponentInteraction.message.components);
+      logger.trace("Extracted customIds", { customIds });
+
+      // 全ての現在値をコンテキストにセット
+      for (const customId of customIds) {
+        const parsed = parseCustomId(customId);
+        if (parsed) {
+          const value = defaultSerializer.deserialize(parsed.current);
+          reducerValues.set(parsed.name, value);
+          logger.trace("Restored reducer value", {
+            name: parsed.name,
+            value,
+          });
+        }
+      }
+
+      // クリックされたcustomIdの値を更新（次の値を採用）
+      const clickedParsed = parseCustomId(messageComponentInteraction.data.custom_id);
+      if (clickedParsed) {
+        const nextValue = defaultSerializer.deserialize(clickedParsed.next);
+        reducerValues.set(clickedParsed.name, nextValue);
+        logger.debug("Updated clicked reducer value", {
+          name: clickedParsed.name,
+          nextValue,
+        });
+      }
+    }
+
+    // Contextに配列とreducerValuesを含める
+    const context: ReducerContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
       __interactionCallbacks: interactionCallbacks,
+      __reducerValues: reducerValues,
     };
 
     // ライフサイクルフックを定義
