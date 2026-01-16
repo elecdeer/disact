@@ -5,7 +5,9 @@ import { useReducer } from "./useReducer";
 
 describe("useReducer", () => {
   it("初期値を使用してレンダリングできる", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [count] = useReducer("counter", 0, {
@@ -18,7 +20,9 @@ describe("useReducer", () => {
   });
 
   it("アクション関数がcustomIdを生成する", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [, dispatch] = useReducer("counter", 5, {
@@ -31,12 +35,14 @@ describe("useReducer", () => {
       };
     });
 
-    expect(result.increase).toBe("dsct|counter|5|6");
-    expect(result.decrease).toBe("dsct|counter|5|4");
+    expect(result.increase).toBe("dsct|0|counter|5|6");
+    expect(result.decrease).toBe("dsct|0|counter|5|4");
   });
 
   it("引数を持つアクション関数が正しく動作する", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [, dispatch] = useReducer("counter", 10, {
@@ -50,13 +56,14 @@ describe("useReducer", () => {
       };
     });
 
-    expect(result.add5).toBe("dsct|counter|10|15");
-    expect(result.subtract3).toBe("dsct|counter|10|7");
+    expect(result.add5).toBe("dsct|0|counter|10|15");
+    expect(result.subtract3).toBe("dsct|0|counter|10|7");
   });
 
   it("コンテキストから値を復元する", () => {
     const context: ReducerContext = {
       __reducerValues: new Map([["counter", 42]]),
+      __hookCallIndex: 0,
     };
 
     const result = runInContext(context, () => {
@@ -70,7 +77,9 @@ describe("useReducer", () => {
   });
 
   it("複数のuseReducerを同時に使用できる", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [count1, dispatch1] = useReducer("counter1", 0, {
@@ -90,12 +99,14 @@ describe("useReducer", () => {
 
     expect(result.count1).toBe(0);
     expect(result.count2).toBe(100);
-    expect(result.customId1).toBe("dsct|counter1|0|1");
-    expect(result.customId2).toBe("dsct|counter2|100|101");
+    expect(result.customId1).toBe("dsct|0|counter1|0|1");
+    expect(result.customId2).toBe("dsct|1|counter2|100|101");
   });
 
   it("文字列の状態を管理できる", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [name, dispatch] = useReducer("name", "John", {
@@ -110,11 +121,13 @@ describe("useReducer", () => {
     });
 
     expect(result.name).toBe("John");
-    expect(result.customId).toBe("dsct|name|John|Jane");
+    expect(result.customId).toBe("dsct|0|name|John|Jane");
   });
 
   it("真偽値の状態を管理できる", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     const result = runInContext(context, () => {
       const [enabled, dispatch] = useReducer("enabled", false, {
@@ -132,13 +145,15 @@ describe("useReducer", () => {
     });
 
     expect(result.enabled).toBe(false);
-    expect(result.toggle).toBe("dsct|enabled|false|true");
-    expect(result.setTrue).toBe("dsct|enabled|false|true");
-    expect(result.setFalse).toBe("dsct|enabled|false|false");
+    expect(result.toggle).toBe("dsct|0|enabled|false|true");
+    expect(result.setTrue).toBe("dsct|0|enabled|false|true");
+    expect(result.setFalse).toBe("dsct|0|enabled|false|false");
   });
 
   it("カスタムシリアライザーを使用できる", () => {
-    const context: ReducerContext = {};
+    const context: ReducerContext = {
+      __hookCallIndex: 0,
+    };
 
     type User = { name: string; age: number };
 
@@ -173,7 +188,7 @@ describe("useReducer", () => {
     });
 
     expect(result.user).toEqual({ name: "John", age: 25 });
-    expect(result.setName).toBe("dsct|user|John:25|Jane:25");
-    expect(result.setAge).toBe("dsct|user|John:25|John:30");
+    expect(result.setName).toBe("dsct|0|user|John:25|Jane:25");
+    expect(result.setAge).toBe("dsct|0|user|John:25|John:30");
   });
 });

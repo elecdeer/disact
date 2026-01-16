@@ -3,10 +3,7 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import type {
-  APIInteraction,
-  APIMessageComponentInteraction,
-} from "discord-api-types/v10";
+import type { APIInteraction, APIMessageComponentInteraction } from "discord-api-types/v10";
 import { InteractionType } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import { defaultSerializer, parseCustomId } from "../hooks/customId";
@@ -20,17 +17,11 @@ import type { Session } from "./session";
 const logger = getDisactLogger("app");
 
 export type DisactApp = {
-  connect: <T = APIInteraction>(
-    session: Session<T>,
-    node: DisactElement,
-  ) => Promise<void>;
+  connect: <T = APIInteraction>(session: Session<T>, node: DisactElement) => Promise<void>;
 };
 
 export const createDisactApp = (): DisactApp => {
-  const connect = async <T = APIInteraction>(
-    session: Session<T>,
-    rootElement: DisactElement,
-  ) => {
+  const connect = async <T = APIInteraction>(session: Session<T>, rootElement: DisactElement) => {
     logger.debug("Starting app connection", { hasSession: !!session });
 
     // Interactionコールバック配列を用意
@@ -52,8 +43,7 @@ export const createDisactApp = (): DisactApp => {
 
     if (isMessageComponentInteraction) {
       // 実行時に type, message, data プロパティの存在を確認済みのため、型アサーションは安全
-      const messageComponentInteraction =
-        interaction as unknown as APIMessageComponentInteraction;
+      const messageComponentInteraction = interaction as unknown as APIMessageComponentInteraction;
 
       logger.debug("Restoring state from message component interaction");
 
@@ -90,6 +80,7 @@ export const createDisactApp = (): DisactApp => {
     const context: ReducerContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
       __interactionCallbacks: interactionCallbacks,
       __reducerValues: reducerValues,
+      __hookCallIndex: 0,
     };
 
     // ライフサイクルフックを定義
@@ -98,6 +89,9 @@ export const createDisactApp = (): DisactApp => {
         // 各レンダリング前にcallback配列をクリア
         // 最終レンダリングのcallbackのみを保持するため
         interactionCallbacks.length = 0;
+
+        // hookCallIndexをリセット
+        context.__hookCallIndex = 0;
       },
       postRenderCycle: async () => {
         // 全レンダリング完了後、callbackを実行

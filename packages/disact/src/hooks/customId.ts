@@ -1,6 +1,6 @@
 /**
  * CustomId管理ユーティリティ
- * フォーマット: dsct|{name}|{currentValue}|{nextValue}
+ * フォーマット: dsct|{uniqueId}|{name}|{currentValue}|{nextValue}
  */
 
 const MAGIC = "dsct";
@@ -10,6 +10,7 @@ const SEPARATOR = "|";
  * パースされたcustomIdの構造
  */
 export type ParsedCustomId = {
+  uniqueId: string;
   name: string;
   current: string;
   next: string;
@@ -22,13 +23,13 @@ export type ParsedCustomId = {
 export const parseCustomId = (customId: string): ParsedCustomId | null => {
   const parts = customId.split(SEPARATOR);
 
-  // フォーマット検証: 必ず4つの部品が必要
-  if (parts.length !== 4) {
+  // フォーマット検証: 必ず5つの部品が必要
+  if (parts.length !== 5) {
     return null;
   }
 
-  // parts.length === 4 を確認済みのため、型アサーションは安全
-  const [magic, name, current, next] = parts as [string, string, string, string];
+  // parts.length === 5 を確認済みのため、型アサーションは安全
+  const [magic, uniqueId, name, current, next] = parts as [string, string, string, string, string];
 
   // マジックナンバー検証
   if (magic !== MAGIC) {
@@ -36,22 +37,23 @@ export const parseCustomId = (customId: string): ParsedCustomId | null => {
   }
 
   // 各パーツが空文字列でないことを検証
-  if (name === "" || current === "" || next === "") {
+  if (uniqueId === "" || name === "" || current === "" || next === "") {
     return null;
   }
 
-  return { name, current, next };
+  return { uniqueId, name, current, next };
 };
 
 /**
  * customIdを生成する
  */
 export const generateCustomId = (
+  uniqueId: string,
   name: string,
   current: string,
   next: string,
 ): string => {
-  return [MAGIC, name, current, next].join(SEPARATOR);
+  return [MAGIC, uniqueId, name, current, next].join(SEPARATOR);
 };
 
 /**

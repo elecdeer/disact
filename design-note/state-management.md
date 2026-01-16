@@ -68,18 +68,19 @@ function Counter() {
 ### customIdフォーマット
 
 ```
-dsct|{name}|{currentValue}|{nextValue}
+dsct|{uniqueId}|{name}|{currentValue}|{nextValue}
 ```
 
 #### 例
 
 ```typescript
-dispatch.increase() // "dsct|counter|5|6"
-//                     ^^^^ ^^^^^^^ ^ ^
-//                     magic name   現在値 次の値
+dispatch.increase() // "dsct|0|counter|5|6"
+//                     ^^^^ ^ ^^^^^^^ ^ ^
+//                     magic uniqueId name 現在値 次の値
 
-dispatch.add(3) // "dsct|counter|5|8"
+dispatch.add(3) // "dsct|0|counter|5|8"
 //                 magic: dsct
+//                 uniqueId: 0
 //                 name: counter
 //                 current: 5
 //                 next: 5 + 3 = 8
@@ -91,9 +92,15 @@ dispatch.add(3) // "dsct|counter|5|8"
   - DisactのcustomIdであることを識別
   - パース時の検証に使用
 
+- **uniqueId**: フック呼び出し順序ベースの連番（"0", "1", "2"...）
+  - customIdの重複を防ぐための識別子
+  - レンダリングサイクル毎にリセットされる
+  - 状態復元時には使用しない（nameのみで復元）
+
 - **name**: useReducerの第1引数で指定された名前
   - 短命ランタイムで決定的に同じ値になる必要がある
   - 同じnameは同じ状態を参照する
+  - uniqueIdと組み合わせることで、同じnameを複数回使用可能
 
 - **currentValue**: ボタンがレンダリングされた時点の値
   - Hydration検証に使用
@@ -105,25 +112,54 @@ dispatch.add(3) // "dsct|counter|5|8"
 
 ### 一意性の確保
 
+uniqueIdの導入により、customIdの重複が自動的に防がれます：
+
 ```typescript
 function Component() {
-  // 異なるnameを指定して区別する
+  // 同じnameでもuniqueIdが異なるため重複しない
+  const [count1, dispatch1] = useReducer("counter", 0, reducers);
+  const [count2, dispatch2] = useReducer("counter", 0, reducers);
+
+  return (
+    <>
+      <button customId={dispatch1.increase()}>Button 1</button>
+      {/* customId: "dsct|0|counter|0|1" (uniqueId=0) */}
+
+      <button customId={dispatch2.increase()}>Button 2</button>
+      {/* customId: "dsct|1|counter|0|1" (uniqueId=1) */}
+    </>
+  );
+}
+```
+
+#### uniqueIdの仕組み
+
+- **フック呼び出し順序**: useReducerが呼ばれるたびにカウンターがインクリメント
+- **レンダリング毎にリセット**: 各レンダリングサイクルの開始時にカウンターが0にリセット
+- **決定的な生成**: 同じコンポーネント構造なら常に同じuniqueIdが生成される
+- **状態復元**: uniqueIdは無視され、nameのみで状態を復元
+
+#### ベストプラクティス
+
+同じnameを使用すると状態が共有されるため、通常は異なるnameを使用することを推奨：
+
+```typescript
+function Component() {
+  // 推奨: 異なるnameで状態を分離
   const [count1, dispatch1] = useReducer("counter1", 0, reducers);
   const [count2, dispatch2] = useReducer("counter2", 0, reducers);
 
   return (
     <>
       <button customId={dispatch1.increase()}>Button 1</button>
-      {/* customId: "dsct|counter1|0|1" */}
+      {/* customId: "dsct|0|counter1|0|1" */}
 
       <button customId={dispatch2.increase()}>Button 2</button>
-      {/* customId: "dsct|counter2|0|1" */}
+      {/* customId: "dsct|1|counter2|0|1" */}
     </>
   );
 }
 ```
-
-**注意**: 同じコンポーネント内で複数のuseReducerを使う場合は、異なる`name`を指定する必要があります。
 
 ### 値の復元メカニズム
 

@@ -23,6 +23,7 @@ export type Actions<T, R extends Reducers<T>> = {
  */
 export type ReducerContext = {
   __reducerValues?: Map<string, unknown>;
+  __hookCallIndex?: number;
   [key: string]: unknown;
 };
 
@@ -69,6 +70,15 @@ export const useReducer = <T, R extends Reducers<T>>(
 ): [T, Actions<T, R>] => {
   const context = getCurrentContext<ReducerContext>();
 
+  // __hookCallIndexが存在しない場合は初期化
+  if (context.__hookCallIndex === undefined) {
+    context.__hookCallIndex = 0;
+  }
+
+  // 現在のhook呼び出しindexを取得してインクリメント
+  const uniqueId = String(context.__hookCallIndex);
+  context.__hookCallIndex++;
+
   // reducerValuesマップが存在しない場合は初期化
   if (!context.__reducerValues) {
     context.__reducerValues = new Map();
@@ -98,7 +108,7 @@ export const useReducer = <T, R extends Reducers<T>>(
       // customIdを生成
       const current = serializer.serialize(currentValue);
       const next = serializer.serialize(nextValue);
-      return generateCustomId(name, current, next);
+      return generateCustomId(uniqueId, name, current, next);
     }) as Actions<T, R>[keyof R];
   }
 
