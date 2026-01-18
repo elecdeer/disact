@@ -108,7 +108,8 @@ describe("sectionElement", () => {
                     children: [
                       {
                         type: "text",
-                        content: "disactを使用してDiscord Message ComponentsをJSXで記述しています！",
+                        content:
+                          "disactを使用してDiscord Message ComponentsをJSXで記述しています！",
                       },
                     ],
                   },

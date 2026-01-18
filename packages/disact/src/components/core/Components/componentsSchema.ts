@@ -28,11 +28,7 @@ const componentsChildrenSchema = z.union([
  * RenderResult (単一要素 | 配列 | null) を受け取り、APIMessageTopLevelComponent[] に変換する
  */
 export const componentsRenderResultSchema = z
-  .union([
-    z.null(),
-    componentsChildrenSchema,
-    z.array(componentsChildrenSchema),
-  ])
+  .union([z.null(), componentsChildrenSchema, z.array(componentsChildrenSchema)])
   .transform((renderResult): APIMessageTopLevelComponent[] => {
     if (renderResult === null) {
       return [];

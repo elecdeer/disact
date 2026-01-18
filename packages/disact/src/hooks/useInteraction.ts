@@ -4,9 +4,7 @@ import type { APIInteraction } from "discord-api-types/v10";
 /**
  * Interactionコールバックの型
  */
-export type InteractionCallback<T = APIInteraction> = (
-  interaction: T,
-) => void | Promise<void>;
+export type InteractionCallback<T = APIInteraction> = (interaction: T) => void | Promise<void>;
 
 /**
  * Interactionコールバックを保持するContext型
@@ -32,9 +30,7 @@ export type InteractionCallbacksContext<T = APIInteraction> = {
  * };
  * ```
  */
-export const useInteraction = <T = APIInteraction>(
-  callback: InteractionCallback<T>,
-): void => {
+export const useInteraction = <T = APIInteraction>(callback: InteractionCallback<T>): void => {
   const context = getCurrentContext<InteractionCallbacksContext<T>>();
 
   if (!context.__interactionCallbacks) {

@@ -138,11 +138,10 @@ describe("schemaUtils", () => {
     });
 
     test("min/max制約付きslotスキーマ", () => {
-      const schema = createNamedSlotSchema(
-        "components",
-        z.object({ id: z.number() }),
-        { min: 1, max: 3 },
-      );
+      const schema = createNamedSlotSchema("components", z.object({ id: z.number() }), {
+        min: 1,
+        max: 3,
+      });
 
       // 正常: 1個
       expect(() => {
@@ -283,7 +282,10 @@ describe("schemaUtils", () => {
         {
           name: "slot",
           props: { name: "components" },
-          children: [{ type: "text", id: 2 }, { type: "text", id: 3 }],
+          children: [
+            { type: "text", id: 2 },
+            { type: "text", id: 3 },
+          ],
         },
       ];
 
@@ -291,7 +293,10 @@ describe("schemaUtils", () => {
       expect(accessory).toEqual([{ type: "button", id: 1 }]);
 
       const components = extractSlotContent(children, "components");
-      expect(components).toEqual([{ type: "text", id: 2 }, { type: "text", id: 3 }]);
+      expect(components).toEqual([
+        { type: "text", id: 2 },
+        { type: "text", id: 3 },
+      ]);
     });
 
     test("存在しないslot名でundefined", () => {

@@ -15,9 +15,7 @@ describe("textDisplayElement", () => {
           type: "intrinsic",
           name: "slot",
           props: { name: "children" },
-          children: [
-            { type: "text", content: "Hello, World!" },
-          ],
+          children: [{ type: "text", content: "Hello, World!" }],
         },
       ],
     });
@@ -85,9 +83,7 @@ describe("textDisplayElement", () => {
           type: "intrinsic",
           name: "slot",
           props: { name: "children" },
-          children: [
-            { type: "text", content: "" },
-          ],
+          children: [{ type: "text", content: "" }],
         },
       ],
     });
@@ -106,9 +102,7 @@ describe("textDisplayElement", () => {
           type: "intrinsic",
           name: "slot",
           props: { name: "children" },
-          children: [
-            { type: "text", content: "a".repeat(4001) },
-          ],
+          children: [{ type: "text", content: "a".repeat(4001) }],
         },
       ],
     });

@@ -1,12 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "unicorn",
-    "typescript",
-    "oxc",
-    "import",
-    "vitest"
-  ],
+  "plugins": ["unicorn", "typescript", "oxc", "import", "vitest"],
   "categories": {},
   "rules": {
     "constructor-super": "error",
@@ -123,10 +117,13 @@
     "vitest/no-disabled-tests": "error",
     "vitest/no-export": "error",
     "vitest/no-focused-tests": "error",
-    "vitest/no-standalone-expect": ["error", {
-      // Extend Test Contextで誤検知されるので
-      "additionalTestBlockFunctions": ["test"]
-    }],
+    "vitest/no-standalone-expect": [
+      "error",
+      {
+        // Extend Test Contextで誤検知されるので
+        "additionalTestBlockFunctions": ["test"]
+      }
+    ],
     "vitest/require-to-throw-message": "error",
     "vitest/valid-describe-callback": "error",
     "vitest/valid-expect": "error",

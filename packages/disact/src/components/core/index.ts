@@ -5,7 +5,10 @@ export { Components, type ComponentsProps } from "./Components/Components";
 export { Container, type ContainerProps } from "./Container/Container";
 export { File, type FileProps } from "./File/File";
 export { MediaGallery, type MediaGalleryProps } from "./MediaGallery/MediaGallery";
-export { MentionableSelect, type MentionableSelectProps } from "./MentionableSelect/MentionableSelect";
+export {
+  MentionableSelect,
+  type MentionableSelectProps,
+} from "./MentionableSelect/MentionableSelect";
 export { RoleSelect, type RoleSelectProps } from "./RoleSelect/RoleSelect";
 export { Section, type SectionProps } from "./Section/Section";
 export { Separator, type SeparatorProps } from "./Separator/Separator";

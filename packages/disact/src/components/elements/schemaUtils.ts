@@ -165,7 +165,7 @@ export const createSingleSlotComponentSchema = <
   return createMessageComponentSchemaBase(componentType, propsSchema, childrenSchema).transform(
     (obj) => {
       const slotContent =
-        options?.optional && obj.children === undefined ? [] : obj.children?.[0]?.children ?? [];
+        options?.optional && obj.children === undefined ? [] : (obj.children?.[0]?.children ?? []);
       return transformFn({
         props: obj.props as z.output<TPropsSchema> & { type: TComponentType },
         slotContent,
