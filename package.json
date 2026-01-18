@@ -13,9 +13,11 @@
     "format:fix": "pnpm exec oxfmt --write .",
     "lint": "pnpm exec oxlint --type-aware --type-check",
     "lint:fix": "pnpm exec oxlint --type-aware --type-check --fix",
+    "postinstall": "lefthook install",
     "test": "vitest run"
   },
   "devDependencies": {
+    "lefthook": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",

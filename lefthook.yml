@@ -1,0 +1,4 @@
+pre-commit:
+  commands:
+    format:
+      run: pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
