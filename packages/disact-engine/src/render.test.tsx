@@ -1,72 +1,9 @@
+/** @jsxImportSource . */
 import { describe, expect, it } from "vitest";
-import type {
-  DisactElement,
-  DisactNode,
-  FunctionComponent,
-  IntrinsicElementName,
-  PropsBase,
-  RenderedElement,
-} from "./element";
+import type { DisactElement, DisactNode, FC, PropsBase, RenderedElement } from "./element";
+import { Fragment, Suspense } from "./jsx";
 import { renderToReadableStream } from "./render";
 import { use } from "./thenable";
-
-/**
- * preactのh関数のようなヘルパー関数
- * テストでの要素作成を簡単にするために使用
- */
-function h(
-  type: IntrinsicElementName,
-  props?: Omit<PropsBase, "children"> | null,
-  children?: DisactNode | DisactNode[],
-): DisactElement;
-function h<P extends PropsBase>(
-  type: FunctionComponent<P>,
-  props: Omit<P, "children">,
-  children?: DisactNode | DisactNode[],
-): DisactElement;
-function h(
-  type: IntrinsicElementName | FunctionComponent,
-  props?: Omit<PropsBase, "children"> | null,
-  children?: DisactNode | DisactNode[],
-): DisactElement {
-  const actualProps = props || {};
-
-  const mergedProps = {
-    ...actualProps,
-    children,
-  };
-
-  if (typeof type === "string") {
-    return {
-      type: "intrinsic",
-      name: type,
-      props: mergedProps,
-    };
-  } else {
-    return {
-      type: "function",
-      fc: type,
-      props: mergedProps,
-    };
-  }
-}
-
-/**
- * Suspense要素を作成するヘルパー関数
- */
-function Suspense(props: { fallback: DisactNode; children: DisactNode }): DisactElement {
-  return {
-    type: "suspense",
-    props,
-  };
-}
-
-/**
- * Fragment相当のヘルパー関数
- */
-function Fragment(props: { children: DisactNode }): DisactNode {
-  return props.children;
-}
 
 describe("renderToReadableStream", () => {
   const mockContext = {
@@ -74,9 +11,11 @@ describe("renderToReadableStream", () => {
   };
 
   // ストリームから結果を読み取るヘルパー関数
-  const readStreamToCompletion = async (stream: ReadableStream): Promise<RenderedElement[]> => {
+  const readStreamToCompletion = async (
+    stream: ReadableStream,
+  ): Promise<(RenderedElement | RenderedElement[] | null)[]> => {
     const reader = stream.getReader();
-    const chunks: RenderedElement[] = [];
+    const chunks: (RenderedElement | RenderedElement[] | null)[] = [];
 
     try {
       while (true) {
@@ -93,7 +32,7 @@ describe("renderToReadableStream", () => {
 
   describe("Basic Element Processing", () => {
     it("should render a text element", async () => {
-      const element = h("div", null, "Hello World");
+      const element = <div>Hello World</div>;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -108,13 +47,10 @@ describe("renderToReadableStream", () => {
     });
 
     it("should render an intrinsic element with props", async () => {
-      const element = h(
-        "button",
-        {
-          disabled: true,
-          className: "primary",
-        },
-        "Click me",
+      const element = (
+        <button disabled={true} className="primary">
+          Click me
+        </button>
       );
 
       const stream = renderToReadableStream(element, mockContext);
@@ -133,7 +69,11 @@ describe("renderToReadableStream", () => {
     });
 
     it("should render nested elements", async () => {
-      const element = h("div", null, h("span", null, "Nested content"));
+      const element = (
+        <div>
+          <span>Nested content</span>
+        </div>
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -155,11 +95,13 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle multiple children", async () => {
-      const element = h("div", null, [
-        "First child",
-        h("span", null, "Second child"),
-        "Third child",
-      ]);
+      const element = (
+        <div>
+          First child
+          <span>Second child</span>
+          Third child
+        </div>
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -183,7 +125,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should filter out null and undefined children", async () => {
-      const element = h("div", null, ["Valid text", null, undefined, "Another valid text", ""]);
+      const element = <div>{["Valid text", null, undefined, "Another valid text", ""]}</div>;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -203,10 +145,9 @@ describe("renderToReadableStream", () => {
 
   describe("Function Component", () => {
     it("should render a basic function component", async () => {
-      const TestComponent: FunctionComponent<{ name: string }> = ({ name }) =>
-        h("span", null, `Hello ${name}`);
+      const TestComponent: FC<{ name: string }> = ({ name }) => <span>{`Hello ${name}`}</span>;
 
-      const element = h(TestComponent, { name: "World" });
+      const element = <TestComponent name="World" />;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -221,15 +162,15 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle nested function components", async () => {
-      const InnerComponent: FunctionComponent<{ text: string }> = ({ text }) =>
-        h("span", null, text);
+      const InnerComponent: FC<{ text: string }> = ({ text }) => <span>{text}</span>;
 
-      const OuterComponent: FunctionComponent<{ message: string }> = ({ message }) =>
-        h("div", null, h(InnerComponent, { text: message }));
+      const OuterComponent: FC<{ message: string }> = ({ message }) => (
+        <div>
+          <InnerComponent text={message} />
+        </div>
+      );
 
-      const element = h(OuterComponent, {
-        message: "Hello from nested component",
-      });
+      const element = <OuterComponent message="Hello from nested component" />;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -251,31 +192,16 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle FC returning another FC", async () => {
-      const Button: FunctionComponent<{ text: string; variant?: string }> = ({
-        text,
-        variant = "primary",
-      }) =>
-        h(
-          "button",
-          {
-            className: `btn btn-${variant}`,
-          },
-          text,
-        );
+      const Button: FC<{ text: string; variant?: string }> = ({ text, variant = "primary" }) => (
+        <button className={`btn btn-${variant}`}>{text}</button>
+      );
 
-      const ButtonWrapper: FunctionComponent<{
+      const ButtonWrapper: FC<{
         label: string;
         type?: string;
-      }> = ({ label, type = "secondary" }) =>
-        h(Button, {
-          text: label,
-          variant: type,
-        });
+      }> = ({ label, type = "secondary" }) => <Button text={label} variant={type} />;
 
-      const element = h(ButtonWrapper, {
-        label: "Submit",
-        type: "primary",
-      });
+      const element = <ButtonWrapper label="Submit" type="primary" />;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -292,34 +218,24 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle FC returning conditional FC based on props", async () => {
-      const PrimaryButton: FunctionComponent<{ children: string }> = ({ children }) =>
-        h(
-          "button",
-          {
-            className: "btn-primary",
-          },
-          children,
-        );
+      const PrimaryButton: FC<{ children: string }> = ({ children }) => (
+        <button className="btn-primary">{children}</button>
+      );
 
-      const SecondaryButton: FunctionComponent<{ children: string }> = ({ children }) =>
-        h(
-          "button",
-          {
-            className: "btn-secondary",
-          },
-          children,
-        );
+      const SecondaryButton: FC<{ children: string }> = ({ children }) => (
+        <button className="btn-secondary">{children}</button>
+      );
 
-      const AdaptiveButton: FunctionComponent<{
+      const AdaptiveButton: FC<{
         isPrimary: boolean;
         text: string;
-      }> = ({ isPrimary, text }) => h(isPrimary ? PrimaryButton : SecondaryButton, {}, text);
+      }> = ({ isPrimary, text }) => {
+        const Component = isPrimary ? PrimaryButton : SecondaryButton;
+        return <Component>{text}</Component>;
+      };
 
       // Test primary variant
-      const primaryElement = h(AdaptiveButton, {
-        isPrimary: true,
-        text: "Primary Action",
-      });
+      const primaryElement = <AdaptiveButton isPrimary={true} text="Primary Action" />;
 
       const stream = renderToReadableStream(primaryElement, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -338,22 +254,19 @@ describe("renderToReadableStream", () => {
 
   describe("Conditional Rendering and Dynamic Behavior", () => {
     it("should handle component with conditional rendering based on props", async () => {
-      const ConditionalComponent: FunctionComponent<{
+      const ConditionalComponent: FC<{
         type: "button" | "link";
         text: string;
         href?: string;
       }> = ({ type, text, href }) => {
         if (type === "button") {
-          return h("button", null, text);
+          return <button>{text}</button>;
         }
-        return h("a", { href }, text);
+        return <a href={href}>{text}</a>;
       };
 
       // Test button variant
-      const buttonElement = h(ConditionalComponent, {
-        type: "button",
-        text: "Click me",
-      });
+      const buttonElement = <ConditionalComponent type="button" text="Click me" />;
 
       const stream1 = renderToReadableStream(buttonElement, mockContext);
       const chunks1 = await readStreamToCompletion(stream1);
@@ -368,11 +281,7 @@ describe("renderToReadableStream", () => {
       });
 
       // Test link variant
-      const linkElement = h(ConditionalComponent, {
-        type: "link",
-        text: "Go to page",
-        href: "/page",
-      });
+      const linkElement = <ConditionalComponent type="link" text="Go to page" href="/page" />;
 
       const stream2 = renderToReadableStream(linkElement, mockContext);
       const chunks2 = await readStreamToCompletion(stream2);
@@ -388,43 +297,31 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle component with different structures based on props", async () => {
-      const StatusComponent: FunctionComponent<{
+      const StatusComponent: FC<{
         status: "loading" | "success" | "error";
         message?: string;
       }> = ({ status, message }) => {
         switch (status) {
           case "loading":
-            return h(
-              "div",
-              {
-                className: "loading",
-              },
-              "Loading...",
-            );
+            return <div className="loading">Loading...</div>;
           case "success":
-            return h(
-              "div",
-              {
-                className: "success",
-              },
-              [h("span", null, "✓"), message || "Success"],
+            return (
+              <div className="success">
+                <span>✓</span>
+                {message || "Success"}
+              </div>
             );
           case "error":
-            return h(
-              "div",
-              {
-                className: "error",
-              },
-              h("strong", null, message || "Error occurred"),
+            return (
+              <div className="error">
+                <strong>{message || "Error occurred"}</strong>
+              </div>
             );
         }
       };
 
       // Test success status
-      const successElement = h(StatusComponent, {
-        status: "success",
-        message: "Data saved",
-      });
+      const successElement = <StatusComponent status="success" message="Data saved" />;
 
       const stream = renderToReadableStream(successElement, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -448,19 +345,21 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle component with array children manipulation", async () => {
-      const ListComponent: FunctionComponent<{
+      const ListComponent: FC<{
         items: string[];
         ordered?: boolean;
-      }> = ({ items, ordered = false }) =>
-        h(
-          ordered ? "ol" : "ul",
-          null,
-          items.map((item) => h("li", null, item)),
+      }> = ({ items, ordered = false }) => {
+        const Tag = ordered ? "ol" : "ul";
+        return (
+          <Tag>
+            {items.map((item) => (
+              <li>{item}</li>
+            ))}
+          </Tag>
         );
+      };
 
-      const element = h(ListComponent, {
-        items: ["Item 1", "Item 2", "Item 3"],
-      });
+      const element = <ListComponent items={["Item 1", "Item 2", "Item 3"]} />;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -496,28 +395,25 @@ describe("renderToReadableStream", () => {
 
   describe("Render Functions and DisactElement Props", () => {
     it("should handle component with renderContent-like function props", async () => {
-      const Modal: FunctionComponent<{
+      const Modal: FC<{
         title: string;
         renderContent: () => DisactNode;
         renderFooter?: () => DisactNode;
-      }> = ({ title, renderContent, renderFooter }) =>
-        h(
-          "div",
-          {
-            className: "modal",
-          },
-          [
-            h("header", null, title),
-            h("main", null, renderContent()),
-            renderFooter ? h("footer", null, renderFooter()) : null,
-          ],
-        );
+      }> = ({ title, renderContent, renderFooter }) => (
+        <div className="modal">
+          <header>{title}</header>
+          <main>{renderContent()}</main>
+          {renderFooter ? <footer>{renderFooter()}</footer> : null}
+        </div>
+      );
 
-      const element = h(Modal, {
-        title: "Confirmation",
-        renderContent: () => "Are you sure you want to continue?",
-        renderFooter: () => h("button", null, "OK"),
-      });
+      const element = (
+        <Modal
+          title="Confirmation"
+          renderContent={() => "Are you sure you want to continue?"}
+          renderFooter={() => <button>OK</button>}
+        />
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -558,42 +454,26 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle component with DisactElement as props", async () => {
-      const Wrapper: FunctionComponent<{
+      const Wrapper: FC<{
         prefix: DisactElement;
         suffix: DisactElement;
         children: string;
-      }> = ({ prefix, suffix, children }) =>
-        h(
-          "div",
-          {
-            className: "wrapper",
-          },
-          [prefix, children, suffix],
-        );
-
-      const prefixElement = h(
-        "span",
-        {
-          className: "prefix",
-        },
-        "→ ",
+      }> = ({ prefix, suffix, children }) => (
+        <div className="wrapper">
+          {prefix}
+          {children}
+          {suffix}
+        </div>
       );
 
-      const suffixElement = h(
-        "span",
-        {
-          className: "suffix",
-        },
-        " ←",
-      );
+      const prefixElement = <span className="prefix">→ </span>;
 
-      const element = h(
-        Wrapper,
-        {
-          prefix: prefixElement,
-          suffix: suffixElement,
-        },
-        "Main content",
+      const suffixElement = <span className="suffix"> ←</span>;
+
+      const element = (
+        <Wrapper prefix={prefixElement} suffix={suffixElement}>
+          Main content
+        </Wrapper>
       );
 
       const stream = renderToReadableStream(element, mockContext);
@@ -623,35 +503,21 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle component with function component as props", async () => {
-      const IconComponent: FunctionComponent<{ name: string }> = ({ name }) =>
-        h(
-          "i",
-          {
-            className: `icon-${name}`,
-          },
-          "",
-        );
+      const IconComponent: FC<{ name: string }> = ({ name }) => <i className={`icon-${name}`}></i>;
 
-      const Button: FunctionComponent<{
+      const Button: FC<{
         icon: DisactElement;
         text: string;
         variant?: string;
-      }> = ({ icon, text, variant = "default" }) =>
-        h(
-          "button",
-          {
-            className: `btn btn-${variant}`,
-          },
-          [icon, " ", text],
-        );
+      }> = ({ icon, text, variant = "default" }) => (
+        <button className={`btn btn-${variant}`}>
+          {icon} {text}
+        </button>
+      );
 
-      const iconElement = h(IconComponent, { name: "save" });
+      const iconElement = <IconComponent name="save" />;
 
-      const element = h(Button, {
-        icon: iconElement,
-        text: "Save Document",
-        variant: "primary",
-      });
+      const element = <Button icon={iconElement} text="Save Document" variant="primary" />;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -677,16 +543,14 @@ describe("renderToReadableStream", () => {
 
   describe("Fragment Pattern", () => {
     it("should handle Fragment as children in intrinsic element", async () => {
-      const containerElement = h(
-        "div",
-        {
-          className: "container",
-        },
-        h(Fragment, {}, [
-          h("h2", null, "Title"),
-          h("p", null, "Content goes here"),
-          h("button", null, "Action"),
-        ]),
+      const containerElement = (
+        <div className="container">
+          <Fragment>
+            <h2>Title</h2>
+            <p>Content goes here</p>
+            <button>Action</button>
+          </Fragment>
+        </div>
       );
 
       const stream = renderToReadableStream(containerElement, mockContext);
@@ -724,17 +588,18 @@ describe("renderToReadableStream", () => {
     it("should handle nested Fragment pattern", async () => {
       const Fragment = ({ children }: { children: DisactElement[] }): DisactNode => children;
 
-      const containerElement = h(
-        "article",
-        null,
-        h(Fragment, {}, [
-          h(
-            "header",
-            null,
-            h(Fragment, {}, [h("h1", null, "Main Title"), h("p", null, "Subtitle")]),
-          ),
-          h("main", null, "Main content"),
-        ]),
+      const containerElement = (
+        <article>
+          <Fragment>
+            <header>
+              <Fragment>
+                <h1>Main Title</h1>
+                <p>Subtitle</p>
+              </Fragment>
+            </header>
+            <main>Main content</main>
+          </Fragment>
+        </article>
       );
 
       const stream = renderToReadableStream(containerElement, mockContext);
@@ -780,16 +645,13 @@ describe("renderToReadableStream", () => {
   describe("HOC (Higher-Order Component) Pattern", () => {
     it("should handle HOC with styling and container wrapping", async () => {
       // Base component
-      const Button: FunctionComponent<{
+      const Button: FC<{
         children: string;
         onClick?: () => void;
-      }> = ({ children }) => h("button", null, children);
+      }> = ({ children }) => <button>{children}</button>;
 
       // HOC that adds styling
-      const withStyling = <P extends PropsBase>(
-        Component: FunctionComponent<P>,
-        className: string,
-      ): FunctionComponent<P> => {
+      const withStyling = <P extends PropsBase>(Component: FC<P>, className: string): FC<P> => {
         return (props: P) => {
           const element = Component(props);
           if (element && typeof element === "object" && "type" in element) {
@@ -808,24 +670,15 @@ describe("renderToReadableStream", () => {
       };
 
       // HOC that wraps with container
-      const withContainer = <P extends PropsBase>(
-        Component: FunctionComponent<P>,
-      ): FunctionComponent<P> => {
-        return (props: P) =>
-          h(
-            "div",
-            {
-              className: "container",
-            },
-            Component(props),
-          );
+      const withContainer = <P extends PropsBase>(Component: FC<P>): FC<P> => {
+        return (props: P) => <div className="container">{Component(props)}</div>;
       };
 
       // Apply HOCs
       const StyledButton = withStyling(Button, "btn btn-primary");
       const ContainerButton = withContainer(StyledButton);
 
-      const element = h(ContainerButton, {}, "Click me");
+      const element = <ContainerButton>Click me</ContainerButton>;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -848,34 +701,24 @@ describe("renderToReadableStream", () => {
 
     it("should handle HOC with props transformation and validation", async () => {
       // Base input component
-      const Input: FunctionComponent<{
+      const Input: FC<{
         value: string;
         placeholder?: string;
-      }> = ({ value, placeholder }) => h("input", { value, placeholder });
+      }> = ({ value, placeholder }) => <input value={value} placeholder={placeholder} />;
 
       // HOC that adds validation
       const withValidation = <P extends { value: string }>(
-        Component: FunctionComponent<P>,
-      ): FunctionComponent<P & { required?: boolean }> => {
+        Component: FC<P>,
+      ): FC<P & { required?: boolean }> => {
         return ({ required = false, ...props }) => {
           const baseElement = Component(props as P);
 
           if (required && (!props.value || props.value.trim() === "")) {
-            return h(
-              "div",
-              {
-                className: "field-error",
-              },
-              [
-                baseElement,
-                h(
-                  "span",
-                  {
-                    className: "error-message",
-                  },
-                  "This field is required",
-                ),
-              ],
+            return (
+              <div className="field-error">
+                {baseElement}
+                <span className="error-message">This field is required</span>
+              </div>
             );
           }
 
@@ -886,11 +729,9 @@ describe("renderToReadableStream", () => {
       const ValidatedInput = withValidation(Input);
 
       // Test with validation error
-      const errorElement = h(ValidatedInput, {
-        value: "",
-        placeholder: "Enter your name",
-        required: true,
-      });
+      const errorElement = (
+        <ValidatedInput value="" placeholder="Enter your name" required={true} />
+      );
 
       const stream = renderToReadableStream(errorElement, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -921,9 +762,9 @@ describe("renderToReadableStream", () => {
 
   describe("Error Handling", () => {
     it("should handle function component returning null", async () => {
-      const NullComponent: FunctionComponent = () => null;
+      const NullComponent: FC = () => null;
 
-      const element = h(NullComponent, {});
+      const element = <NullComponent />;
 
       const stream = renderToReadableStream(element, mockContext);
 
@@ -932,9 +773,9 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle function component returning array", async () => {
-      const ArrayComponent: FunctionComponent = () => ["item1", "item2"];
+      const ArrayComponent: FC = () => ["item1", "item2"];
 
-      const element = h(ArrayComponent, {});
+      const element = <ArrayComponent />;
 
       const stream = renderToReadableStream(element, mockContext);
 
@@ -948,10 +789,12 @@ describe("renderToReadableStream", () => {
     });
 
     it("should handle Fragment pattern at root level", async () => {
-      const fragmentElement = h(Fragment, {}, [
-        h("p", null, "First paragraph"),
-        h("p", null, "Second paragraph"),
-      ]);
+      const fragmentElement = (
+        <Fragment>
+          <p>First paragraph</p>
+          <p>Second paragraph</p>
+        </Fragment>
+      );
 
       // Fragment returns array, which is now allowed
       const stream = renderToReadableStream(fragmentElement, mockContext);
@@ -976,81 +819,18 @@ describe("renderToReadableStream", () => {
     });
   });
 
-  describe("同期レンダリング", () => {
-    it("should render a simple text element and stream the result", async () => {
-      const element = h("div", null, "Hello World");
-
-      const stream = renderToReadableStream(element, mockContext);
-      const chunks = await readStreamToCompletion(stream);
-
-      expect(chunks).toHaveLength(1);
-      expect(chunks[0]).toEqual({
-        type: "intrinsic",
-        name: "div",
-        props: {},
-        children: [{ type: "text", content: "Hello World" }],
-      });
-    });
-
-    it("should render function components and stream the result", async () => {
-      const TestComponent: FunctionComponent<{ name: string }> = ({ name }) =>
-        h("span", null, `Hello ${name}`);
-
-      const element = h(TestComponent, { name: "World" });
-
-      const stream = renderToReadableStream(element, mockContext);
-      const chunks = await readStreamToCompletion(stream);
-
-      expect(chunks).toHaveLength(1);
-      expect(chunks[0]).toEqual({
-        type: "intrinsic",
-        name: "span",
-        props: {},
-        children: [{ type: "text", content: "Hello World" }],
-      });
-    });
-
-    it("should handle complex nested structures", async () => {
-      const element = h("div", null, [
-        "First child",
-        h("span", null, "Second child"),
-        "Third child",
-      ]);
-
-      const stream = renderToReadableStream(element, mockContext);
-      const chunks = await readStreamToCompletion(stream);
-
-      expect(chunks).toHaveLength(1);
-      expect(chunks[0]).toEqual({
-        type: "intrinsic",
-        name: "div",
-        props: {},
-        children: [
-          { type: "text", content: "First child" },
-          {
-            type: "intrinsic",
-            name: "span",
-            props: {},
-            children: [{ type: "text", content: "Second child" }],
-          },
-          { type: "text", content: "Third child" },
-        ],
-      });
-    });
-  });
-
   describe("Suspense機能", () => {
     it("should render Suspense with fallback when child uses Promise", async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const result = use(promise);
         return result;
       };
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(AsyncComponent, {}),
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1077,11 +857,11 @@ describe("renderToReadableStream", () => {
     });
 
     it("should render normally when child doesn't throw a Promise", async () => {
-      const NormalComponent: FunctionComponent = () => h("div", null, "Normal content");
+      const NormalComponent: FC = () => <div>Normal content</div>;
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(NormalComponent, {}),
+        children: <NormalComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1100,13 +880,13 @@ describe("renderToReadableStream", () => {
     it("should handle simple Promise error case", async () => {
       const error = new Error("Test error");
 
-      const ErrorComponent: FunctionComponent = () => {
+      const ErrorComponent: FC = () => {
         throw error;
       };
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(ErrorComponent, {}),
+        children: <ErrorComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1118,22 +898,22 @@ describe("renderToReadableStream", () => {
     it("should handle Suspense as non-root element", async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const result = use(promise);
         return result;
       };
 
       const suspenseElement = Suspense({
         fallback: "Loading async...",
-        children: h(AsyncComponent, {}),
+        children: <AsyncComponent />,
       });
 
-      const element = h(
-        "div",
-        {
-          className: "container",
-        },
-        ["Before Suspense", suspenseElement, "After Suspense"],
+      const element = (
+        <div className="container">
+          Before Suspense
+          {suspenseElement}
+          After Suspense
+        </div>
       );
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1180,17 +960,20 @@ describe("renderToReadableStream", () => {
     it("should handle grandchild component using Promise", async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const GrandChild: FunctionComponent = () => {
+      const GrandChild: FC = () => {
         const result = use(promise);
         return result;
       };
 
-      const Child: FunctionComponent = () =>
-        h("span", null, ["Child prefix: ", h(GrandChild, {}), " - Child suffix"]);
+      const Child: FC = () => (
+        <span>
+          Child prefix: <GrandChild /> - Child suffix
+        </span>
+      );
 
       const element = Suspense({
         fallback: "Loading grandchild...",
-        children: h(Child, {}),
+        children: <Child />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1232,27 +1015,27 @@ describe("renderToReadableStream", () => {
       const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
       const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
-      const AsyncComponent1: FunctionComponent = () => {
+      const AsyncComponent1: FC = () => {
         const result = use(promise1);
         return result;
       };
 
-      const AsyncComponent2: FunctionComponent = () => {
+      const AsyncComponent2: FC = () => {
         const result = use(promise2);
         return result;
       };
 
-      const element = h("div", null, [
-        Suspense({
-          fallback: "Loading 1...",
-          children: h(AsyncComponent1, {}),
-        }),
-        " and ",
-        Suspense({
-          fallback: "Loading 2...",
-          children: h(AsyncComponent2, {}),
-        }),
-      ]);
+      const element = (
+        <div>
+          <Suspense fallback="Loading 1...">
+            <AsyncComponent1 />
+          </Suspense>
+          {" and "}
+          <Suspense fallback="Loading 2...">
+            <AsyncComponent2 />
+          </Suspense>
+        </div>
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const reader = stream.getReader();
@@ -1299,14 +1082,14 @@ describe("renderToReadableStream", () => {
     it("should handle use() with already resolved Promise", async () => {
       const resolvedPromise = Promise.resolve("Already resolved!");
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const result = use(resolvedPromise);
         return result;
       };
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(AsyncComponent, {}),
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1321,14 +1104,14 @@ describe("renderToReadableStream", () => {
     it("should handle use() with rejected Promise", async () => {
       const rejectedPromise = Promise.reject(new Error("Promise rejected"));
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const result = use(rejectedPromise);
         return result;
       };
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(AsyncComponent, {}),
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1341,34 +1124,33 @@ describe("renderToReadableStream", () => {
       const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
       const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
-      const AsyncComponent1: FunctionComponent = () => {
+      const AsyncComponent1: FC = () => {
         const result = use(promise1);
         return `First: ${result}`;
       };
 
-      const AsyncComponent2: FunctionComponent = () => {
+      const AsyncComponent2: FC = () => {
         const result = use(promise2);
         return `Second: ${result}`;
       };
 
-      const App: FunctionComponent = () =>
-        h("div", null, [
-          Suspense({
-            fallback: "Loading first...",
-            children: h(AsyncComponent1, {}),
-          }),
-          " | ",
-          Suspense({
-            fallback: "Loading second...",
-            children: h(AsyncComponent2, {}),
-          }),
-        ]);
+      const App: FC = () => (
+        <div>
+          <Suspense fallback="Loading first...">
+            <AsyncComponent1 />
+          </Suspense>
+          {" | "}
+          <Suspense fallback="Loading second...">
+            <AsyncComponent2 />
+          </Suspense>
+        </div>
+      );
 
       // Promiseを事前に解決
       resolve1("Data A");
       resolve2("Data B");
 
-      const stream = renderToReadableStream(h(App, {}), mockContext);
+      const stream = renderToReadableStream(<App />, mockContext);
 
       const chunks = await readStreamToCompletion(stream);
 
@@ -1393,17 +1175,17 @@ describe("renderToReadableStream", () => {
       const { promise: promise1, resolve: resolve1 } = Promise.withResolvers<string>();
       const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
-      const AsyncComponent1: FunctionComponent = () => {
+      const AsyncComponent1: FC = () => {
         const result = use(promise1);
         return `First: ${result}`;
       };
 
-      const AsyncComponent2: FunctionComponent = () => {
+      const AsyncComponent2: FC = () => {
         const result = use(promise2);
         return `Second: ${result}`;
       };
 
-      const App: FunctionComponent = () => ({
+      const App: FC = () => ({
         type: "intrinsic",
         name: "div",
         props: {
@@ -1435,7 +1217,7 @@ describe("renderToReadableStream", () => {
         },
       });
 
-      const stream = renderToReadableStream(h(App, {}), mockContext);
+      const stream = renderToReadableStream(<App />, mockContext);
       const reader = stream.getReader();
 
       // 最初は両方ともfallbackが表示される
@@ -1492,37 +1274,32 @@ describe("renderToReadableStream", () => {
       const { promise: fastPromise, resolve: resolveFast } = Promise.withResolvers<string>();
       const { promise: slowPromise, resolve: resolveSlow } = Promise.withResolvers<string>();
 
-      const FastComponent: FunctionComponent = () => {
+      const FastComponent: FC = () => {
         const result = use(fastPromise);
         return `Fast: ${result}`;
       };
 
-      const SlowComponent: FunctionComponent = () => {
+      const SlowComponent: FC = () => {
         const result = use(slowPromise);
         return `Slow: ${result}`;
       };
 
-      const App: FunctionComponent = () =>
-        h("section", null, [
-          h(
-            "div",
-            null,
-            Suspense({
-              fallback: "Fast loading...",
-              children: h(FastComponent, {}),
-            }),
-          ),
-          h(
-            "div",
-            null,
-            Suspense({
-              fallback: "Slow loading...",
-              children: h(SlowComponent, {}),
-            }),
-          ),
-        ]);
+      const App: FC = () => (
+        <section>
+          <div>
+            <Suspense fallback="Fast loading...">
+              <FastComponent />
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback="Slow loading...">
+              <SlowComponent />
+            </Suspense>
+          </div>
+        </section>
+      );
 
-      const stream = renderToReadableStream(h(App, {}), mockContext);
+      const stream = renderToReadableStream(<App />, mockContext);
       const reader = stream.getReader();
 
       // 初期状態：両方ともローディング中
@@ -1605,30 +1382,29 @@ describe("renderToReadableStream", () => {
     it("should enqueue only once when multiple Suspense boundaries share the same Promise", async () => {
       const { promise: sharedPromise, resolve: resolveShared } = Promise.withResolvers<string>();
 
-      const AsyncComponent1: FunctionComponent = () => {
+      const AsyncComponent1: FC = () => {
         const result = use(sharedPromise);
         return `Component1: ${result}`;
       };
 
-      const AsyncComponent2: FunctionComponent = () => {
+      const AsyncComponent2: FC = () => {
         const result = use(sharedPromise);
         return `Component2: ${result}`;
       };
 
-      const App: FunctionComponent = () =>
-        h("main", null, [
-          Suspense({
-            fallback: "Loading component 1...",
-            children: h(AsyncComponent1, {}),
-          }),
-          " and ",
-          Suspense({
-            fallback: "Loading component 2...",
-            children: h(AsyncComponent2, {}),
-          }),
-        ]);
+      const App: FC = () => (
+        <main>
+          <Suspense fallback="Loading component 1...">
+            <AsyncComponent1 />
+          </Suspense>
+          {" and "}
+          <Suspense fallback="Loading component 2...">
+            <AsyncComponent2 />
+          </Suspense>
+        </main>
+      );
 
-      const stream = renderToReadableStream(h(App, {}), mockContext);
+      const stream = renderToReadableStream(<App />, mockContext);
       const reader = stream.getReader();
 
       // 初期状態：両方のSuspenseがfallbackを表示
@@ -1671,40 +1447,38 @@ describe("renderToReadableStream", () => {
       const { promise: sharedPromise, resolve: resolveShared } = Promise.withResolvers<string>();
       const { promise: uniquePromise, resolve: resolveUnique } = Promise.withResolvers<string>();
 
-      const SharedComponent1: FunctionComponent = () => {
+      const SharedComponent1: FC = () => {
         const result = use(sharedPromise);
         return `Shared1: ${result}`;
       };
 
-      const SharedComponent2: FunctionComponent = () => {
+      const SharedComponent2: FC = () => {
         const result = use(sharedPromise);
         return `Shared2: ${result}`;
       };
 
-      const UniqueComponent: FunctionComponent = () => {
+      const UniqueComponent: FC = () => {
         const result = use(uniquePromise);
         return `Unique: ${result}`;
       };
 
-      const App: FunctionComponent = () =>
-        h("container", null, [
-          Suspense({
-            fallback: "Loading shared 1...",
-            children: h(SharedComponent1, {}),
-          }),
-          " | ",
-          Suspense({
-            fallback: "Loading shared 2...",
-            children: h(SharedComponent2, {}),
-          }),
-          " | ",
-          Suspense({
-            fallback: "Loading unique...",
-            children: h(UniqueComponent, {}),
-          }),
-        ]);
+      const App: FC = () => (
+        <container>
+          <Suspense fallback="Loading shared 1...">
+            <SharedComponent1 />
+          </Suspense>
+          {" | "}
+          <Suspense fallback="Loading shared 2...">
+            <SharedComponent2 />
+          </Suspense>
+          {" | "}
+          <Suspense fallback="Loading unique...">
+            <UniqueComponent />
+          </Suspense>
+        </container>
+      );
 
-      const stream = renderToReadableStream(h(App, {}), mockContext);
+      const stream = renderToReadableStream(<App />, mockContext);
       const reader = stream.getReader();
 
       // 初期状態：すべてがfallback表示
@@ -1768,24 +1542,24 @@ describe("renderToReadableStream", () => {
     it("should handle basic nested Suspense with inner component being async", async () => {
       const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
-      const InnerAsyncComponent: FunctionComponent = () => {
+      const InnerAsyncComponent: FC = () => {
         const result = use(innerPromise);
         return result;
       };
 
-      const MiddleComponent: FunctionComponent = () =>
-        h("div", { className: "middle" }, [
-          "Middle start - ",
-          Suspense({
-            fallback: "Inner loading...",
-            children: h(InnerAsyncComponent, {}),
-          }),
-          " - Middle end",
-        ]);
+      const MiddleComponent: FC = () => (
+        <div className="middle">
+          {"Middle start - "}
+          <Suspense fallback="Inner loading...">
+            <InnerAsyncComponent />
+          </Suspense>
+          {" - Middle end"}
+        </div>
+      );
 
       const element = Suspense({
         fallback: "Outer loading...",
-        children: h(MiddleComponent, {}),
+        children: <MiddleComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1832,22 +1606,23 @@ describe("renderToReadableStream", () => {
     it("should handle nested Suspense with outer component being async", async () => {
       const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
 
-      const OuterAsyncComponent: FunctionComponent = () => {
+      const OuterAsyncComponent: FC = () => {
         const result = use(outerPromise);
-        return h("section", { className: "outer" }, [
-          "Outer content: ",
-          result,
-          " - ",
-          Suspense({
-            fallback: "Inner loading...",
-            children: h("span", null, "Inner sync content"),
-          }),
-        ]);
+        return (
+          <section className="outer">
+            {"Outer content: "}
+            {result}
+            {" - "}
+            <Suspense fallback="Inner loading...">
+              <span>Inner sync content</span>
+            </Suspense>
+          </section>
+        );
       };
 
       const element = Suspense({
         fallback: "Outer loading...",
-        children: h(OuterAsyncComponent, {}),
+        children: <OuterAsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1895,26 +1670,27 @@ describe("renderToReadableStream", () => {
       const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
       const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
-      const InnerAsyncComponent: FunctionComponent = () => {
+      const InnerAsyncComponent: FC = () => {
         const result = use(innerPromise);
         return `Inner: ${result}`;
       };
 
-      const OuterAsyncComponent: FunctionComponent = () => {
+      const OuterAsyncComponent: FC = () => {
         const result = use(outerPromise);
-        return h("article", { className: "outer-async" }, [
-          `Outer: ${result}`,
-          " | ",
-          Suspense({
-            fallback: "Inner loading...",
-            children: h(InnerAsyncComponent, {}),
-          }),
-        ]);
+        return (
+          <article className="outer-async">
+            {`Outer: ${result}`}
+            {" | "}
+            <Suspense fallback="Inner loading...">
+              <InnerAsyncComponent />
+            </Suspense>
+          </article>
+        );
       };
 
       const element = Suspense({
         fallback: "Outer loading...",
-        children: h(OuterAsyncComponent, {}),
+        children: <OuterAsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -1974,26 +1750,27 @@ describe("renderToReadableStream", () => {
       const { promise: outerPromise, resolve: resolveOuter } = Promise.withResolvers<string>();
       const { promise: innerPromise, resolve: resolveInner } = Promise.withResolvers<string>();
 
-      const InnerAsyncComponent: FunctionComponent = () => {
+      const InnerAsyncComponent: FC = () => {
         const result = use(innerPromise);
         return `Inner: ${result}`;
       };
 
-      const OuterAsyncComponent: FunctionComponent = () => {
+      const OuterAsyncComponent: FC = () => {
         const result = use(outerPromise);
-        return h("section", { className: "outer-resolved" }, [
-          `Outer: ${result}`,
-          " | ",
-          Suspense({
-            fallback: "Inner loading...",
-            children: h(InnerAsyncComponent, {}),
-          }),
-        ]);
+        return (
+          <section className="outer-resolved">
+            {`Outer: ${result}`}
+            {" | "}
+            <Suspense fallback="Inner loading...">
+              <InnerAsyncComponent />
+            </Suspense>
+          </section>
+        );
       };
 
       const element = Suspense({
         fallback: "Outer loading...",
-        children: h(OuterAsyncComponent, {}),
+        children: <OuterAsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2054,12 +1831,12 @@ describe("renderToReadableStream", () => {
 
       const testContext: TestContext = { theme: "dark", userId: 123 };
 
-      const ContextAwareComponent: FunctionComponent = () => {
+      const ContextAwareComponent: FC = () => {
         const ctx = getCurrentContext<TestContext>();
-        return h("div", null, `Theme: ${ctx.theme}, User: ${ctx.userId}`);
+        return <div>{`Theme: ${ctx.theme}, User: ${ctx.userId}`}</div>;
       };
 
-      const element = h(ContextAwareComponent, {});
+      const element = <ContextAwareComponent />;
 
       const stream = renderToReadableStream(element, testContext);
       const chunks = await readStreamToCompletion(stream);
@@ -2078,15 +1855,18 @@ describe("renderToReadableStream", () => {
 
       const testContext = { message: "Hello from context!" };
 
-      const NestedComponent: FunctionComponent = () => {
+      const NestedComponent: FC = () => {
         const ctx = getCurrentContext<typeof testContext>();
-        return h("span", null, ctx.message);
+        return <span>{ctx.message}</span>;
       };
 
-      const WrapperComponent: FunctionComponent = () =>
-        h("div", null, ["Wrapper start - ", h(NestedComponent, {}), " - Wrapper end"]);
+      const WrapperComponent: FC = () => (
+        <div>
+          Wrapper start - <NestedComponent /> - Wrapper end
+        </div>
+      );
 
-      const element = h(WrapperComponent, {});
+      const element = <WrapperComponent />;
 
       const stream = renderToReadableStream(element, testContext);
       const chunks = await readStreamToCompletion(stream);
@@ -2117,15 +1897,15 @@ describe("renderToReadableStream", () => {
         prefix: "Context:",
       };
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const ctx = getCurrentContext<typeof testContext>();
         const result = use(promise);
-        return h("span", null, `${ctx.prefix} ${result}`);
+        return <span>{`${ctx.prefix} ${result}`}</span>;
       };
 
       const element = Suspense({
         fallback: "Loading...",
-        children: h(AsyncComponent, {}),
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, testContext);
@@ -2158,12 +1938,12 @@ describe("renderToReadableStream", () => {
 
       const testContext = { value: "test" };
 
-      const TestComponent: FunctionComponent = () => {
+      const TestComponent: FC = () => {
         const ctx = getCurrentContext<typeof testContext>();
-        return h("div", null, ctx.value);
+        return <div>{ctx.value}</div>;
       };
 
-      const element = h(TestComponent, {});
+      const element = <TestComponent />;
 
       const stream = renderToReadableStream(element, testContext);
       await readStreamToCompletion(stream);
@@ -2179,7 +1959,7 @@ describe("renderToReadableStream", () => {
     it("should catch synchronous errors and render fallback", async () => {
       const error = new Error("Test error");
 
-      const ErrorComponent: FunctionComponent = () => {
+      const ErrorComponent: FC = () => {
         throw error;
       };
 
@@ -2194,8 +1974,8 @@ describe("renderToReadableStream", () => {
       };
 
       const element = ErrorBoundary({
-        fallback: (err: Error) => h("div", { className: "error" }, err.message),
-        children: h(ErrorComponent, {}),
+        fallback: (err: Error) => <div className="error">{err.message}</div>,
+        children: <ErrorComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2213,11 +1993,11 @@ describe("renderToReadableStream", () => {
     it("should not catch errors when no ErrorBoundary is present", async () => {
       const error = new Error("Uncaught error");
 
-      const ErrorComponent: FunctionComponent = () => {
+      const ErrorComponent: FC = () => {
         throw error;
       };
 
-      const element = h(ErrorComponent, {});
+      const element = <ErrorComponent />;
 
       const stream = renderToReadableStream(element, mockContext);
 
@@ -2227,7 +2007,7 @@ describe("renderToReadableStream", () => {
     it("should handle nested ErrorBoundary with inner error", async () => {
       const innerError = new Error("Inner error");
 
-      const InnerErrorComponent: FunctionComponent = () => {
+      const InnerErrorComponent: FC = () => {
         throw innerError;
       };
 
@@ -2243,14 +2023,16 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: () => "Outer fallback",
-        children: h("div", null, [
-          "Before error - ",
-          ErrorBoundary({
-            fallback: (err: Error) => `Inner fallback: ${err.message}`,
-            children: h(InnerErrorComponent, {}),
-          }),
-          " - After error",
-        ]),
+        children: (
+          <div>
+            {"Before error - "}
+            {ErrorBoundary({
+              fallback: (err: Error) => `Inner fallback: ${err.message}`,
+              children: <InnerErrorComponent />,
+            })}
+            {" - After error"}
+          </div>
+        ),
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2273,11 +2055,11 @@ describe("renderToReadableStream", () => {
       const error1 = new Error("Error 1");
       const error2 = new Error("Error 2");
 
-      const ErrorComponent1: FunctionComponent = () => {
+      const ErrorComponent1: FC = () => {
         throw error1;
       };
 
-      const ErrorComponent2: FunctionComponent = () => {
+      const ErrorComponent2: FC = () => {
         throw error2;
       };
 
@@ -2291,17 +2073,17 @@ describe("renderToReadableStream", () => {
         };
       };
 
-      const element = h("div", null, [
-        ErrorBoundary({
-          fallback: (err: Error) => `Fallback 1: ${err.message}`,
-          children: h(ErrorComponent1, {}),
-        }),
-        " and ",
-        ErrorBoundary({
-          fallback: (err: Error) => `Fallback 2: ${err.message}`,
-          children: h(ErrorComponent2, {}),
-        }),
-      ]);
+      const element = (
+        <div>
+          <ErrorBoundary fallback={(err: Error) => `Fallback 1: ${err.message}`}>
+            <ErrorComponent1 />
+          </ErrorBoundary>
+          {" and "}
+          <ErrorBoundary fallback={(err: Error) => `Fallback 2: ${err.message}`}>
+            <ErrorComponent2 />
+          </ErrorBoundary>
+        </div>
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -2320,7 +2102,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should not catch errors when child renders successfully", async () => {
-      const NormalComponent: FunctionComponent = () => h("span", null, "Normal content");
+      const NormalComponent: FC = () => <span>Normal content</span>;
 
       const ErrorBoundary = (props: {
         fallback: (error: Error) => DisactNode;
@@ -2334,7 +2116,7 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: () => "Error fallback",
-        children: h(NormalComponent, {}),
+        children: <NormalComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2352,7 +2134,7 @@ describe("renderToReadableStream", () => {
     it("should handle ErrorBoundary with Suspense", async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const result = use(promise);
         throw new Error(`Error after async: ${result}`);
       };
@@ -2371,7 +2153,7 @@ describe("renderToReadableStream", () => {
         fallback: (err: Error) => `Caught: ${err.message}`,
         children: Suspense({
           fallback: "Loading...",
-          children: h(AsyncComponent, {}),
+          children: <AsyncComponent />,
         }),
       });
 
@@ -2401,12 +2183,15 @@ describe("renderToReadableStream", () => {
     it("should propagate errors to outer ErrorBoundary when inner has no boundary", async () => {
       const error = new Error("Deep error");
 
-      const DeepErrorComponent: FunctionComponent = () => {
+      const DeepErrorComponent: FC = () => {
         throw error;
       };
 
-      const MiddleComponent: FunctionComponent = () =>
-        h("div", null, ["Middle - ", h(DeepErrorComponent, {}), " - End"]);
+      const MiddleComponent: FC = () => (
+        <div>
+          Middle - <DeepErrorComponent /> - End
+        </div>
+      );
 
       const ErrorBoundary = (props: {
         fallback: (error: Error) => DisactNode;
@@ -2420,7 +2205,7 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: (err: Error) => `Outer caught: ${err.message}`,
-        children: h(MiddleComponent, {}),
+        children: <MiddleComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2437,11 +2222,11 @@ describe("renderToReadableStream", () => {
       const outerError = new Error("Outer error");
       const innerError = new Error("Inner error");
 
-      const InnerErrorComponent: FunctionComponent = () => {
+      const InnerErrorComponent: FC = () => {
         throw innerError;
       };
 
-      const OuterErrorComponent: FunctionComponent = () => {
+      const OuterErrorComponent: FC = () => {
         throw outerError;
       };
 
@@ -2457,14 +2242,15 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: (err: Error) => `Outer: ${err.message}`,
-        children: h("section", null, [
-          h(OuterErrorComponent, {}),
-          " | ",
-          ErrorBoundary({
-            fallback: (err: Error) => `Inner: ${err.message}`,
-            children: h(InnerErrorComponent, {}),
-          }),
-        ]),
+        children: (
+          <section>
+            <OuterErrorComponent /> |
+            {ErrorBoundary({
+              fallback: (err: Error) => `Inner: ${err.message}`,
+              children: <InnerErrorComponent />,
+            })}
+          </section>
+        ),
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2481,7 +2267,7 @@ describe("renderToReadableStream", () => {
     it("should handle deeply nested ErrorBoundaries", async () => {
       const level3Error = new Error("Level 3 error");
 
-      const Level3ErrorComponent: FunctionComponent = () => {
+      const Level3ErrorComponent: FC = () => {
         throw level3Error;
       };
 
@@ -2497,21 +2283,25 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: (err: Error) => `L1: ${err.message}`,
-        children: h("div", { className: "level1" }, [
-          "Level 1 start - ",
-          ErrorBoundary({
-            fallback: (err: Error) => `L2: ${err.message}`,
-            children: h("div", { className: "level2" }, [
-              "Level 2 start - ",
-              ErrorBoundary({
-                fallback: (err: Error) => `L3: ${err.message}`,
-                children: h(Level3ErrorComponent, {}),
-              }),
-              " - Level 2 end",
-            ]),
-          }),
-          " - Level 1 end",
-        ]),
+        children: (
+          <div className="level1">
+            {"Level 1 start - "}
+            {ErrorBoundary({
+              fallback: (err: Error) => `L2: ${err.message}`,
+              children: (
+                <div className="level2">
+                  {"Level 2 start - "}
+                  {ErrorBoundary({
+                    fallback: (err: Error) => `L3: ${err.message}`,
+                    children: <Level3ErrorComponent />,
+                  })}
+                  {" - Level 2 end"}
+                </div>
+              ),
+            })}
+            {" - Level 1 end"}
+          </div>
+        ),
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2542,11 +2332,11 @@ describe("renderToReadableStream", () => {
     it("should handle ErrorBoundary nested in ErrorBoundary where outer catches error", async () => {
       const outerError = new Error("Outer component error");
 
-      const OuterErrorComponent: FunctionComponent = () => {
+      const OuterErrorComponent: FC = () => {
         throw outerError;
       };
 
-      const NormalComponent: FunctionComponent = () => h("span", null, "Inner normal content");
+      const NormalComponent: FC = () => <span>Inner normal content</span>;
 
       const ErrorBoundary = (props: {
         fallback: (error: Error) => DisactNode;
@@ -2560,13 +2350,15 @@ describe("renderToReadableStream", () => {
 
       const element = ErrorBoundary({
         fallback: (err: Error) => `Outer fallback: ${err.message}`,
-        children: h("div", null, [
-          h(OuterErrorComponent, {}),
-          ErrorBoundary({
-            fallback: (err: Error) => `Inner fallback: ${err.message}`,
-            children: h(NormalComponent, {}),
-          }),
-        ]),
+        children: (
+          <div>
+            <OuterErrorComponent />
+            {ErrorBoundary({
+              fallback: (err: Error) => `Inner fallback: ${err.message}`,
+              children: <NormalComponent />,
+            })}
+          </div>
+        ),
       });
 
       const stream = renderToReadableStream(element, mockContext);
@@ -2583,7 +2375,7 @@ describe("renderToReadableStream", () => {
     it("should handle mixed ErrorBoundary and Suspense nesting", async () => {
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncErrorComponent: FunctionComponent = () => {
+      const AsyncErrorComponent: FC = () => {
         const result = use(promise);
         throw new Error(`${result} error`);
       };
@@ -2598,22 +2390,21 @@ describe("renderToReadableStream", () => {
         };
       };
 
-      const element = h("container", null, [
-        ErrorBoundary({
-          fallback: (err: Error) => `Outer caught: ${err.message}`,
-          children: h("div", null, [
-            "Outer start - ",
-            Suspense({
-              fallback: "Inner loading...",
-              children: ErrorBoundary({
-                fallback: (err: Error) => `Inner caught: ${err.message}`,
-                children: h(AsyncErrorComponent, {}),
-              }),
-            }),
-            " - Outer end",
-          ]),
-        }),
-      ]);
+      const element = (
+        <container>
+          <ErrorBoundary fallback={(err: Error) => `Outer caught: ${err.message}`}>
+            <div>
+              {"Outer start - "}
+              <Suspense fallback="Inner loading...">
+                <ErrorBoundary fallback={(err: Error) => `Inner caught: ${err.message}`}>
+                  <AsyncErrorComponent />
+                </ErrorBoundary>
+              </Suspense>
+              {" - Outer end"}
+            </div>
+          </ErrorBoundary>
+        </container>
+      );
 
       const stream = renderToReadableStream(element, mockContext);
       const reader = stream.getReader();
@@ -2671,7 +2462,7 @@ describe("renderToReadableStream", () => {
       const postRenderCalls: number[] = [];
       const postRenderCycleCalls: number[] = [];
 
-      const element = h("div", null, "Hello");
+      const element = <div>Hello</div>;
 
       const stream = renderToReadableStream(element, mockContext, {
         preRender: async () => {
@@ -2695,7 +2486,7 @@ describe("renderToReadableStream", () => {
     it("should call hooks in correct order: preRender -> postRender -> postRenderCycle", async () => {
       const callOrder: string[] = [];
 
-      const element = h("div", null, "Test");
+      const element = <div>Test</div>;
 
       const stream = renderToReadableStream(element, mockContext, {
         preRender: async () => {
@@ -2721,14 +2512,14 @@ describe("renderToReadableStream", () => {
 
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const data = use(promise);
-        return h("span", null, data);
+        return <span>{data}</span>;
       };
 
       const element = Suspense({
-        fallback: h("div", null, "Loading..."),
-        children: h(AsyncComponent, {}),
+        fallback: <div>Loading...</div>,
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext, {
@@ -2788,14 +2579,14 @@ describe("renderToReadableStream", () => {
 
       const { promise, resolve } = Promise.withResolvers<string>();
 
-      const AsyncComponent: FunctionComponent = () => {
+      const AsyncComponent: FC = () => {
         const data = use(promise);
-        return h("span", null, data);
+        return <span>{data}</span>;
       };
 
       const element = Suspense({
-        fallback: h("div", null, "Loading..."),
-        children: h(AsyncComponent, {}),
+        fallback: <div>Loading...</div>,
+        children: <AsyncComponent />,
       });
 
       const stream = renderToReadableStream(element, mockContext, {
@@ -2834,7 +2625,7 @@ describe("renderToReadableStream", () => {
     it("should handle async lifecycle hooks", async () => {
       const executionLog: string[] = [];
 
-      const element = h("div", null, "Test");
+      const element = <div>Test</div>;
 
       const stream = renderToReadableStream(element, mockContext, {
         preRender: async () => {
@@ -2861,7 +2652,7 @@ describe("renderToReadableStream", () => {
     });
 
     it("should work without any hooks provided", async () => {
-      const element = h("div", null, "Test");
+      const element = <div>Test</div>;
 
       const stream = renderToReadableStream(element, mockContext);
       const chunks = await readStreamToCompletion(stream);
@@ -2878,7 +2669,7 @@ describe("renderToReadableStream", () => {
     it("should work with partial hooks provided", async () => {
       const preRenderCalls: number[] = [];
 
-      const element = h("div", null, "Test");
+      const element = <div>Test</div>;
 
       const stream = renderToReadableStream(element, mockContext, {
         preRender: async () => {
@@ -2900,26 +2691,26 @@ describe("renderToReadableStream", () => {
       // oxlint-disable-next-line p42
       const { promise: promise2, resolve: resolve2 } = Promise.withResolvers<string>();
 
-      const AsyncComponent1: FunctionComponent = () => {
+      const AsyncComponent1: FC = () => {
         const data = use(promise1);
-        return h("span", null, data);
+        return <span>{data}</span>;
       };
 
-      const AsyncComponent2: FunctionComponent = () => {
+      const AsyncComponent2: FC = () => {
         const data = use(promise2);
-        return h("span", null, data);
+        return <span>{data}</span>;
       };
 
-      const element = h("div", null, [
-        Suspense({
-          fallback: h("div", null, "Loading 1..."),
-          children: h(AsyncComponent1, {}),
-        }),
-        Suspense({
-          fallback: h("div", null, "Loading 2..."),
-          children: h(AsyncComponent2, {}),
-        }),
-      ]);
+      const element = (
+        <div>
+          <Suspense fallback={<div>Loading 1...</div>}>
+            <AsyncComponent1 />
+          </Suspense>
+          <Suspense fallback={<div>Loading 2...</div>}>
+            <AsyncComponent2 />
+          </Suspense>
+        </div>
+      );
 
       const stream = renderToReadableStream(element, mockContext, {
         preRender: async () => {

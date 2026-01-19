@@ -6,6 +6,8 @@ export type PropsBase = Record<PropertyKey, unknown>;
 // oxlint-disable-next-line no-explicit-any: 右側はanyにせざるを得ない
 export type FunctionComponent<P extends PropsBase = any> = (props: P) => DisactNode;
 
+export type FC<P extends PropsBase = {}> = FunctionComponent<P>;
+
 export type DevSource = {
   fileName: string;
   lineNumber: number;

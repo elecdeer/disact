@@ -11,6 +11,8 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "moduleResolution": "Bundler",
-    "noEmit": true
+    "noEmit": true,
+    "jsx": "react-jsxdev",
+    "jsxImportSource": "."
   }
 }

@@ -62,3 +62,22 @@ export const ErrorBoundary = ({
   type: "errorBoundary",
   props: { fallback, children },
 });
+
+export namespace JSXInternal {
+  export type Element = DisactElement;
+
+  // oxlint-disable-next-line no-explicit-any
+  export type ElementType<P extends PropsBase = any> =
+    | {
+        [K in keyof IntrinsicElements]: P extends IntrinsicElements[K] ? K : never;
+      }[keyof IntrinsicElements]
+    | ((props: P) => DisactNode);
+
+  export type ElementChildrenAttribute = {
+    children: unknown;
+  };
+
+  export type IntrinsicElements = {
+    [elemName: string]: PropsBase;
+  };
+}
