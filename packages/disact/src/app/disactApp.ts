@@ -59,6 +59,7 @@ export const createDisactApp = (): DisactApp => {
 
     void (async () => {
       let chunkCount = 0;
+
       for await (const chunk of stream) {
         chunkCount++;
         logger.debug("Processing render chunk", {

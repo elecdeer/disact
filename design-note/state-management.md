@@ -68,18 +68,18 @@ function Counter() {
 ### customIdフォーマット
 
 ```
-dsct|{name}|{currentValue}|{nextValue}
+{uniqueId}:{name}:{currentValue}:{nextValue}
 ```
 
 #### 例
 
 ```typescript
-dispatch.increase(); // "dsct|0|counter|5|6"
-//                     ^^^^ ^ ^^^^^^^ ^ ^
-//                     magic uniqueId name 現在値 次の値
+dispatch.increase(); // "a7f3k2:counter:5:6"
+//                     ^^^^^^ ^^^^^^^ ^ ^
+//                     ID     name    現在値 次の値
 
-dispatch.add(3); // "dsct|0|counter|5|8"
-//                 magic: dsct
+dispatch.add(3); // "a7f3k2:counter:5:8"
+//                 ID: a7f3k2
 //                 name: counter
 //                 current: 5
 //                 next: 5 + 3 = 8
@@ -87,13 +87,11 @@ dispatch.add(3); // "dsct|0|counter|5|8"
 
 #### フォーマットの特徴
 
-- **magic**: 固定文字列 `"dsct"`
-  - DisactのcustomIdであることを識別
-  - パース時の検証に使用
+- **uniqueId**: レンダリング時に生成されるランダムな一意識別子
+  - 同じコンポーネント内で複数のuseReducerを区別
+  - 例: `generateRandomId()` → "a7f3k2"
 
 - **name**: useReducerの第1引数で指定された名前
-  - 短命ランタイムで決定的に同じ値になる必要がある
-  - 同じnameは同じ状態を参照する
 
 - **currentValue**: ボタンがレンダリングされた時点の値
   - Hydration検証に使用
@@ -107,23 +105,21 @@ dispatch.add(3); // "dsct|0|counter|5|8"
 
 ```typescript
 function Component() {
-  // 異なるnameを指定して区別する
-  const [count1, dispatch1] = useReducer("counter1", 0, reducers);
-  const [count2, dispatch2] = useReducer("counter2", 0, reducers);
+  // 各useReducer呼び出しで異なるIDが生成される
+  const [count1, dispatch1] = useReducer("counter", 0, reducers); // ID: "a7f3k2"
+  const [count2, dispatch2] = useReducer("counter", 0, reducers); // ID: "x9k1p"
 
   return (
     <>
       <button customId={dispatch1.increase()}>Button 1</button>
-      {/* customId: "dsct|counter1|0|1" */}
+      {/* customId: "a7f3k2:counter:0:1" */}
 
       <button customId={dispatch2.increase()}>Button 2</button>
-      {/* customId: "dsct|counter2|0|1" */}
+      {/* customId: "x9k1p:counter:0:1" */}
     </>
   );
 }
 ```
-
-**注意**: 同じコンポーネント内で複数のuseReducerを使う場合は、異なる`name`を指定する必要があります。
 
 ### 値の復元メカニズム
 
@@ -136,24 +132,20 @@ async function handleInteraction(session, interaction, element) {
 
   // 2. メッセージから全てのcustomIdを抽出
   const customIds = extractCustomIds(currentMessage.components);
-  // 例: ["dsct|counter|5|6", "dsct|page|2|3"]
+  // 例: ["a7f3k2:counter:5:6", "x9k1p:page:2:3"]
 
   // 3. 全ての現在値をコンテキストにセット
   for (const customId of customIds) {
-    const parsed = parseCustomId(customId);
-    if (parsed) {
-      context.setReducerValue(parsed.name, deserialize(parsed.current));
-    }
+    const [id, name, curr, next] = parseCustomId(customId);
+    context.setReducerValue(`${id}:${name}`, deserialize(curr));
   }
-  // "counter" → 5
-  // "page" → 2
+  // "a7f3k2:counter" → 5
+  // "x9k1p:page" → 2
 
   // 4. クリックされたcustomIdの値だけ更新
-  const parsed = parseCustomId(interaction.data.custom_id);
-  if (parsed) {
-    context.setReducerValue(parsed.name, deserialize(parsed.next));
-  }
-  // 例: "counter" → 6
+  const [id, name, curr, next] = parseCustomId(interaction.data.custom_id);
+  context.setReducerValue(`${id}:${name}`, deserialize(next));
+  // 例: "a7f3k2:counter" → 6
 
   // 5. 更新された状態でレンダリング（1回のみ）
   const renderResult = runInContext(context, () => render(element));
@@ -221,13 +213,13 @@ function Pagination() {
 
 ```typescript
 // 数値
-customId: "dsct|counter|5|6";
+customId: "id:counter:5:6";
 
 // 文字列
-customId: "dsct|name|John|Jane";
+customId: "id:name:John:Jane";
 
 // 真偽値
-customId: "dsct|enabled|true|false";
+customId: "id:enabled:true:false";
 ```
 
 #### オブジェクト型
@@ -918,14 +910,14 @@ function AdvancedUI() {
    // 変更されたstoreのみストレージに書き込む
    ```
 
-4. **customIdの最適化**: nameを短く保つ
+4. **customIdの最適化**: 不要な情報を削減
 
    ```typescript
    // ❌ 長すぎる
-   customId: "dsct|very-long-component-name-counter|12345|12346";
+   customId: "very-long-component-name:counter:12345:12346";
 
    // ✅ 短く
-   customId: "dsct|cnt|12345|12346";
+   customId: "a7f:c:12345:12346";
    ```
 
 ## 実装ロードマップ
