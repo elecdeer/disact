@@ -3,9 +3,8 @@ import { defaultSerializer, generateCustomId, parseCustomId } from "./customId";
 
 describe("parseCustomId", () => {
   it("正しいフォーマットのcustomIdをパースできる", () => {
-    const result = parseCustomId("dsct|0|counter|5|6");
+    const result = parseCustomId("dsct|counter|5|6");
     expect(result).toEqual({
-      uniqueId: "0",
       name: "counter",
       current: "5",
       next: "6",
@@ -13,14 +12,13 @@ describe("parseCustomId", () => {
   });
 
   it("マジックナンバーが異なる場合はnullを返す", () => {
-    const result = parseCustomId("invalid|0|counter|5|6");
+    const result = parseCustomId("invalid|counter|5|6");
     expect(result).toBeNull();
   });
 
   it("部品数が不正な場合はnullを返す", () => {
-    expect(parseCustomId("dsct|counter|5|6")).toBeNull(); // 4パート
-    expect(parseCustomId("dsct|0|counter|5")).toBeNull(); // 4パート
-    expect(parseCustomId("dsct|0|counter|5|6|extra")).toBeNull(); // 6パート
+    expect(parseCustomId("dsct|counter|5")).toBeNull();
+    expect(parseCustomId("dsct|counter|5|6|extra")).toBeNull();
   });
 
   it("空文字列の場合はnullを返す", () => {
@@ -28,41 +26,36 @@ describe("parseCustomId", () => {
     expect(result).toBeNull();
   });
 
-  it("uniqueIdが空文字列の場合はnullを返す", () => {
-    const result = parseCustomId("dsct||counter|5|6");
-    expect(result).toBeNull();
-  });
-
   it("nameが空文字列の場合はnullを返す", () => {
-    const result = parseCustomId("dsct|0||5|6");
+    const result = parseCustomId("dsct||5|6");
     expect(result).toBeNull();
   });
 
   it("currentが空文字列の場合はnullを返す", () => {
-    const result = parseCustomId("dsct|0|counter||6");
+    const result = parseCustomId("dsct|counter||6");
     expect(result).toBeNull();
   });
 
   it("nextが空文字列の場合はnullを返す", () => {
-    const result = parseCustomId("dsct|0|counter|5|");
+    const result = parseCustomId("dsct|counter|5|");
     expect(result).toBeNull();
   });
 
   it("全ての部品が空文字列の場合はnullを返す", () => {
-    const result = parseCustomId("dsct||||");
+    const result = parseCustomId("dsct|||");
     expect(result).toBeNull();
   });
 });
 
 describe("generateCustomId", () => {
   it("正しいフォーマットのcustomIdを生成できる", () => {
-    const result = generateCustomId("0", "counter", "5", "6");
-    expect(result).toBe("dsct|0|counter|5|6");
+    const result = generateCustomId("counter", "5", "6");
+    expect(result).toBe("dsct|counter|5|6");
   });
 
   it("複雑なnameでも正しく生成できる", () => {
-    const result = generateCustomId("1", "my-component-state", "100", "101");
-    expect(result).toBe("dsct|1|my-component-state|100|101");
+    const result = generateCustomId("my-component-state", "100", "101");
+    expect(result).toBe("dsct|my-component-state|100|101");
   });
 });
 

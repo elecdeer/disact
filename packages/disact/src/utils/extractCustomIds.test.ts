@@ -25,14 +25,14 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Click",
-            custom_id: "dsct|0|counter|5|6",
+            custom_id: "dsct|counter|5|6",
           },
         ],
       } as APIMessageTopLevelComponent,
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|counter|5|6"]);
+    expect(result).toEqual(["dsct|counter|5|6"]);
   });
 
   it("複数のButtonからcustomIdを抽出できる", () => {
@@ -44,20 +44,20 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Increase",
-            custom_id: "dsct|0|counter|5|6",
+            custom_id: "dsct|counter|5|6",
           },
           {
             type: ComponentType.Button,
             style: 1,
             label: "Decrease",
-            custom_id: "dsct|0|counter|5|4",
+            custom_id: "dsct|counter|5|4",
           },
         ],
       } as APIMessageTopLevelComponent,
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|counter|5|6", "dsct|0|counter|5|4"]);
+    expect(result).toEqual(["dsct|counter|5|6", "dsct|counter|5|4"]);
   });
 
   it("複数のActionRowからcustomIdを抽出できる", () => {
@@ -69,7 +69,7 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Button 1",
-            custom_id: "dsct|0|counter|5|6",
+            custom_id: "dsct|counter|5|6",
           },
         ],
       } as APIMessageTopLevelComponent,
@@ -80,14 +80,14 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Button 2",
-            custom_id: "dsct|1|page|2|3",
+            custom_id: "dsct|page|2|3",
           },
         ],
       } as APIMessageTopLevelComponent,
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|counter|5|6", "dsct|1|page|2|3"]);
+    expect(result).toEqual(["dsct|counter|5|6", "dsct|page|2|3"]);
   });
 
   it("LinkButtonのようなcustom_idを持たないコンポーネントは無視する", () => {
@@ -105,14 +105,14 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Button",
-            custom_id: "dsct|0|counter|5|6",
+            custom_id: "dsct|counter|5|6",
           },
         ],
       } as APIMessageTopLevelComponent,
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|counter|5|6"]);
+    expect(result).toEqual(["dsct|counter|5|6"]);
   });
 
   it("SelectMenuからもcustomIdを抽出できる", () => {
@@ -122,7 +122,7 @@ describe("extractCustomIds", () => {
         components: [
           {
             type: ComponentType.StringSelect,
-            custom_id: "dsct|0|select|option1|option2",
+            custom_id: "dsct|select|option1|option2",
             options: [],
           },
         ],
@@ -130,7 +130,7 @@ describe("extractCustomIds", () => {
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|select|option1|option2"]);
+    expect(result).toEqual(["dsct|select|option1|option2"]);
   });
 
   it("Container内のActionRowからcustomIdを抽出できる", () => {
@@ -145,7 +145,7 @@ describe("extractCustomIds", () => {
                 type: ComponentType.Button,
                 style: 1,
                 label: "Container Button",
-                custom_id: "dsct|0|container-btn|0|1",
+                custom_id: "dsct|container-btn|0|1",
               },
             ],
           } as APIMessageTopLevelComponent,
@@ -154,7 +154,7 @@ describe("extractCustomIds", () => {
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|container-btn|0|1"]);
+    expect(result).toEqual(["dsct|container-btn|0|1"]);
   });
 
   it("Container内の複数のコンポーネントからcustomIdを抽出できる", () => {
@@ -169,7 +169,7 @@ describe("extractCustomIds", () => {
                 type: ComponentType.Button,
                 style: 1,
                 label: "Button 1",
-                custom_id: "dsct|0|btn1|0|1",
+                custom_id: "dsct|btn1|0|1",
               },
             ],
           } as APIMessageTopLevelComponent,
@@ -178,7 +178,7 @@ describe("extractCustomIds", () => {
             components: [
               {
                 type: ComponentType.StringSelect,
-                custom_id: "dsct|1|select1|a|b",
+                custom_id: "dsct|select1|a|b",
                 options: [],
               },
             ],
@@ -188,7 +188,7 @@ describe("extractCustomIds", () => {
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|btn1|0|1", "dsct|1|select1|a|b"]);
+    expect(result).toEqual(["dsct|btn1|0|1", "dsct|select1|a|b"]);
   });
 
   it("SectionのaccessoryにButtonがある場合customIdを抽出できる", () => {
@@ -205,13 +205,13 @@ describe("extractCustomIds", () => {
           type: ComponentType.Button,
           style: 1,
           label: "Section Button",
-          custom_id: "dsct|0|section-btn|0|1",
+          custom_id: "dsct|section-btn|0|1",
         },
       } as APIMessageTopLevelComponent,
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|section-btn|0|1"]);
+    expect(result).toEqual(["dsct|section-btn|0|1"]);
   });
 
   it("SectionのaccessoryがThumbnailの場合はcustomIdを抽出しない", () => {
@@ -246,7 +246,7 @@ describe("extractCustomIds", () => {
             type: ComponentType.Button,
             style: 1,
             label: "Top Button",
-            custom_id: "dsct|0|top|0|1",
+            custom_id: "dsct|top|0|1",
           },
         ],
       } as APIMessageTopLevelComponent,
@@ -260,7 +260,7 @@ describe("extractCustomIds", () => {
                 type: ComponentType.Button,
                 style: 1,
                 label: "Container Button",
-                custom_id: "dsct|1|container|0|1",
+                custom_id: "dsct|container|0|1",
               },
             ],
           } as APIMessageTopLevelComponent,
@@ -276,7 +276,7 @@ describe("extractCustomIds", () => {
               type: ComponentType.Button,
               style: 1,
               label: "Section Button",
-              custom_id: "dsct|2|section|0|1",
+              custom_id: "dsct|section|0|1",
             },
           } as APIMessageTopLevelComponent,
         ],
@@ -284,6 +284,6 @@ describe("extractCustomIds", () => {
     ];
 
     const result = extractCustomIds(components);
-    expect(result).toEqual(["dsct|0|top|0|1", "dsct|1|container|0|1", "dsct|2|section|0|1"]);
+    expect(result).toEqual(["dsct|top|0|1", "dsct|container|0|1", "dsct|section|0|1"]);
   });
 });

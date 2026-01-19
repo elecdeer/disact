@@ -80,7 +80,6 @@ export const createDisactApp = (): DisactApp => {
     const context: ReducerContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
       __interactionCallbacks: interactionCallbacks,
       __reducerValues: reducerValues,
-      __hookCallIndex: 0,
     };
 
     // ライフサイクルフックを定義
@@ -89,9 +88,6 @@ export const createDisactApp = (): DisactApp => {
         // 各レンダリング前にcallback配列をクリア
         // 最終レンダリングのcallbackのみを保持するため
         interactionCallbacks.length = 0;
-
-        // hookCallIndexをリセット
-        context.__hookCallIndex = 0;
       },
       postRenderCycle: async () => {
         // 全レンダリング完了後、callbackを実行
