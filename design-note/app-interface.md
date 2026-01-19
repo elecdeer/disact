@@ -66,10 +66,7 @@ interface DisactApp {
    *
    * Application CommandとComponent Interactionの両方で使用
    */
-  connect(
-    session: DisactSession,
-    element: DisactElement,
-  ): Promise<ConnectResult>;
+  connect(session: DisactSession, element: DisactElement): Promise<ConnectResult>;
 
   /**
    * セッションのクリーンアップ（オプション）
@@ -121,9 +118,7 @@ function sessionFromInteraction(
  * Component Interactionからセッション作成
  * 既存メッセージを更新する場合に使用
  */
-function sessionFromInteraction(
-  interaction: ComponentInteraction,
-): DisactSession;
+function sessionFromInteraction(interaction: ComponentInteraction): DisactSession;
 
 // 実装例
 function sessionFromInteraction(
@@ -168,10 +163,7 @@ interface ConnectResult {
 #### 実装フロー
 
 ```typescript
-async function connect(
-  session: DisactSession,
-  element: DisactElement,
-): Promise<ConnectResult> {
+async function connect(session: DisactSession, element: DisactElement): Promise<ConnectResult> {
   const isUpdate = !!session.messageId;
 
   if (isUpdate) {
@@ -279,7 +271,6 @@ async function connect(
       response: { type: 7 }, // UPDATE_MESSAGE
       sessionId: session.id,
     };
-
   } else {
     // === 新規メッセージの作成（Application Command） ===
 
@@ -548,10 +539,7 @@ interface HydrationWarning {
   actual?: any;
 }
 
-function validateHydration(
-  discordMessage: Message,
-  renderResult: RenderResult,
-): HydrationResult {
+function validateHydration(discordMessage: Message, renderResult: RenderResult): HydrationResult {
   const discordCustomIds = extractCustomIds(discordMessage.components);
   const renderedCustomIds = extractCustomIds(renderResult);
 

@@ -30,10 +30,10 @@ type Reducers<T> = Record<string, (curr: T, ...args: any[]) => T>;
 
 type Actions<T, R extends Reducers<T>> = {
   [K in keyof R]: R[K] extends (curr: T) => T
-    ? () => string  // 引数なしのreducer
+    ? () => string // 引数なしのreducer
     : R[K] extends (curr: T, ...args: infer Args) => T
-    ? (...args: Args) => string  // 引数ありのreducer
-    : never;
+      ? (...args: Args) => string // 引数ありのreducer
+      : never;
 };
 ```
 
@@ -74,11 +74,11 @@ dsct|{uniqueId}|{name}|{currentValue}|{nextValue}
 #### 例
 
 ```typescript
-dispatch.increase() // "dsct|0|counter|5|6"
+dispatch.increase(); // "dsct|0|counter|5|6"
 //                     ^^^^ ^ ^^^^^^^ ^ ^
 //                     magic uniqueId name 現在値 次の値
 
-dispatch.add(3) // "dsct|0|counter|5|8"
+dispatch.add(3); // "dsct|0|counter|5|8"
 //                 magic: dsct
 //                 uniqueId: 0
 //                 name: counter
@@ -257,13 +257,13 @@ function Pagination() {
 
 ```typescript
 // 数値
-customId: "dsct|counter|5|6"
+customId: "dsct|counter|5|6";
 
 // 文字列
-customId: "dsct|name|John|Jane"
+customId: "dsct|name|John|Jane";
 
 // 真偽値
-customId: "dsct|enabled|true|false"
+customId: "dsct|enabled|true|false";
 ```
 
 #### オブジェクト型
@@ -281,10 +281,10 @@ const [user, dispatch] = useReducer(
   {
     serialize: (user) => `${user.name}:${user.age}`,
     deserialize: (str) => {
-      const [name, age] = str.split(':');
+      const [name, age] = str.split(":");
       return { name, age: Number(age) };
     },
-  }
+  },
 );
 ```
 
@@ -338,17 +338,13 @@ interface ExternalStoreOptions<T> {
   defaultValue: T;
 }
 
-function createExternalStore<T>(
-  options: ExternalStoreOptions<T>,
-): ExternalStore<T>;
+function createExternalStore<T>(options: ExternalStoreOptions<T>): ExternalStore<T>;
 ```
 
 #### 実装例
 
 ```typescript
-function createExternalStore<T>(
-  options: ExternalStoreOptions<T>,
-): ExternalStore<T> {
+function createExternalStore<T>(options: ExternalStoreOptions<T>): ExternalStore<T> {
   return {
     defaultValue: options.defaultValue,
 
@@ -371,9 +367,7 @@ function createExternalStore<T>(
 ```typescript
 type SetExternalStore<T> = (value: T | ((prev: T) => T)) => Promise<void>;
 
-function useExternalStore<T>(
-  store: ExternalStore<T>
-): [T, SetExternalStore<T>];
+function useExternalStore<T>(store: ExternalStore<T>): [T, SetExternalStore<T>];
 ```
 
 ### InteractionContext
@@ -464,10 +458,7 @@ function Profile() {
 
 ```typescript
 // connect時に必要なstoreを事前ロード
-await Promise.all([
-  userNameStore.get(),
-  isPremiumStore.get(),
-]);
+await Promise.all([userNameStore.get(), isPremiumStore.get()]);
 
 // useExternalStoreはロード済みの値を同期的に取得
 function useExternalStore<T>(store: ExternalStore<T>): [T, SetExternalStore<T>] {
@@ -477,9 +468,8 @@ function useExternalStore<T>(store: ExternalStore<T>): [T, SetExternalStore<T>] 
   const value = context.externalStoreValues.get(store) ?? store.defaultValue;
 
   const setter = async (newValue: T | ((prev: T) => T)) => {
-    const actualValue = typeof newValue === "function"
-      ? (newValue as (prev: T) => T)(value)
-      : newValue;
+    const actualValue =
+      typeof newValue === "function" ? (newValue as (prev: T) => T)(value) : newValue;
 
     // contextに保存
     context.externalStoreValues.set(store, actualValue);
@@ -945,11 +935,7 @@ function AdvancedUI() {
 1. **事前ロード**: 必要なstoreをまとめてロード
 
    ```typescript
-   await Promise.all([
-     nameStore.get(),
-     ageStore.get(),
-     cityStore.get(),
-   ]);
+   await Promise.all([nameStore.get(), ageStore.get(), cityStore.get()]);
    ```
 
 2. **バッチング**: 複数の更新を1回にまとめる
@@ -972,10 +958,10 @@ function AdvancedUI() {
 
    ```typescript
    // ❌ 長すぎる
-   customId: "dsct|very-long-component-name-counter|12345|12346"
+   customId: "dsct|very-long-component-name-counter|12345|12346";
 
    // ✅ 短く
-   customId: "dsct|cnt|12345|12346"
+   customId: "dsct|cnt|12345|12346";
    ```
 
 ## 実装ロードマップ
