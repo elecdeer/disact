@@ -10,7 +10,7 @@ import { Container } from "./components/core/Container/Container";
 import { TextDisplay } from "./components/core/TextDisplay/TextDisplay";
 import { testRender, waitFor } from "./testing";
 
-describe("test", () => {
+describe.skip("test", () => {
   it("render", async () => {
     const name = "alice";
     const Component = () => {

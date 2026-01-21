@@ -53,3 +53,4 @@ export type { Session } from "./app/session";
 // Hooks
 export { useInteraction } from "./hooks";
 export type { InteractionCallback, InteractionCallbacksContext } from "./hooks";
+export { useRerender } from "./hooks/useRerender";

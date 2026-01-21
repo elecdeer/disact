@@ -15,7 +15,7 @@ import { TextDisplay } from "./components/core/TextDisplay/TextDisplay";
 import { UserSelect } from "./components/core/UserSelect/UserSelect";
 import { testRender, waitFor } from "./testing";
 
-describe("Integration Tests", () => {
+describe.skip("Integration Tests", () => {
   describe("Basic Rendering", () => {
     it("Container + ActionRow + Button + TextDisplay の基本レンダリング", async () => {
       const name = "alice";

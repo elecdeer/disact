@@ -11,6 +11,14 @@
     ".": {
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx.d.mts",
+      "default": "./dist/jsx.mjs"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-dev-runtime.d.mts",
+      "default": "./dist/jsx-dev-runtime.mjs"
     }
   },
   "scripts": {
