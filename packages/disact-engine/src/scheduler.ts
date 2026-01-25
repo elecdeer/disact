@@ -35,8 +35,6 @@ export type Scheduler = {
 
 type State = "idle" | "running" | "disposed";
 
-type ProcessingState = "idle" | "executing-task" | "executing-callbacks" | "waiting-for-promise";
-
 /**
  * Track the status of a promise by attaching a status property
  */
@@ -71,127 +69,50 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
 
   let state: State = "idle";
   let taskQueue: Array<{ waitFor: Promise<unknown> | undefined }> = [];
-  let processingState: ProcessingState = "idle";
-  let idleTimerId: ReturnType<typeof setTimeout> | null = null;
+  let isProcessing = false;
   let hasExecutedTask = false; // Track if at least one task has been executed
+
+  // Symbol to identify idle timeout in Promise.race
+  const IDLE_TIMEOUT = Symbol("idle-timeout");
+
+  // AbortController to cancel idle timeout when new task is queued
+  let idleTimeoutAbort: AbortController | null = null;
 
   logger.trace("Created", { idleTimeout });
 
   /**
-   * Start the idle timer
+   * Create a promise that resolves after the specified delay, or rejects if aborted
    */
-  const startIdleTimer = (): void => {
-    if (idleTimeout <= 0) return;
-    // Only start timer if at least one task has been executed
-    if (!hasExecutedTask) return;
+  const sleep = (ms: number, signal?: AbortSignal): Promise<typeof IDLE_TIMEOUT> => {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => resolve(IDLE_TIMEOUT), ms);
 
-    if (idleTimerId !== null) {
-      clearTimeout(idleTimerId);
-      logger.trace("Idle timer reset", { idleTimeout });
-    } else {
-      logger.trace("Idle timer started", { idleTimeout });
-    }
-
-    idleTimerId = setTimeout(() => {
-      void handleIdle();
-    }, idleTimeout);
-  };
-
-  /**
-   * Clear the idle timer
-   */
-  const clearIdleTimer = (): void => {
-    if (idleTimerId !== null) {
-      clearTimeout(idleTimerId);
-      idleTimerId = null;
-      logger.trace("Idle timer cleared");
-    }
-  };
-
-  /**
-   * Handle idle timeout
-   */
-  const handleIdle = async (): Promise<void> => {
-    // handleIdleの実行中も新しいprocessQueueが開始されないようにする
-    // waitFor待機中はhandleIdleを実行可能にする
-    if (
-      (processingState !== "idle" && processingState !== "waiting-for-promise") ||
-      state === "disposed"
-    ) {
-      logger.trace("handleIdle skipped", { processingState, state });
-      return;
-    }
-
-    processingState = "executing-callbacks";
-
-    try {
-      logger.trace("Idle timeout reached", {
-        queueLength: taskQueue.length,
-        state,
-      });
-
-      // Call onIdle
-      if (onIdle) {
-        logger.trace("Calling onIdle");
-        try {
-          await onIdle();
-          logger.trace("onIdle completed");
-        } catch (error) {
-          // Ignore errors in onIdle
-          logger.trace("Error in onIdle", { error });
-        }
-      }
-
-      // If queue is empty, call onFinish and reset to idle
-      if (taskQueue.length === 0) {
-        if (onFinish) {
-          logger.trace("Calling onFinish");
-          try {
-            await onFinish();
-            logger.trace("onFinish completed");
-          } catch (error) {
-            // Ignore errors in onFinish
-            logger.trace("Error in onFinish", { error });
-          }
-        }
-
-        // Reset to idle state (allow reuse)
-        // Check both idle and running states since state might have changed during await
-        if (state === "idle" || state === "running") {
-          logger.trace("Resetting to idle state");
-          state = "idle";
-        }
-      }
-    } finally {
-      processingState = "idle";
-
-      // onIdle/onFinishの実行中にキューされたタスクがあれば処理を開始
-      if (taskQueue.length > 0 && (state === "idle" || state === "running")) {
-        logger.trace("Starting processQueue after handleIdle", {
-          queueLength: taskQueue.length,
+      if (signal) {
+        signal.addEventListener("abort", () => {
+          clearTimeout(timeoutId);
+          reject(new Error("Aborted"));
         });
-        void processQueue();
       }
-    }
+    });
   };
 
   /**
    * Process the task queue
    */
   const processQueue = async (): Promise<void> => {
-    if (processingState !== "idle" || state === "disposed") {
-      logger.trace("processQueue skipped", { processingState, state });
+    if (isProcessing || state === "disposed") {
+      logger.trace("processQueue skipped", { isProcessing, state });
       return;
     }
 
     logger.trace("processQueue started", {
       queueLength: taskQueue.length,
     });
-    processingState = "executing-task";
+    isProcessing = true;
 
     try {
-      while (taskQueue.length > 0 && (state === "idle" || state === "running")) {
-        // Find a task that is ready (waitFor is settled or undefined)
+      while (state === "idle" || state === "running") {
+        // 1. Find a task that is ready (waitFor is settled or undefined)
         const readyIndex = taskQueue.findIndex(
           (item) => item.waitFor === undefined || isPromiseSettled(item.waitFor),
         );
@@ -204,8 +125,11 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
             remainingTasks: taskQueue.length,
           });
 
-          // Reset idle timer before executing task
-          clearIdleTimer();
+          // Cancel any pending idle timeout
+          if (idleTimeoutAbort) {
+            idleTimeoutAbort.abort();
+            idleTimeoutAbort = null;
+          }
 
           try {
             // Execute the task
@@ -237,54 +161,132 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
               break;
             }
           }
+          continue;
+        }
 
-          // Start idle timer after task completion
-          startIdleTimer();
-        } else {
-          // No ready task, wait for any waitFor promise to settle
-          const pendingPromises = taskQueue
-            .map((item) => item.waitFor)
-            .filter((p): p is Promise<unknown> => p !== undefined);
+        // 2. No ready task, check for pending promises
+        const pendingPromises = taskQueue
+          .map((item) => item.waitFor)
+          .filter((p): p is Promise<unknown> => p !== undefined);
 
-          if (pendingPromises.length > 0) {
-            logger.trace("Waiting for promises to settle", {
-              pendingCount: pendingPromises.length,
-            });
-            // Start idle timer while waiting for promises
-            startIdleTimer();
+        if (pendingPromises.length > 0) {
+          logger.trace("Waiting for promises to settle", {
+            pendingCount: pendingPromises.length,
+          });
 
-            // waitForを待機している間は状態を変更して、handleIdleが実行できるようにする
-            processingState = "waiting-for-promise";
-            await Promise.race(
-              pendingPromises.map((p) =>
-                p.catch(() => {
-                  // Ignore rejection, we just want to know when it settles
-                }),
-              ),
+          // Create race array with pending promises
+          const racingPromises: Array<Promise<unknown>> = pendingPromises.map((p) =>
+            p.catch(() => {
+              // Ignore rejection, we just want to know when it settles
+            }),
+          );
+
+          // Add idle timeout if configured and at least one task has been executed
+          if (idleTimeout > 0 && hasExecutedTask) {
+            idleTimeoutAbort = new AbortController();
+            racingPromises.push(
+              sleep(idleTimeout, idleTimeoutAbort.signal).catch(() => {
+                // Timeout was aborted, ignore
+              }),
             );
-            // 待機が終わったら状態を戻す
-            processingState = "executing-task";
+          }
 
-            logger.trace("A promise settled, retrying");
-            // Clear idle timer after promise settled
-            clearIdleTimer();
+          const result = await Promise.race(racingPromises);
+
+          // Clear abort controller after race completes
+          idleTimeoutAbort = null;
+
+          if (result === IDLE_TIMEOUT) {
+            // Idle timeout reached
+            logger.trace("Idle timeout reached during promise wait", {
+              queueLength: taskQueue.length,
+            });
+
+            // Call onIdle
+            if (onIdle) {
+              logger.trace("Calling onIdle");
+              try {
+                await onIdle();
+                logger.trace("onIdle completed");
+              } catch (error) {
+                // Ignore errors in onIdle
+                logger.trace("Error in onIdle", { error });
+              }
+            }
+            // Note: Do NOT call onFinish here - queue is not empty
+            // After onIdle, check if new tasks were added and continue loop
           } else {
-            // No pending promises, break
-            logger.trace("No pending promises, breaking");
-            break;
+            logger.trace("A promise settled, retrying");
+          }
+          continue;
+        }
+
+        // 3. Queue is empty - perform final idle/finish callbacks
+        logger.trace("Queue is empty, performing final callbacks");
+
+        // Wait for idle timeout if configured and at least one task has been executed
+        if (hasExecutedTask && idleTimeout > 0) {
+          logger.trace("Waiting for idle timeout before finishing", { idleTimeout });
+          idleTimeoutAbort = new AbortController();
+          try {
+            await sleep(idleTimeout, idleTimeoutAbort.signal);
+            idleTimeoutAbort = null;
+
+            // Call onIdle
+            if (onIdle) {
+              logger.trace("Calling onIdle");
+              try {
+                await onIdle();
+                logger.trace("onIdle completed");
+              } catch (error) {
+                // Ignore errors in onIdle
+                logger.trace("Error in onIdle", { error });
+              }
+            }
+
+            // Check if new tasks were queued during onIdle
+            if (taskQueue.length > 0) {
+              logger.trace("New tasks queued during onIdle, continuing loop");
+              continue;
+            }
+          } catch {
+            // Timeout was aborted - new task was queued
+            logger.trace("Idle timeout aborted, new task queued");
+            idleTimeoutAbort = null;
+            continue;
           }
         }
+
+        // Call onFinish
+        if (onFinish) {
+          logger.trace("Calling onFinish");
+          try {
+            await onFinish();
+            logger.trace("onFinish completed");
+          } catch (error) {
+            // Ignore errors in onFinish
+            logger.trace("Error in onFinish", { error });
+          }
+        }
+
+        // Check if new tasks were queued during onFinish
+        if (taskQueue.length > 0) {
+          logger.trace("New tasks queued during onFinish, continuing loop");
+          continue;
+        }
+
+        // Reset to idle state (allow reuse)
+        if (state === "idle" || state === "running") {
+          logger.trace("Resetting to idle state");
+          state = "idle";
+        }
+        break;
       }
     } finally {
-      processingState = "idle";
+      isProcessing = false;
       logger.trace("processQueue finished", {
         queueLength: taskQueue.length,
       });
-
-      // Ensure idle timer is running (regardless of queue state)
-      if (state === "idle" || state === "running") {
-        startIdleTimer();
-      }
     }
   };
 
@@ -317,8 +319,12 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
       state = "running";
     }
 
-    // Clear idle timer when new task is queued
-    clearIdleTimer();
+    // Cancel any pending idle timeout when new task is queued
+    if (idleTimeoutAbort) {
+      logger.trace("Cancelling idle timeout due to new task");
+      idleTimeoutAbort.abort();
+      idleTimeoutAbort = null;
+    }
 
     // Start processing
     void processQueue();
@@ -334,7 +340,6 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
     });
     state = "disposed";
     taskQueue = [];
-    clearIdleTimer();
   };
 
   /**
