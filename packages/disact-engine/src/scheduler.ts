@@ -35,6 +35,8 @@ export type Scheduler = {
 
 type State = "idle" | "running" | "disposed";
 
+type ProcessingState = "idle" | "executing-task" | "executing-callbacks" | "waiting-for-promise";
+
 /**
  * Track the status of a promise by attaching a status property
  */
@@ -69,7 +71,7 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
 
   let state: State = "idle";
   let taskQueue: Array<{ waitFor: Promise<unknown> | undefined }> = [];
-  let isProcessing = false;
+  let processingState: ProcessingState = "idle";
   let idleTimerId: ReturnType<typeof setTimeout> | null = null;
   let hasExecutedTask = false; // Track if at least one task has been executed
 
@@ -110,42 +112,65 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
    * Handle idle timeout
    */
   const handleIdle = async (): Promise<void> => {
-    logger.trace("Idle timeout reached", {
-      queueLength: taskQueue.length,
-      isProcessing,
-      state,
-    });
-
-    // Call onIdle
-    if (onIdle && state !== "disposed") {
-      logger.trace("Calling onIdle");
-      try {
-        await onIdle();
-        logger.trace("onIdle completed");
-      } catch (error) {
-        // Ignore errors in onIdle
-        logger.trace("Error in onIdle", { error });
-      }
+    // handleIdleの実行中も新しいprocessQueueが開始されないようにする
+    // waitFor待機中はhandleIdleを実行可能にする
+    if (
+      (processingState !== "idle" && processingState !== "waiting-for-promise") ||
+      state === "disposed"
+    ) {
+      logger.trace("handleIdle skipped", { processingState, state });
+      return;
     }
 
-    // If queue is empty and not processing, call onFinish and reset to idle
-    if (taskQueue.length === 0 && !isProcessing && state !== "disposed") {
-      if (onFinish) {
-        logger.trace("Calling onFinish");
+    processingState = "executing-callbacks";
+
+    try {
+      logger.trace("Idle timeout reached", {
+        queueLength: taskQueue.length,
+        state,
+      });
+
+      // Call onIdle
+      if (onIdle) {
+        logger.trace("Calling onIdle");
         try {
-          await onFinish();
-          logger.trace("onFinish completed");
+          await onIdle();
+          logger.trace("onIdle completed");
         } catch (error) {
-          // Ignore errors in onFinish
-          logger.trace("Error in onFinish", { error });
+          // Ignore errors in onIdle
+          logger.trace("Error in onIdle", { error });
         }
       }
 
-      // Reset to idle state (allow reuse)
-      // Check both idle and running states since state might have changed during await
-      if (state === "idle" || state === "running") {
-        logger.trace("Resetting to idle state");
-        state = "idle";
+      // If queue is empty, call onFinish and reset to idle
+      if (taskQueue.length === 0) {
+        if (onFinish) {
+          logger.trace("Calling onFinish");
+          try {
+            await onFinish();
+            logger.trace("onFinish completed");
+          } catch (error) {
+            // Ignore errors in onFinish
+            logger.trace("Error in onFinish", { error });
+          }
+        }
+
+        // Reset to idle state (allow reuse)
+        // Check both idle and running states since state might have changed during await
+        if (state === "idle" || state === "running") {
+          logger.trace("Resetting to idle state");
+          state = "idle";
+        }
+      }
+    } finally {
+      processingState = "idle";
+
+      // onIdle/onFinishの実行中にキューされたタスクがあれば処理を開始
+      if (taskQueue.length > 0 && (state === "idle" || state === "running")) {
+        logger.trace("Starting processQueue after handleIdle", {
+          queueLength: taskQueue.length,
+        });
+        void processQueue();
       }
     }
   };
@@ -154,15 +179,15 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
    * Process the task queue
    */
   const processQueue = async (): Promise<void> => {
-    if (isProcessing || state === "disposed") {
-      logger.trace("processQueue skipped", { isProcessing, state });
+    if (processingState !== "idle" || state === "disposed") {
+      logger.trace("processQueue skipped", { processingState, state });
       return;
     }
 
     logger.trace("processQueue started", {
       queueLength: taskQueue.length,
     });
-    isProcessing = true;
+    processingState = "executing-task";
 
     try {
       while (taskQueue.length > 0 && (state === "idle" || state === "running")) {
@@ -227,6 +252,9 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
             });
             // Start idle timer while waiting for promises
             startIdleTimer();
+
+            // waitForを待機している間は状態を変更して、handleIdleが実行できるようにする
+            processingState = "waiting-for-promise";
             await Promise.race(
               pendingPromises.map((p) =>
                 p.catch(() => {
@@ -234,6 +262,9 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
                 }),
               ),
             );
+            // 待機が終わったら状態を戻す
+            processingState = "executing-task";
+
             logger.trace("A promise settled, retrying");
             // Clear idle timer after promise settled
             clearIdleTimer();
@@ -245,7 +276,7 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
         }
       }
     } finally {
-      isProcessing = false;
+      processingState = "idle";
       logger.trace("processQueue finished", {
         queueLength: taskQueue.length,
       });

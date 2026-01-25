@@ -440,4 +440,223 @@ describe("createScheduler", () => {
     expect(maxActiveCount).toBe(1);
     expect(task).toHaveBeenCalledTimes(3);
   });
+
+  it("should not execute task, onIdle, and onFinish concurrently", async () => {
+    let activeCount = 0;
+    let maxActiveCount = 0;
+    const activeFunctions: string[] = [];
+
+    /**
+     * 関数の実行開始と終了を追跡するヘルパー
+     */
+    const trackExecution = async (name: string, delay: number): Promise<void> => {
+      activeCount++;
+      activeFunctions.push(name);
+      maxActiveCount = Math.max(maxActiveCount, activeCount);
+
+      // 並行実行されていないことを確認（activeCountが1より大きい場合は失敗）
+      if (activeCount > 1) {
+        throw new Error(
+          `Concurrent execution detected: ${name} started while another function is active (activeCount: ${activeCount}, active: ${activeFunctions.join(", ")})`,
+        );
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      activeCount--;
+      activeFunctions.splice(activeFunctions.indexOf(name), 1);
+    };
+
+    const task = vi.fn(async () => {
+      await trackExecution("task", 10);
+    });
+
+    const onIdle = vi.fn(async () => {
+      await trackExecution("onIdle", 10);
+    });
+
+    const onFinish = vi.fn(async () => {
+      await trackExecution("onFinish", 10);
+    });
+
+    const scheduler = createScheduler({
+      task,
+      idleTimeout: 30,
+      onIdle,
+      onFinish,
+    });
+
+    // 複数のタスクをキューに追加
+    scheduler.queue();
+    scheduler.queue();
+    scheduler.queue();
+
+    // すべてのタスクとコールバックが完了するまで待機
+    await vi.advanceTimersByTimeAsync(200);
+
+    // すべての関数が呼び出されたことを確認
+    expect(task).toHaveBeenCalledTimes(3);
+    expect(onIdle).toHaveBeenCalledTimes(1);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+
+    // 並行実行されていないことを確認（maxActiveCountが1であること）
+    expect(maxActiveCount).toBe(1);
+    expect(activeFunctions).toEqual([]);
+  });
+
+  it("should not execute onIdle while task is running", async () => {
+    const executionLog: string[] = [];
+    let taskResolver: (() => void) | null = null;
+
+    const task = vi.fn(async () => {
+      executionLog.push("task-start");
+      // タスクの実行を制御するためのプロミス
+      await new Promise<void>((resolve) => {
+        taskResolver = resolve;
+      });
+      executionLog.push("task-end");
+    });
+
+    const onIdle = vi.fn(() => {
+      executionLog.push("onIdle");
+    });
+
+    const scheduler = createScheduler({
+      task,
+      idleTimeout: 50,
+      onIdle,
+    });
+
+    scheduler.queue();
+
+    // タスクが開始するまで待機
+    await vi.waitFor(() => {
+      expect(taskResolver).not.toBeNull();
+    });
+
+    // タスク実行中にアイドルタイムアウトを経過させる
+    await vi.advanceTimersByTimeAsync(60);
+
+    // タスクが実行中の間はonIdleが呼ばれていないことを確認
+    expect(executionLog).toEqual(["task-start"]);
+    expect(onIdle).not.toHaveBeenCalled();
+
+    // タスクを完了させる
+    taskResolver!();
+    await vi.advanceTimersByTimeAsync(60);
+
+    // タスク完了後にonIdleが呼ばれることを確認
+    expect(executionLog).toEqual(["task-start", "task-end", "onIdle"]);
+    expect(onIdle).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not execute task while onIdle is running", async () => {
+    const executionLog: string[] = [];
+    let onIdleResolver: (() => void) | null = null;
+
+    const task = vi.fn(() => {
+      executionLog.push("task");
+    });
+
+    const onIdle = vi.fn(async () => {
+      executionLog.push("onIdle-start");
+      // onIdleの実行を制御するためのプロミス
+      await new Promise<void>((resolve) => {
+        onIdleResolver = resolve;
+      });
+      executionLog.push("onIdle-end");
+    });
+
+    const scheduler = createScheduler({
+      task,
+      idleTimeout: 50,
+      onIdle,
+    });
+
+    // 最初のタスクを実行
+    scheduler.queue();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(executionLog).toEqual(["task"]);
+
+    // アイドルタイムアウトを経過させてonIdleをトリガー
+    await vi.advanceTimersByTimeAsync(60);
+
+    // onIdleが開始するまで待機
+    await vi.waitFor(() => {
+      expect(onIdleResolver).not.toBeNull();
+    });
+
+    expect(executionLog).toEqual(["task", "onIdle-start"]);
+
+    // onIdle実行中に新しいタスクをキュー
+    scheduler.queue();
+
+    // タイマーを進めてもonIdle実行中はタスクが実行されないことを確認
+    await vi.advanceTimersByTimeAsync(10);
+    expect(executionLog).toEqual(["task", "onIdle-start"]);
+
+    // onIdleを完了させる
+    onIdleResolver!();
+    await vi.advanceTimersByTimeAsync(10);
+
+    // onIdle完了後にタスクが実行されることを確認
+    expect(executionLog).toEqual(["task", "onIdle-start", "onIdle-end", "task"]);
+    expect(task).toHaveBeenCalledTimes(2);
+  });
+
+  it("should not execute task while onFinish is running", async () => {
+    const executionLog: string[] = [];
+    let onFinishResolver: (() => void) | null = null;
+
+    const task = vi.fn(() => {
+      executionLog.push("task");
+    });
+
+    const onFinish = vi.fn(async () => {
+      executionLog.push("onFinish-start");
+      // onFinishの実行を制御するためのプロミス
+      await new Promise<void>((resolve) => {
+        onFinishResolver = resolve;
+      });
+      executionLog.push("onFinish-end");
+    });
+
+    const scheduler = createScheduler({
+      task,
+      idleTimeout: 50,
+      onFinish,
+    });
+
+    // タスクを実行
+    scheduler.queue();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(executionLog).toEqual(["task"]);
+
+    // アイドルタイムアウトを経過させてonFinishをトリガー
+    await vi.advanceTimersByTimeAsync(60);
+
+    // onFinishが開始するまで待機
+    await vi.waitFor(() => {
+      expect(onFinishResolver).not.toBeNull();
+    });
+
+    expect(executionLog).toEqual(["task", "onFinish-start"]);
+
+    // onFinish実行中に新しいタスクをキュー
+    scheduler.queue();
+
+    // タイマーを進めてもonFinish実行中はタスクが実行されないことを確認
+    await vi.advanceTimersByTimeAsync(10);
+    expect(executionLog).toEqual(["task", "onFinish-start"]);
+
+    // onFinishを完了させる
+    onFinishResolver!();
+    await vi.advanceTimersByTimeAsync(10);
+
+    // onFinish完了後にタスクが実行されることを確認
+    expect(executionLog).toEqual(["task", "onFinish-start", "onFinish-end", "task"]);
+    expect(task).toHaveBeenCalledTimes(2);
+  });
 });
