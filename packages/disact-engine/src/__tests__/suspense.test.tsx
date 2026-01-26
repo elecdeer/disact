@@ -297,6 +297,8 @@ describe("Suspense機能", () => {
 
   it("should handle use() with rejected Promise", async () => {
     const rejectedPromise = Promise.reject(new Error("Promise rejected"));
+    // Prevent unhandled rejection warning
+    rejectedPromise.catch(() => {});
 
     const AsyncComponent: FC = () => {
       const result = use(rejectedPromise);
@@ -992,7 +994,8 @@ describe("Suspense機能", () => {
     const raceResult = await Promise.race([timeoutPromise, secondChunkPromise]);
     expect(raceResult).toBe("timeout"); // チャンクではなくタイムアウトが先に発生
 
-    // 外側のPromiseを解決
+    // idleTimeoutより長く待ってから外側のPromiseを解決（2つの別々のチャンクになるように）
+    await new Promise((resolve) => setTimeout(resolve, 150));
     resolveOuter("Outer data second");
 
     // 次のチャンク: 両方が一度に解決される（内側のPromiseは既に解決済み）

@@ -1,8 +1,7 @@
-import type { RerenderSignal } from "@disact/engine";
 import { getCurrentContext } from "@disact/engine";
 
-export type RerenderSignalContext = {
-  __rerenderSignal?: RerenderSignal;
+export type RerenderContext = {
+  __requestRerender?: () => void;
   [key: string]: unknown;
 };
 
@@ -10,7 +9,7 @@ export type RerenderSignalContext = {
  * 再レンダリングをトリガーする関数を取得するフック
  *
  * @returns 再レンダリングをトリガーする関数
- * @throws コンテキストに__rerenderSignalが存在しない場合
+ * @throws コンテキストに__requestRerenderが存在しない場合
  *
  * @example
  * ```tsx
@@ -27,13 +26,13 @@ export type RerenderSignalContext = {
  * ```
  */
 export const useRerender = (): (() => void) => {
-  const context = getCurrentContext<RerenderSignalContext>();
+  const context = getCurrentContext<RerenderContext>();
 
-  if (!context.__rerenderSignal) {
+  if (!context.__requestRerender) {
     throw new Error(
-      "useRerender requires __rerenderSignal in render context.",
+      "useRerender requires __requestRerender in render context.",
     );
   }
 
-  return context.__rerenderSignal.requestRerender;
+  return context.__requestRerender;
 };

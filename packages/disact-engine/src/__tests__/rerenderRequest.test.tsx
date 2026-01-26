@@ -5,7 +5,6 @@ import { renderToReadableStream } from "../render";
 import { getCurrentContext } from "../context";
 import type { RenderLifecycleHelpers } from "../render";
 import type { RenderResult, DisactElement } from "../element";
-import type { RerenderSignal } from "../rerenderSignal";
 
 /**
  * ReadableStreamから全てのチャンクを読み取る
@@ -24,7 +23,7 @@ const readAllChunks = async (stream: ReadableStream<RenderResult>): Promise<Rend
 };
 
 type RerenderContext = {
-  __rerenderSignal?: RerenderSignal;
+  __requestRerender?: () => void;
   [key: string]: unknown;
 };
 
@@ -43,10 +42,12 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初のpostRenderでのみ再レンダリング
             if (postRenderCount === 1) {
+              // idleTimeoutより長く待ってから次のタスクをキュー
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
@@ -73,16 +74,18 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          preRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+          preRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
             preRenderCount++;
             // 2回目のpreRenderでのみ再レンダリング（初回は再レンダリングトリガー前なので）
             if (preRenderCount === 2) {
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
-          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
             // 初回のpostRenderで再レンダリングをトリガー
             if (renderCount === 1) {
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
@@ -109,10 +112,11 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRenderCycle: ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRenderCycle: async ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCycleCount++;
             // 最初のpostRenderCycleでのみ再レンダリング
             if (postRenderCycleCount === 1) {
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
@@ -128,7 +132,7 @@ describe("requestRerender", () => {
   });
 
   describe("コンテキストからの直接アクセス", () => {
-    it("コンテキストから__rerenderSignalを取得してrequestRerenderを呼び出せる", async () => {
+    it("コンテキストから__requestRerenderを取得してrequestRerenderを呼び出せる", async () => {
       let renderCount = 0;
       let postRenderCount = 0;
 
@@ -136,8 +140,8 @@ describe("requestRerender", () => {
         renderCount++;
         const context = getCurrentContext<RerenderContext>();
 
-        // コンテキストに__rerenderSignalが存在することを確認
-        expect(context.__rerenderSignal).toBeDefined();
+        // コンテキストに__requestRerenderが存在することを確認
+        expect(context.__requestRerender).toBeDefined();
 
         return <div>{`Render count: ${renderCount}`}</div>;
       };
@@ -146,10 +150,11 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初のpostRenderでのみ再レンダリング
             if (postRenderCount === 1) {
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
@@ -161,26 +166,6 @@ describe("requestRerender", () => {
       expect(renderCount).toBe(2);
       expect(postRenderCount).toBe(2);
       expect(chunks).toHaveLength(2);
-    });
-
-    it("コンテキストにアクセスして再レンダリング状態を確認できる", async () => {
-      let shouldRerenderAfterInitial = false;
-
-      const Component = (): DisactElement => {
-        const context = getCurrentContext<RerenderContext>();
-
-        if (context.__rerenderSignal) {
-          shouldRerenderAfterInitial = context.__rerenderSignal.shouldRerender();
-        }
-
-        return <div>Test</div>;
-      };
-
-      const stream = renderToReadableStream(<Component />, {});
-      await readAllChunks(stream);
-
-      // 初回レンダリング後は再レンダリング要求がないのでfalse
-      expect(shouldRerenderAfterInitial).toBe(false);
     });
   });
 
@@ -198,10 +183,11 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初の3回は再レンダリング
             if (postRenderCount < 3) {
+              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },

@@ -51,10 +51,11 @@ describe("useRerender", () => {
       element,
       {},
       {
-        postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+        postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
           postRenderCount++;
           // 最初のpostRenderでのみ再レンダリング
           if (postRenderCount === 1) {
+            await new Promise((resolve) => setTimeout(resolve, 150));
             requestRerender();
           }
         },

@@ -12,5 +12,3 @@ export { renderToReadableStream } from "./render";
 export type { RenderLifecycleCallbacks, RenderLifecycleHelpers } from "./render";
 export { use } from "./thenable";
 export { getCurrentContext, runInContext } from "./context";
-export type { RerenderSignal } from "./rerenderSignal";
-export { createRerenderSignal } from "./rerenderSignal";
