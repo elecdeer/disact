@@ -986,22 +986,22 @@ describe("Suspense機能", () => {
     // 内側のPromiseを先に解決
     resolveInner("Inner data first");
 
-    // 内側だけが解決されても、外側がまだ未解決なのでチャンクは送信されない
-    // Promise.raceでタイムアウトを使って確認
-    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve("timeout"), 50));
-    const secondChunkPromise = reader.read().then((chunk) => ({ type: "chunk", chunk }));
-
-    const raceResult = await Promise.race([timeoutPromise, secondChunkPromise]);
-    expect(raceResult).toBe("timeout"); // チャンクではなくタイムアウトが先に発生
-
-    // idleTimeoutより長く待ってから外側のPromiseを解決（2つの別々のチャンクになるように）
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    resolveOuter("Outer data second");
-
-    // 次のチャンク: 両方が一度に解決される（内側のPromiseは既に解決済み）
+    // 次のチャンク: まだ外側は解決されていないので、外側のfallbackが継続
     const secondChunk = await reader.read();
     expect(secondChunk.done).toBe(false);
     expect(secondChunk.value).toEqual({
+      type: "text",
+      content: "Outer loading...",
+    });
+
+    // 外側のPromiseを解決
+    resolveOuter("Outer data second");
+
+    // 最後のチャンク: 両方が解決
+    const thirdChunk = await reader.read();
+
+    expect(thirdChunk.done).toBe(false);
+    expect(thirdChunk.value).toEqual({
       type: "intrinsic",
       name: "section",
       props: { className: "outer-resolved" },

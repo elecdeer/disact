@@ -29,9 +29,7 @@ export const useRerender = (): (() => void) => {
   const context = getCurrentContext<RerenderContext>();
 
   if (!context.__requestRerender) {
-    throw new Error(
-      "useRerender requires __requestRerender in render context.",
-    );
+    throw new Error("useRerender requires __requestRerender in render context.");
   }
 
   return context.__requestRerender;

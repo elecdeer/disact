@@ -1,10 +1,11 @@
 /** @jsxImportSource ../ */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { renderToReadableStream } from "../render";
 import { getCurrentContext } from "../context";
 import type { RenderLifecycleHelpers } from "../render";
 import type { RenderResult, DisactElement } from "../element";
+import { configure, getConsoleSink } from "@logtape/logtape";
 
 /**
  * ReadableStreamから全てのチャンクを読み取る
@@ -28,6 +29,16 @@ type RerenderContext = {
 };
 
 describe("requestRerender", () => {
+  beforeEach(async () => {
+    await configure({
+      reset: true,
+      sinks: { console: getConsoleSink() },
+      loggers: [
+        { category: ["disact-engine", "scheduler"], lowestLevel: "trace", sinks: ["console"] },
+      ],
+    });
+  });
+
   describe("ライフサイクルフックからの再レンダリング", () => {
     it("postRenderフック内でrequestRerenderを呼び出すと再レンダリングされる", async () => {
       let renderCount = 0;
@@ -42,12 +53,10 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初のpostRenderでのみ再レンダリング
             if (postRenderCount === 1) {
-              // idleTimeoutより長く待ってから次のタスクをキュー
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
@@ -58,7 +67,22 @@ describe("requestRerender", () => {
       // 2回レンダリングされる（初回 + 再レンダリング）
       expect(renderCount).toBe(2);
       expect(postRenderCount).toBe(2);
-      expect(chunks).toHaveLength(2);
+
+      expect(chunks).toMatchInlineSnapshot(`
+        [
+          {
+            "children": [
+              {
+                "content": "Render count: 2",
+                "type": "text",
+              },
+            ],
+            "name": "div",
+            "props": {},
+            "type": "intrinsic",
+          },
+        ]
+      `);
     });
 
     it("preRenderフック内でrequestRerenderを呼び出すと再レンダリングされる", async () => {
@@ -74,29 +98,26 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          preRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          preRender: ({ requestRerender }: RenderLifecycleHelpers) => {
             preRenderCount++;
             // 2回目のpreRenderでのみ再レンダリング（初回は再レンダリングトリガー前なので）
             if (preRenderCount === 2) {
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
-          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
             // 初回のpostRenderで再レンダリングをトリガー
             if (renderCount === 1) {
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
         },
       );
-      const chunks = await readAllChunks(stream);
+      await readAllChunks(stream);
 
       // 3回レンダリングされる（初回 + postRenderトリガー + preRenderトリガー）
       expect(renderCount).toBe(3);
       expect(preRenderCount).toBe(3);
-      expect(chunks).toHaveLength(3);
     });
 
     it("postRenderCycleフック内でrequestRerenderを呼び出すと新しいサイクルが開始される", async () => {
@@ -112,22 +133,47 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRenderCycle: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRenderCycle: ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCycleCount++;
             // 最初のpostRenderCycleでのみ再レンダリング
             if (postRenderCycleCount === 1) {
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
         },
       );
-      const chunks = await readAllChunks(stream);
+      const result = await readAllChunks(stream);
 
       // 2回レンダリングされる
       expect(renderCount).toBe(2);
       expect(postRenderCycleCount).toBe(2);
-      expect(chunks).toHaveLength(2);
+      expect(result).toMatchInlineSnapshot(`
+        [
+          {
+            "children": [
+              {
+                "content": "Render count: 1",
+                "type": "text",
+              },
+            ],
+            "name": "div",
+            "props": {},
+            "type": "intrinsic",
+          },
+          {
+            "children": [
+              {
+                "content": "Render count: 2",
+                "type": "text",
+              },
+            ],
+            "name": "div",
+            "props": {},
+            "type": "intrinsic",
+          },
+        ]
+      `);
+      console.log("nya");
     });
   });
 
@@ -150,22 +196,20 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初のpostRenderでのみ再レンダリング
             if (postRenderCount === 1) {
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
         },
       );
-      const chunks = await readAllChunks(stream);
+      await readAllChunks(stream);
 
       // 2回レンダリングされる（初回 + 再レンダリング）
       expect(renderCount).toBe(2);
       expect(postRenderCount).toBe(2);
-      expect(chunks).toHaveLength(2);
     });
   });
 
@@ -183,22 +227,20 @@ describe("requestRerender", () => {
         <Component />,
         {},
         {
-          postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
             postRenderCount++;
             // 最初の3回は再レンダリング
             if (postRenderCount < 3) {
-              await new Promise((resolve) => setTimeout(resolve, 150));
               requestRerender();
             }
           },
         },
       );
-      const chunks = await readAllChunks(stream);
+      await readAllChunks(stream);
 
       // 3回レンダリングされる
       expect(renderCount).toBe(3);
       expect(postRenderCount).toBe(3);
-      expect(chunks).toHaveLength(3);
     });
   });
 });

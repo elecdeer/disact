@@ -61,9 +61,7 @@ export const renderToReadableStream = <Context>(
             // 無限ループ防止チェック
             rerenderCount++;
             if (rerenderCount > MAX_RERENDER_WITHOUT_COMMIT) {
-              throw new Error(
-                `Maximum rerender count (${MAX_RERENDER_WITHOUT_COMMIT}) exceeded`,
-              );
+              throw new Error(`Maximum rerender count (${MAX_RERENDER_WITHOUT_COMMIT}) exceeded`);
             }
 
             // preRenderフック
@@ -98,7 +96,10 @@ export const renderToReadableStream = <Context>(
               await callbacks.postRenderCycle(helpers);
             }
             logger.info("Render stream completed");
-            controller.close();
+
+            if (scheduler.pendingCount() === 0) {
+              controller.close();
+            }
           },
           onError: (error) => {
             logger.error("Render task failed", { error });

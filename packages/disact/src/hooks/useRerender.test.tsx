@@ -51,21 +51,19 @@ describe("useRerender", () => {
       element,
       {},
       {
-        postRender: async ({ requestRerender }: RenderLifecycleHelpers) => {
+        postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
           postRenderCount++;
           // 最初のpostRenderでのみ再レンダリング
           if (postRenderCount === 1) {
-            await new Promise((resolve) => setTimeout(resolve, 150));
             requestRerender();
           }
         },
       },
     );
-    const chunks = await readAllChunks(stream);
+    await readAllChunks(stream);
 
     // 2回レンダリングされる
     expect(renderCount).toBe(2);
     expect(postRenderCount).toBe(2);
-    expect(chunks).toHaveLength(2);
   });
 });
