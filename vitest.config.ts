@@ -16,6 +16,7 @@ export default defineConfig({
         test: {
           name: "disact-engine",
           root: "./packages/disact-engine",
+          setupFiles: ["./src/__tests__/setup.ts"],
           typecheck: {
             enabled: true,
           },

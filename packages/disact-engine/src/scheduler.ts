@@ -101,7 +101,7 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
    */
   const processQueue = async (): Promise<void> => {
     if (isProcessing || state === "disposed") {
-      logger.trace("processQueue skipped", { isProcessing, state });
+      logger.trace("processQueue already started, skipping", { isProcessing, state });
       return;
     }
 

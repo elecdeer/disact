@@ -26,9 +26,10 @@
     "test": "vitest --project disact-engine run"
   },
   "dependencies": {
-    "@logtape/logtape": "catalog:"
+    "@logtape/logtape": "^2.0.2"
   },
   "devDependencies": {
+    "@logtape/pretty": "^2.0.2",
     "@monorepo/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "ts-dedent": "catalog:"

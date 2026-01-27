@@ -127,9 +127,12 @@ importers:
   packages/disact-engine:
     dependencies:
       '@logtape/logtape':
-        specifier: 'catalog:'
-        version: 1.3.5
+        specifier: ^2.0.2
+        version: 2.0.2
     devDependencies:
+      '@logtape/pretty':
+        specifier: ^2.0.2
+        version: 2.0.2(@logtape/logtape@2.0.2)
       '@monorepo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -539,10 +542,18 @@ packages:
   '@logtape/logtape@1.3.5':
     resolution: {integrity: sha512-G+MxWB7Tbv/2764519+Cp6rKXUdRbe/GiRwTvlm/Wv/sNsiquRnx9Hzr9eXaIpAYLT4PrBlkthjJ4gmqdSPrFg==}
 
+  '@logtape/logtape@2.0.2':
+    resolution: {integrity: sha512-cveUBLbCMFkvkLycP/2vNWvywl47JcJbazHIju94/QNGboZ/jyYAgZIm0ZXezAOx3eIz8OG1EOZ5CuQP3+2FQg==}
+
   '@logtape/pretty@1.3.5':
     resolution: {integrity: sha512-b554wA36+jqMhorB2AVb7vmjhIryGUFtPlv0GBEig3eY8Jf0rSunVitReDXfO3s0iG4aqFdvAXQ1WfMllXMqaA==}
     peerDependencies:
       '@logtape/logtape': ^1.3.5
+
+  '@logtape/pretty@2.0.2':
+    resolution: {integrity: sha512-WMKoHuaEZvJgDeciIM/OL+joDDlheuoSpkfJOuKncdim7eV6GfIh0BUxLt0Td4JJsljzt5dAttxaX0kXqE0N9Q==}
+    peerDependencies:
+      '@logtape/logtape': ^2.0.2
 
   '@napi-rs/wasm-runtime@1.1.1':
     resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
@@ -1998,9 +2009,15 @@ snapshots:
 
   '@logtape/logtape@1.3.5': {}
 
+  '@logtape/logtape@2.0.2': {}
+
   '@logtape/pretty@1.3.5(@logtape/logtape@1.3.5)':
     dependencies:
       '@logtape/logtape': 1.3.5
+
+  '@logtape/pretty@2.0.2(@logtape/logtape@2.0.2)':
+    dependencies:
+      '@logtape/logtape': 2.0.2
 
   '@napi-rs/wasm-runtime@1.1.1':
     dependencies:

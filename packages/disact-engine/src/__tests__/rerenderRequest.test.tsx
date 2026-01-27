@@ -1,11 +1,10 @@
 /** @jsxImportSource ../ */
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToReadableStream } from "../render";
 import { getCurrentContext } from "../context";
 import type { RenderLifecycleHelpers } from "../render";
 import type { RenderResult, DisactElement } from "../element";
-import { configure, getConsoleSink } from "@logtape/logtape";
 
 /**
  * ReadableStreamから全てのチャンクを読み取る
@@ -29,16 +28,6 @@ type RerenderContext = {
 };
 
 describe("requestRerender", () => {
-  beforeEach(async () => {
-    await configure({
-      reset: true,
-      sinks: { console: getConsoleSink() },
-      loggers: [
-        { category: ["disact-engine", "scheduler"], lowestLevel: "trace", sinks: ["console"] },
-      ],
-    });
-  });
-
   describe("ライフサイクルフックからの再レンダリング", () => {
     it("postRenderフック内でrequestRerenderを呼び出すと再レンダリングされる", async () => {
       let renderCount = 0;
@@ -173,7 +162,6 @@ describe("requestRerender", () => {
           },
         ]
       `);
-      console.log("nya");
     });
   });
 
