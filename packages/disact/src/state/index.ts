@@ -5,8 +5,8 @@ export { createDefaultSerializer } from "./serializer";
 export type { Serializer } from "./serializer";
 
 export type {
-	EmbedStateContext,
-	EmbedStateReducer,
-	ReducerEntry,
-	TriggeredEmbedState,
+  EmbedStateContext,
+  EmbedStateReducer,
+  ReducerEntry,
+  TriggeredEmbedState,
 } from "./embedStateContext";

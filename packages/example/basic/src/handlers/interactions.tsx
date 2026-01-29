@@ -9,6 +9,7 @@ import {
   createDisactApp,
   createSessionFromApplicationCommandInteraction,
   createSessionFromMessageComponentInteraction,
+  useEmbedState,
   useInteraction,
 } from "disact";
 import type {
@@ -97,6 +98,12 @@ const DemoComponent = ({ title }: { title: string }) => {
     });
   });
 
+  const [count, actions] = useEmbedState(0, {
+    increment: (prev) => prev + 1,
+    decrement: (prev) => prev - 1,
+    reset: () => 0,
+  });
+
   return (
     <Components>
       <Section
@@ -108,19 +115,20 @@ const DemoComponent = ({ title }: { title: string }) => {
       >
         <TextDisplay>✨ {title}</TextDisplay>
         <TextDisplay>disactを使用してDiscord Message ComponentsをJSXで記述しています！</TextDisplay>
+        <TextDisplay>カウント: {`${count}`}</TextDisplay>
       </Section>
 
       <Separator />
 
       <ActionRow>
-        <Button customId="button_primary" style="primary">
-          Primary Button
+        <Button customId={actions.increment} style="primary">
+          +1
         </Button>
-        <Button customId="button_success" style="success">
-          Success Button
+        <Button customId={actions.decrement} style="success">
+          -1
         </Button>
-        <Button customId="button_danger" style="danger">
-          Danger Button
+        <Button customId={actions.reset} style="danger">
+          Reset
         </Button>
       </ActionRow>
 

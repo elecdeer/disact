@@ -3,10 +3,7 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import type {
-  APIInteraction,
-  APIMessageComponentInteraction,
-} from "discord-api-types/v10";
+import type { APIInteraction, APIMessageComponentInteraction } from "discord-api-types/v10";
 import { InteractionType } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import type { InteractionCallback } from "../hooks/useInteraction";
