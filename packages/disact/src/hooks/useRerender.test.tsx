@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import { renderToReadableStream } from "@disact/engine";
-import type { RenderResult, RenderLifecycleHelpers } from "@disact/engine";
+import type { RenderResult } from "@disact/engine";
 import { useRerender } from "./useRerender";
 
 /**
@@ -37,32 +37,71 @@ describe("useRerender", () => {
     expect(rerenderFn).toBeInstanceOf(Function);
   });
 
-  it("postRenderフック内で再レンダリングをトリガーできる", async () => {
+  it("コンポーネント内で useRerender を呼び出せる", async () => {
     let renderCount = 0;
-    let postRenderCount = 0;
 
     const Component = () => {
+      const rerender = useRerender();
+
       renderCount++;
+      if (renderCount < 3) {
+        // 2回まで再レンダリングをトリガー
+        rerender();
+      }
+
       return `Render count: ${renderCount}`;
     };
 
-    const stream = renderToReadableStream(
-      <Component />,
-      {},
-      {
-        postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
-          postRenderCount++;
-          // 最初のpostRenderでのみ再レンダリング
-          if (postRenderCount === 1) {
-            requestRerender();
-          }
-        },
-      },
-    );
-    await readAllChunks(stream);
+    const stream = renderToReadableStream(<Component />, {});
+    const chunks = await readAllChunks(stream);
 
-    // 2回レンダリングされる
+    expect(renderCount).toBe(3);
+    expect(chunks.at(-1)).toEqual({
+      type: "text",
+      content: "Render count: 3",
+    });
+    expect(chunks).toMatchInlineSnapshot(`
+      [
+        {
+          "content": "Render count: 3",
+          "type": "text",
+        },
+      ]
+    `);
+  });
+
+  it("1レンダリング中に複数回 useRerender を呼び出しても1回の再レンダリングにまとめられる", async () => {
+    let renderCount = 0;
+
+    const Component = () => {
+      const rerender = useRerender();
+
+      renderCount++;
+      if (renderCount === 1) {
+        // 最初のレンダリング中に複数回再レンダリングをトリガー
+        rerender();
+        rerender();
+        rerender();
+      }
+
+      return `Render count: ${renderCount}`;
+    };
+
+    const stream = renderToReadableStream(<Component />, {});
+    const chunks = await readAllChunks(stream);
+
     expect(renderCount).toBe(2);
-    expect(postRenderCount).toBe(2);
+    expect(chunks.at(-1)).toEqual({
+      type: "text",
+      content: "Render count: 2",
+    });
+    expect(chunks).toMatchInlineSnapshot(`
+      [
+        {
+          "content": "Render count: 2",
+          "type": "text",
+        },
+      ]
+    `);
   });
 });
