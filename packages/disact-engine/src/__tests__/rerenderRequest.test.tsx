@@ -230,5 +230,34 @@ describe("requestRerender", () => {
       expect(renderCount).toBe(3);
       expect(postRenderCount).toBe(3);
     });
+
+    it("一回のレンダリング中に複数回requestRerenderを呼び出しても1回の再レンダリングにまとめられる", async () => {
+      let renderCount = 0;
+
+      const Component = (): DisactElement => {
+        renderCount++;
+        return <div>{`Render count: ${renderCount}`}</div>;
+      };
+
+      const stream = renderToReadableStream(
+        <Component />,
+        {},
+        {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+            // 一回のpostRenderで複数回再レンダリングをトリガー
+
+            if (renderCount === 1) {
+              requestRerender();
+              requestRerender();
+              requestRerender();
+            }
+          },
+        },
+      );
+      await readAllChunks(stream);
+
+      // 2回レンダリングされる（初回 + 1回の再レンダリング）
+      expect(renderCount).toBe(2);
+    });
   });
 });

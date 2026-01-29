@@ -1,7 +1,6 @@
 import { runInContext } from "./context";
 import type { DisactElement, DisactNode, RenderedElement, RenderResult } from "./element";
 import { createScheduler } from "./scheduler";
-import type { Scheduler } from "./scheduler";
 import { getEngineLogger } from "./utils/logger";
 
 const logger = getEngineLogger("render");
@@ -43,9 +42,10 @@ export const renderToReadableStream = <Context>(
         let rerenderCount = 0;
 
         // requestRerender関数を作成（schedulerへの参照をクロージャでキャプチャ）
-        let schedulerRef: Scheduler | null = null;
+        let rerenderRequested = false;
         const requestRerender = () => {
-          schedulerRef?.queue();
+          rerenderRequested = true;
+          logger.debug("Rerender requested");
         };
 
         const helpers: RenderLifecycleHelpers = { requestRerender };
@@ -58,6 +58,8 @@ export const renderToReadableStream = <Context>(
 
         const scheduler = createScheduler({
           task: async () => {
+            rerenderRequested = false;
+
             // 無限ループ防止チェック
             rerenderCount++;
             if (rerenderCount > MAX_RERENDER_WITHOUT_COMMIT) {
@@ -81,6 +83,12 @@ export const renderToReadableStream = <Context>(
             if (callbacks?.postRender) {
               await callbacks.postRender(helpers);
             }
+
+            // 再レンダリング要求があれば再度キューに追加
+            if (rerenderRequested) {
+              logger.debug("Rerendering due to requestRerender called");
+              scheduler.queue();
+            }
           },
           idleTimeout: 100,
           onIdle: async () => {
@@ -92,12 +100,18 @@ export const renderToReadableStream = <Context>(
           },
           onFinish: async () => {
             // postRenderCycleフック
+            rerenderRequested = false;
             if (callbacks?.postRenderCycle) {
               await callbacks.postRenderCycle(helpers);
             }
-            logger.info("Render stream completed");
+            if (rerenderRequested) {
+              // 再レンダリング要求があれば再度キューに追加
+              logger.debug("Rerendering due to requestRerender called in postRenderCycle");
+              scheduler.queue();
+            }
 
             if (scheduler.pendingCount() === 0) {
+              logger.info("Render stream completed");
               controller.close();
             }
           },
@@ -107,8 +121,6 @@ export const renderToReadableStream = <Context>(
             return "stop";
           },
         });
-
-        schedulerRef = scheduler;
 
         // 初回レンダリングをキュー
         scheduler.queue();
