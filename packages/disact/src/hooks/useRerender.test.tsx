@@ -1,8 +1,9 @@
+/** @jsxImportSource .. */
+
 import { describe, expect, it } from "vitest";
 import { renderToReadableStream } from "@disact/engine";
 import type { RenderResult, RenderLifecycleHelpers } from "@disact/engine";
 import { useRerender } from "./useRerender";
-import { jsx } from "@disact/engine";
 
 /**
  * ReadableStreamから全てのチャンクを読み取る
@@ -29,8 +30,7 @@ describe("useRerender", () => {
       return "Test";
     };
 
-    const element = jsx(Component, {}, undefined, false);
-    const stream = renderToReadableStream(element, {});
+    const stream = renderToReadableStream(<Component />, {});
     await readAllChunks(stream);
 
     // useRerender()は関数を返す
@@ -46,9 +46,8 @@ describe("useRerender", () => {
       return `Render count: ${renderCount}`;
     };
 
-    const element = jsx(Component, {}, undefined, false);
     const stream = renderToReadableStream(
-      element,
+      <Component />,
       {},
       {
         postRender: ({ requestRerender }: RenderLifecycleHelpers) => {

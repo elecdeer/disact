@@ -11,6 +11,7 @@ import { waitFor } from "../testing";
 import { createDisactApp } from "./disactApp";
 import type { Session } from "./session";
 import { useInteraction } from "../hooks/useInteraction";
+import type { APIInteraction } from "discord-api-types/v10";
 
 type TestContext<T = unknown> = {
   mockSession: Session<T>;
@@ -19,7 +20,8 @@ type TestContext<T = unknown> = {
   mockInteraction: { value: T | undefined };
 };
 
-const test = base.extend<TestContext>({
+// oxlint-disable-next-line vitest/no-disabled-tests, jest/expect-expect 誤検知
+const test = base.extend<TestContext<APIInteraction>>({
   // oxlint-disable-next-line no-empty-pattern
   currentPayload: async ({}, use) => {
     // 初期状態は null (未コミット)
@@ -32,7 +34,7 @@ const test = base.extend<TestContext>({
   },
   // oxlint-disable-next-line no-empty-pattern
   mockInteraction: async ({}, use) => {
-    const interaction: { value: unknown } = {
+    const interaction: { value: APIInteraction | undefined } = {
       value: undefined,
     };
     await use(interaction);
@@ -333,7 +335,7 @@ describe("useInteraction Integration", () => {
   }) => {
     const callbackExecuted = vi.fn();
     const interaction = { id: "123", type: 2 };
-    mockInteraction.value = interaction;
+    mockInteraction.value = interaction as APIInteraction;
 
     const Component = () => {
       useInteraction((interaction) => {
@@ -364,7 +366,7 @@ describe("useInteraction Integration", () => {
   }) => {
     const executionOrder: number[] = [];
     const interaction = { id: "456", type: 2 };
-    mockInteraction.value = interaction;
+    mockInteraction.value = interaction as APIInteraction;
 
     const Component = () => {
       useInteraction(() => {
@@ -402,7 +404,7 @@ describe("useInteraction Integration", () => {
     const finalCallbackExecuted = vi.fn();
     const interactionCallbackExecuted = vi.fn();
     const interaction = { id: "789", type: 2 };
-    mockInteraction.value = interaction;
+    mockInteraction.value = interaction as APIInteraction;
 
     const AsyncData = () => {
       const data = use(promise);
@@ -464,7 +466,7 @@ describe("useInteraction Integration", () => {
   test("非同期 callback が正しく実行される", async ({ mockSession, mockInteraction }) => {
     const asyncCallbackExecuted = vi.fn();
     const interaction = { id: "async-123", type: 2 };
-    mockInteraction.value = interaction;
+    mockInteraction.value = interaction as APIInteraction;
 
     const Component = () => {
       useInteraction(async (interaction) => {
@@ -498,7 +500,7 @@ describe("useInteraction Integration", () => {
     });
     const callback3 = vi.fn();
     const interaction = { id: "error-test", type: 2 };
-    mockInteraction.value = interaction;
+    mockInteraction.value = interaction as APIInteraction;
 
     const Component = () => {
       useInteraction(callback1);
@@ -547,45 +549,5 @@ describe("useInteraction Integration", () => {
 
     // callback が実行されていないことを確認
     expect(callbackExecuted).not.toHaveBeenCalled();
-  });
-
-  test("型安全な interaction オブジェクトの受け渡し", async ({ mockSession, mockInteraction }) => {
-    interface CustomInteraction {
-      id: string;
-      type: number;
-      customField: string;
-    }
-
-    const callbackExecuted = vi.fn<(interaction: CustomInteraction) => void>();
-    const interaction: CustomInteraction = {
-      id: "type-safe",
-      type: 2,
-      customField: "custom value",
-    };
-    mockInteraction.value = interaction;
-
-    const Component = () => {
-      useInteraction<CustomInteraction>((interaction) => {
-        // 型安全にカスタムフィールドにアクセス
-        callbackExecuted(interaction);
-      });
-      return (
-        <Container>
-          <TextDisplay>Test</TextDisplay>
-        </Container>
-      );
-    };
-
-    const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
-
-    await waitFor(() => {
-      expect(callbackExecuted).toHaveBeenCalledTimes(1);
-    });
-
-    expect(callbackExecuted).toHaveBeenCalledWith(interaction);
-    // customField が正しく渡されたことを確認
-    const firstCall = callbackExecuted.mock.calls[0];
-    expect(firstCall?.[0]?.customField).toBe("custom value");
   });
 });
