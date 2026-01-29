@@ -54,3 +54,5 @@ export type { Session } from "./app/session";
 export { useInteraction } from "./hooks";
 export type { InteractionCallback, InteractionCallbacksContext } from "./hooks";
 export { useRerender } from "./hooks/useRerender";
+export { useEmbedState } from "./hooks";
+export type { Reducers, Actions, UseEmbedStateOptions } from "./hooks";

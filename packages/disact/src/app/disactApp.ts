@@ -3,9 +3,15 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import type { APIInteraction } from "discord-api-types/v10";
+import type {
+  APIInteraction,
+  APIMessageComponentInteraction,
+} from "discord-api-types/v10";
+import { InteractionType } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import type { InteractionCallback } from "../hooks/useInteraction";
+import { isDisactCustomId, parseCustomId } from "../state/customId";
+import type { EmbedStateContext } from "../state/embedStateContext";
 import { getDisactLogger } from "../utils/logger";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
@@ -23,10 +29,38 @@ export const createDisactApp = (): DisactApp => {
     // Interactionコールバック配列を用意
     const interactionCallbacks: InteractionCallback<T>[] = [];
 
-    // Contextに配列を含める
-    const context = {
+    // Contextに配列を含める（EmbedState用のフィールドも追加）
+    const context: EmbedStateContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
       __interactionCallbacks: interactionCallbacks,
+      __embedStateIdCounter: 0,
+      __embedStateReducers: new Map(),
     };
+
+    // Message Component Interaction の場合、customId を解析
+    const interaction = session.getInteraction();
+    if (interaction && isMessageComponentInteraction(interaction)) {
+      const customId = interaction.data.custom_id;
+
+      if (isDisactCustomId(customId)) {
+        const parsed = parseCustomId(customId);
+        if (parsed) {
+          logger.debug("Disact customId detected", {
+            hookId: parsed.hookId,
+            action: parsed.action,
+          });
+
+          // トリガー情報をコンテキストに設定
+          context.__embedStateTriggered = {
+            hookId: parsed.hookId,
+            action: parsed.action,
+            prevState: parsed.prevState,
+          };
+
+          // interaction をコンテキストに設定（reducer 実行時に使用）
+          context.__embedStateInteraction = interaction;
+        }
+      }
+    }
 
     // ライフサイクルフックを定義
     const lifecycleCallbacks: RenderLifecycleCallbacks = {
@@ -34,6 +68,8 @@ export const createDisactApp = (): DisactApp => {
         // 各レンダリング前にcallback配列をクリア
         // 最終レンダリングのcallbackのみを保持するため
         interactionCallbacks.length = 0;
+        // hookId カウンターをリセット（再レンダリング時に同じ hookId を生成するため）
+        context.__embedStateIdCounter = 0;
       },
       postRenderCycle: async () => {
         // 全レンダリング完了後、callbackを実行
@@ -103,4 +139,18 @@ export const createDisactApp = (): DisactApp => {
   return {
     connect,
   };
+};
+
+/**
+ * Interaction が Message Component Interaction かどうかを判定
+ */
+const isMessageComponentInteraction = (
+  interaction: unknown,
+): interaction is APIMessageComponentInteraction => {
+  return (
+    typeof interaction === "object" &&
+    interaction !== null &&
+    "type" in interaction &&
+    (interaction as { type: number }).type === InteractionType.MessageComponent
+  );
 };
