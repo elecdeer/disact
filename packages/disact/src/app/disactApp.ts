@@ -29,7 +29,7 @@ export const createDisactApp = (): DisactApp => {
     // Contextに配列を含める（EmbedState用のフィールドも追加）
     const context: EmbedStateContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
       __interactionCallbacks: interactionCallbacks,
-      __embedStateIdCounter: 0,
+      __embedStateInstanceCounter: 0,
       __embedStateReducers: new Map(),
     };
 
@@ -42,13 +42,12 @@ export const createDisactApp = (): DisactApp => {
         const parsed = parseCustomId(customId);
         if (parsed) {
           logger.debug("Disact customId detected", {
-            hookId: parsed.hookId,
             action: parsed.action,
+            instanceId: parsed.instanceId,
           });
 
           // トリガー情報をコンテキストに設定
           context.__embedStateTriggered = {
-            hookId: parsed.hookId,
             action: parsed.action,
             prevState: parsed.prevState,
           };
@@ -65,8 +64,8 @@ export const createDisactApp = (): DisactApp => {
         // 各レンダリング前にcallback配列をクリア
         // 最終レンダリングのcallbackのみを保持するため
         interactionCallbacks.length = 0;
-        // hookId カウンターをリセット（再レンダリング時に同じ hookId を生成するため）
-        context.__embedStateIdCounter = 0;
+        // instance カウンターをリセット（再レンダリング時に同じ instanceId を生成するため）
+        context.__embedStateInstanceCounter = 0;
       },
       postRenderCycle: async () => {
         // 全レンダリング完了後、callbackを実行

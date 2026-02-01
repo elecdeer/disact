@@ -2,8 +2,8 @@ const MAGIC_PREFIX = "DSCT";
 const SEPARATOR = "|";
 
 export type ParsedCustomId = {
-  hookId: string;
   action: string;
+  instanceId: string;
   prevState: string; // シリアライズされた状態（デシリアライズは呼び出し側で行う）
 };
 
@@ -28,38 +28,45 @@ export const parseCustomId = (customId: string): ParsedCustomId | null => {
     return null;
   }
 
-  // DSCT|hookId|action|prevState
+  // DSCT|action#instanceId|prevState
   // prevState に | が含まれる可能性があるため、split の limit は使わない
   const withoutPrefix = customId.slice(MAGIC_PREFIX.length + SEPARATOR.length);
   const firstSep = withoutPrefix.indexOf(SEPARATOR);
-  const secondSep = withoutPrefix.indexOf(SEPARATOR, firstSep + 1);
 
-  if (firstSep === -1 || secondSep === -1) {
+  if (firstSep === -1) {
     return null;
   }
 
-  const hookId = withoutPrefix.slice(0, firstSep);
-  const action = withoutPrefix.slice(firstSep + 1, secondSep);
-  const prevState = withoutPrefix.slice(secondSep + 1);
+  const actionPart = withoutPrefix.slice(0, firstSep);
+  const prevState = withoutPrefix.slice(firstSep + 1);
 
-  return { hookId, action, prevState };
+  // action#instanceId を分割
+  const hashIndex = actionPart.indexOf("#");
+  if (hashIndex === -1) {
+    return null;
+  }
+
+  const action = actionPart.slice(0, hashIndex);
+  const instanceId = actionPart.slice(hashIndex + 1);
+
+  return { action, instanceId, prevState };
 };
 
 /**
  * customId を生成
  *
- * @param hookId - フック ID
  * @param action - アクション名
+ * @param instanceId - インスタンス ID
  * @param serializedPrevState - シリアライズされた前の状態
  * @returns 生成された customId
  * @throws 100 文字を超える場合
  */
 export const generateCustomId = (
-  hookId: string,
   action: string,
+  instanceId: string,
   serializedPrevState: string,
 ): string => {
-  const customId = [MAGIC_PREFIX, hookId, action, serializedPrevState].join(SEPARATOR);
+  const customId = `${MAGIC_PREFIX}${SEPARATOR}${action}#${instanceId}${SEPARATOR}${serializedPrevState}`;
 
   if (customId.length > 100) {
     throw new Error(

@@ -18,7 +18,6 @@ export type ReducerEntry<T = unknown> = {
  * クリックされた customId の情報
  */
 export type TriggeredEmbedState = {
-  hookId: string;
   action: string;
   prevState: string; // シリアライズされた状態
 };
@@ -27,10 +26,10 @@ export type TriggeredEmbedState = {
  * useEmbedState 用のコンテキスト型
  */
 export type EmbedStateContext = {
-  /** フック呼び出し順カウンター（hookId 生成用） */
-  __embedStateIdCounter?: number;
+  /** instance ID カウンター（グローバル採番用） */
+  __embedStateInstanceCounter?: number;
 
-  /** hookId → reducer 登録情報 */
+  /** action名 → reducer 登録情報 */
   __embedStateReducers?: Map<string, ReducerEntry>;
 
   /** クリックされた customId の情報（Message Component Interaction 時のみ） */
@@ -43,17 +42,17 @@ export type EmbedStateContext = {
 };
 
 /**
- * hookId を生成（呼び出し順でインクリメント）
+ * instance ID を生成（グローバルカウンター）
  *
  * @param context - コンテキスト
- * @returns 生成された hookId
+ * @returns 生成された instance ID
  */
-export const generateHookId = (context: EmbedStateContext): string => {
-  if (context.__embedStateIdCounter === undefined) {
-    context.__embedStateIdCounter = 0;
+export const generateInstanceId = (context: EmbedStateContext): string => {
+  if (context.__embedStateInstanceCounter === undefined) {
+    context.__embedStateInstanceCounter = 0;
   }
-  const id = context.__embedStateIdCounter;
-  context.__embedStateIdCounter++;
+  const id = context.__embedStateInstanceCounter;
+  context.__embedStateInstanceCounter++;
   return String(id);
 };
 
@@ -61,21 +60,29 @@ export const generateHookId = (context: EmbedStateContext): string => {
  * reducer をコンテキストに登録
  *
  * @param context - コンテキスト
- * @param hookId - フック ID
  * @param reducers - reducer 関数のマップ
  * @param serializer - シリアライザー
  */
 export const registerReducer = <T>(
   context: EmbedStateContext,
-  hookId: string,
   reducers: Record<string, EmbedStateReducer<T>>,
   serializer: Serializer<T>,
 ): void => {
   if (!context.__embedStateReducers) {
     context.__embedStateReducers = new Map();
   }
-  context.__embedStateReducers.set(hookId, {
-    reducers: reducers as Record<string, EmbedStateReducer<unknown>>,
-    serializer: serializer as Serializer<unknown>,
-  });
+
+  // 各action名をキーとして登録（後勝ち）
+  for (const actionName of Object.keys(reducers)) {
+    if (context.__embedStateReducers.has(actionName)) {
+      console.warn(`[useEmbedState] Action "${actionName}" is already registered. Overwriting.`);
+    }
+    context.__embedStateReducers.set(actionName, {
+      reducers: { [actionName]: reducers[actionName] } as Record<
+        string,
+        EmbedStateReducer<unknown>
+      >,
+      serializer: serializer as Serializer<unknown>,
+    });
+  }
 };

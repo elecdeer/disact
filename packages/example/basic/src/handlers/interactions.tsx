@@ -121,13 +121,13 @@ const DemoComponent = ({ title }: { title: string }) => {
       <Separator />
 
       <ActionRow>
-        <Button customId={actions.increment} style="primary">
+        <Button customId={actions.increment()} style="primary">
           +1
         </Button>
-        <Button customId={actions.decrement} style="success">
+        <Button customId={actions.decrement()} style="success">
           -1
         </Button>
-        <Button customId={actions.reset} style="danger">
+        <Button customId={actions.reset()} style="danger">
           Reset
         </Button>
       </ActionRow>
