@@ -9,8 +9,9 @@ import { TextDisplay } from "../components/core/TextDisplay/TextDisplay";
 import { useInteraction } from "../hooks/useInteraction";
 import { useEmbedState } from "../hooks/useEmbedState";
 import type { APIMessageComponentInteraction } from "discord-api-types/v10";
+import { ComponentType } from "discord-api-types/v10";
 import { testApp } from "./testApp";
-import { waitFor } from "./index";
+import { getByLabel, waitFor } from "./index";
 
 describe("testApp", () => {
   test("初回レンダリングで payload が設定される", async () => {
@@ -172,10 +173,10 @@ describe("testApp", () => {
       content: "Count: 0",
     });
 
-    // ボタンの customId を payload から取得
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const row = current.payload?.[0] as any;
-    const buttonCustomId = row?.components?.[1]?.components?.[0]?.custom_id as string;
+    // ボタンの customId をクエリ関数で取得
+    const incrementButton = getByLabel(current.payload, "+1", ComponentType.Button);
+    expect(incrementButton).toMatchObject({ label: "+1" });
+    const buttonCustomId = "custom_id" in incrementButton ? incrementButton.custom_id : "";
     expect(buttonCustomId).toMatch(/^DSCT\|/);
 
     // ボタンをクリック

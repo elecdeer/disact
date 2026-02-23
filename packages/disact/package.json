@@ -18,6 +18,10 @@
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.mts",
       "default": "./dist/jsx-dev-runtime.mjs"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.mts",
+      "default": "./dist/testing.mjs"
     }
   },
   "scripts": {
