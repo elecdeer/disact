@@ -51,10 +51,11 @@ export const renderToReadableStream = <Context>(
         const helpers: RenderLifecycleHelpers = { requestRerender };
 
         // コンテキストにrequestRerender関数を追加
-        const contextWithRerender = {
-          ...context,
-          __requestRerender: requestRerender,
-        };
+        // 別オブジェクトにしてはいけない
+        const contextWithRerender: Context & {
+          __requestRerender: () => void;
+        } = context as Context & { __requestRerender: () => void };
+        contextWithRerender.__requestRerender = requestRerender;
 
         const scheduler = createScheduler({
           task: async () => {
