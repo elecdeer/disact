@@ -1,13 +1,15 @@
 import { getCurrentContext } from "@disact/engine";
 import type { APIMessageComponentInteraction } from "discord-api-types/v10";
-import { generateCustomId } from "../state/customId";
+import { generateCustomId, isDisactCustomId, parseCustomId } from "../state/customId";
 import { createDefaultSerializer, type Serializer } from "../state/serializer";
 import {
   type EmbedStateContext,
   type EmbedStateReducer,
   generateInstanceId,
-  registerReducer,
 } from "../state/embedStateContext";
+import type { InteractionCallbacksContext } from "./useInteraction";
+import { useInteraction } from "./useInteraction";
+import { useRerender } from "./useRerender";
 
 /**
  * Reducers の型定義
@@ -57,7 +59,8 @@ export const useEmbedState = <T, R extends Reducers<T>>(
   reducers: R,
   options?: UseEmbedStateOptions<T>,
 ): [T, Actions<R>] => {
-  const context = getCurrentContext<EmbedStateContext>();
+  const context = getCurrentContext<EmbedStateContext & InteractionCallbacksContext>();
+  const rerender = useRerender();
 
   // シリアライザーを取得
   const serializer: Serializer<T> =
@@ -65,38 +68,44 @@ export const useEmbedState = <T, R extends Reducers<T>>(
       ? { serialize: options.serialize, deserialize: options.deserialize }
       : createDefaultSerializer<T>();
 
-  // reducer をコンテキストに登録
-  registerReducer(context, reducers, serializer);
+  // instanceId を生成（レンダリングごとに安定）
+  const instanceId = generateInstanceId(context);
 
-  // 現在の状態を決定
+  // 計算済みの状態があれば使用、なければ初期値
+  const computedStates = context.__embedStateComputedStates;
   let currentState: T;
-
-  const triggered = context.__embedStateTriggered;
-  if (triggered) {
-    // このアクションがトリガーされたか確認
-    const reducer = reducers[triggered.action];
-
-    if (reducer) {
-      // この useEmbedState のアクションがトリガーされた場合、reducer を実行
-      const prevState = serializer.deserialize(triggered.prevState);
-
-      // interaction を取得（context に設定されている必要がある）
-      const interaction = context.__embedStateInteraction as
-        | APIMessageComponentInteraction
-        | undefined;
-      if (!interaction) {
-        throw new Error("useEmbedState: interaction is required when triggered");
-      }
-
-      currentState = reducer(prevState, interaction);
-    } else {
-      // このフックのアクションではない場合は初期値を使用
-      currentState = initialValue;
-    }
+  if (computedStates?.has(instanceId)) {
+    currentState = computedStates.get(instanceId) as T;
   } else {
-    // トリガーされていない場合は初期値を使用
     currentState = initialValue;
   }
+
+  // useInteraction でコールバックを登録
+  useInteraction<APIMessageComponentInteraction>((interaction) => {
+    const customId = interaction.data.custom_id;
+    if (!isDisactCustomId(customId)) return;
+
+    const parsed = parseCustomId(customId);
+    if (!parsed) return;
+
+    // instanceId でこのフックのアクションか判定
+    if (parsed.instanceId !== instanceId) return;
+
+    const reducer = reducers[parsed.action];
+    if (!reducer) return;
+
+    const prevState = serializer.deserialize(parsed.prevState);
+    const nextState = reducer(prevState, interaction);
+
+    // 計算された状態を保存
+    if (!context.__embedStateComputedStates) {
+      context.__embedStateComputedStates = new Map();
+    }
+    context.__embedStateComputedStates.set(instanceId, nextState);
+
+    // 再レンダリングをトリガー
+    rerender();
+  });
 
   // Actions を生成（関数形式）
   const actions = {} as Actions<R>;
@@ -104,7 +113,6 @@ export const useEmbedState = <T, R extends Reducers<T>>(
 
   for (const actionName of Object.keys(reducers)) {
     (actions as Record<string, () => string>)[actionName] = () => {
-      const instanceId = generateInstanceId(context);
       return generateCustomId(actionName, instanceId, serializedState);
     };
   }

@@ -10,6 +10,7 @@ export type InteractionCallback<T = APIInteraction> = (interaction: T) => void |
  * Interactionコールバックを保持するContext型
  */
 export type InteractionCallbacksContext<T = APIInteraction> = {
+  __interaction?: T;
   __interactionCallbacks?: InteractionCallback<T>[];
   [key: string]: unknown;
 };
@@ -41,4 +42,26 @@ export const useInteraction = <T = APIInteraction>(callback: InteractionCallback
   }
 
   context.__interactionCallbacks.push(callback as InteractionCallback<unknown>);
+};
+
+/**
+ * 現在のInteractionオブジェクトを取得する
+ *
+ * @returns 現在のInteractionオブジェクト、または存在しない場合はundefined
+ * @throws レンダリングコンテキスト外で呼び出された場合
+ *
+ * @example
+ * ```tsx
+ * const MyComponent = () => {
+ *   const interaction = useCurrentInteraction<APIMessageComponentInteraction>();
+ *   if (interaction) {
+ *     console.log('Current interaction:', interaction.id);
+ *   }
+ *   return <Text>Hello</Text>;
+ * };
+ * ```
+ */
+export const useCurrentInteraction = <T = APIInteraction>(): T | undefined => {
+  const context = getCurrentContext<InteractionCallbacksContext<T>>();
+  return context.__interaction as T | undefined;
 };

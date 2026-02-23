@@ -3,11 +3,9 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import type { APIInteraction, APIMessageComponentInteraction } from "discord-api-types/v10";
-import { InteractionType } from "discord-api-types/v10";
+import type { APIInteraction } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
-import type { InteractionCallback } from "../hooks/useInteraction";
-import { isDisactCustomId, parseCustomId } from "../state/customId";
+import type { InteractionCallback, InteractionCallbacksContext } from "../hooks/useInteraction";
 import type { EmbedStateContext } from "../state/embedStateContext";
 import { getDisactLogger } from "../utils/logger";
 import { isDifferentPayloadElement } from "./diff";
@@ -26,36 +24,18 @@ export const createDisactApp = (): DisactApp => {
     // Interactionコールバック配列を用意
     const interactionCallbacks: InteractionCallback<T>[] = [];
 
+    // 現在の interaction を取得
+    const interaction = session.getInteraction();
+
     // Contextに配列を含める（EmbedState用のフィールドも追加）
-    const context: EmbedStateContext & { __interactionCallbacks: InteractionCallback<T>[] } = {
+    const context: EmbedStateContext & InteractionCallbacksContext<T> = {
       __interactionCallbacks: interactionCallbacks,
       __embedStateInstanceCounter: 0,
-      __embedStateReducers: new Map(),
     };
 
-    // Message Component Interaction の場合、customId を解析
-    const interaction = session.getInteraction();
-    if (interaction && isMessageComponentInteraction(interaction)) {
-      const customId = interaction.data.custom_id;
-
-      if (isDisactCustomId(customId)) {
-        const parsed = parseCustomId(customId);
-        if (parsed) {
-          logger.debug("Disact customId detected", {
-            action: parsed.action,
-            instanceId: parsed.instanceId,
-          });
-
-          // トリガー情報をコンテキストに設定
-          context.__embedStateTriggered = {
-            action: parsed.action,
-            prevState: parsed.prevState,
-          };
-
-          // interaction をコンテキストに設定（reducer 実行時に使用）
-          context.__embedStateInteraction = interaction;
-        }
-      }
+    // interaction が存在する場合はコンテキストに設定
+    if (interaction) {
+      context.__interaction = interaction;
     }
 
     // ライフサイクルフックを定義
@@ -120,7 +100,6 @@ export const createDisactApp = (): DisactApp => {
           });
           continue;
         }
-
         logger.info("Committing chunk to session", {
           chunkCount,
           isInitial: current === null,
@@ -131,22 +110,7 @@ export const createDisactApp = (): DisactApp => {
       logger.info("App connection completed", { totalChunks: chunkCount });
     })();
   };
-
   return {
     connect,
   };
-};
-
-/**
- * Interaction が Message Component Interaction かどうかを判定
- */
-const isMessageComponentInteraction = (
-  interaction: unknown,
-): interaction is APIMessageComponentInteraction => {
-  return (
-    typeof interaction === "object" &&
-    interaction !== null &&
-    "type" in interaction &&
-    (interaction as { type: number }).type === InteractionType.MessageComponent
-  );
 };

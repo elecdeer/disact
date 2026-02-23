@@ -6,14 +6,19 @@ import {
 } from "discord-api-types/v10";
 import { describe, expect, it } from "vitest";
 import type { EmbedStateContext } from "../state/embedStateContext";
+import type { InteractionCallbacksContext } from "./useInteraction";
+import type { RerenderContext } from "./useRerender";
 import { useEmbedState } from "./useEmbedState";
+
+type TestContext = EmbedStateContext & InteractionCallbacksContext & RerenderContext;
 
 describe("useEmbedState", () => {
   describe("初回レンダリング", () => {
     it("should return initialValue", () => {
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
       };
 
       const [count] = runInContext(context, () => {
@@ -26,9 +31,10 @@ describe("useEmbedState", () => {
     });
 
     it("should generate customId for each action", () => {
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
       };
 
       const [, actions] = runInContext(context, () => {
@@ -39,13 +45,14 @@ describe("useEmbedState", () => {
       });
 
       expect(actions.increment()).toBe("DSCT|increment#0|0");
-      expect(actions.decrement()).toBe("DSCT|decrement#1|0");
+      expect(actions.decrement()).toBe("DSCT|decrement#0|0");
     });
 
     it("should generate different instanceId for multiple calls", () => {
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
       };
 
       const result = runInContext(context, () => {
@@ -67,7 +74,7 @@ describe("useEmbedState", () => {
   });
 
   describe("トリガー時", () => {
-    it("should execute reducer when action matches", () => {
+    it("should execute reducer when action matches", async () => {
       // Mock interaction
       const interaction: APIMessageComponentInteraction = {
         type: InteractionType.MessageComponent,
@@ -77,47 +84,64 @@ describe("useEmbedState", () => {
         },
       } as APIMessageComponentInteraction;
 
-      const context: EmbedStateContext = {
+      let rerenderCalled = false;
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "increment",
-          prevState: "5",
+        __interactionCallbacks: [],
+        __requestRerender: () => {
+          rerenderCalled = true;
         },
-        __embedStateInteraction: interaction,
+        __interaction: interaction,
       };
 
-      const [count, actions] = runInContext(context, () => {
+      // 初回レンダリング
+      const [count1] = runInContext(context, () => {
         return useEmbedState(0, {
           increment: (prev) => prev + 1,
         });
       });
 
-      expect(count).toBe(6); // 5 + 1
-      expect(actions.increment()).toBe("DSCT|increment#0|6");
+      expect(count1).toBe(0); // initialValue
+
+      // useInteraction のコールバックを実行
+      for (const callback of context.__interactionCallbacks || []) {
+        await callback(interaction);
+      }
+
+      expect(rerenderCalled).toBe(true);
+      expect(context.__embedStateComputedStates?.get("0")).toBe(6); // 5 + 1
+
+      // 2回目のレンダリング（rerenderトリガー後）
+      context.__embedStateInstanceCounter = 0; // リセット
+      context.__interactionCallbacks = [];
+      const [count2] = runInContext(context, () => {
+        return useEmbedState(0, {
+          increment: (prev) => prev + 1,
+        });
+      });
+
+      expect(count2).toBe(6); // 計算済み状態
     });
 
-    it("should use initialValue when action does not match", () => {
+    it("should use initialValue when action does not match", async () => {
       // Mock interaction triggering action "decrement"
       const interaction: APIMessageComponentInteraction = {
         type: InteractionType.MessageComponent,
         data: {
-          custom_id: "DSCT|decrement#0|10",
+          custom_id: "DSCT|decrement#1|10",
           component_type: 2,
         },
       } as APIMessageComponentInteraction;
 
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "decrement",
-          prevState: "10",
-        },
-        __embedStateInteraction: interaction,
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
+        __interaction: interaction,
       };
 
-      const result = runInContext(context, () => {
+      // 初回レンダリング
+      const result1 = runInContext(context, () => {
         const [count1] = useEmbedState(0, {
           increment: (prev) => prev + 1,
         });
@@ -127,11 +151,35 @@ describe("useEmbedState", () => {
         return { count1, count2 };
       });
 
-      expect(result.count1).toBe(0); // initialValue (action does not match)
-      expect(result.count2).toBe(9); // 10 - 1
+      expect(result1.count1).toBe(0); // initialValue
+      expect(result1.count2).toBe(10); // initialValue
+
+      // useInteraction のコールバックを実行
+      for (const callback of context.__interactionCallbacks || []) {
+        await callback(interaction);
+      }
+
+      // instanceId=1 のみが更新される
+      expect(context.__embedStateComputedStates?.get("1")).toBe(9); // 10 - 1
+
+      // 2回目のレンダリング
+      context.__embedStateInstanceCounter = 0;
+      context.__interactionCallbacks = [];
+      const result2 = runInContext(context, () => {
+        const [count1] = useEmbedState(0, {
+          increment: (prev) => prev + 1,
+        });
+        const [count2] = useEmbedState(10, {
+          decrement: (prev) => prev - 1,
+        });
+        return { count1, count2 };
+      });
+
+      expect(result2.count1).toBe(0); // initialValue (action does not match)
+      expect(result2.count2).toBe(9); // 計算済み状態
     });
 
-    it("should pass interaction to reducer", () => {
+    it("should pass interaction to reducer", async () => {
       // Mock Select interaction
       const interaction = {
         type: InteractionType.MessageComponent,
@@ -142,19 +190,39 @@ describe("useEmbedState", () => {
         },
       } as unknown as APIMessageComponentInteraction;
 
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "set",
-          prevState: "0",
-        },
-        __embedStateInteraction: interaction,
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
+        __interaction: interaction,
       };
 
-      const [value] = runInContext(context, () => {
+      // 初回レンダリング
+      runInContext(context, () => {
         return useEmbedState(0, {
           // Select の values を取得する例
+          set: (prev, interaction) => {
+            if (interaction.data.component_type !== ComponentType.StringSelect) {
+              return prev;
+            }
+
+            return Number(interaction.data.values?.[0] ?? 0);
+          },
+        });
+      });
+
+      // useInteraction のコールバックを実行
+      for (const callback of context.__interactionCallbacks || []) {
+        await callback(interaction);
+      }
+
+      expect(context.__embedStateComputedStates?.get("0")).toBe(42);
+
+      // 2回目のレンダリング
+      context.__embedStateInstanceCounter = 0;
+      context.__interactionCallbacks = [];
+      const [value] = runInContext(context, () => {
+        return useEmbedState(0, {
           set: (prev, interaction) => {
             if (interaction.data.component_type !== ComponentType.StringSelect) {
               return prev;
@@ -173,9 +241,10 @@ describe("useEmbedState", () => {
     it("should use custom serialize/deserialize", () => {
       type State = { count: number; page: number };
 
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
       };
 
       const [state, actions] = runInContext(context, () => {
@@ -199,7 +268,7 @@ describe("useEmbedState", () => {
       expect(actions.increment()).toBe("DSCT|increment#0|0,1");
     });
 
-    it("should deserialize with custom serializer when triggered", () => {
+    it("should deserialize with custom serializer when triggered", async () => {
       type State = { count: number; page: number };
 
       const interaction: APIMessageComponentInteraction = {
@@ -210,16 +279,40 @@ describe("useEmbedState", () => {
         },
       } as APIMessageComponentInteraction;
 
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "increment",
-          prevState: "5,2", // カスタムシリアライズされた形式
-        },
-        __embedStateInteraction: interaction,
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
+        __interaction: interaction,
       };
 
+      // 初回レンダリング
+      runInContext(context, () => {
+        return useEmbedState<State, { increment: (prev: State) => State }>(
+          { count: 0, page: 1 },
+          {
+            increment: (prev) => ({ ...prev, count: prev.count + 1 }),
+          },
+          {
+            serialize: (value) => `${value.count},${value.page}`,
+            deserialize: (str) => {
+              const [count = 0, page = 1] = str.split(",").map(Number);
+              return { count, page };
+            },
+          },
+        );
+      });
+
+      // useInteraction のコールバックを実行
+      for (const callback of context.__interactionCallbacks || []) {
+        await callback(interaction);
+      }
+
+      expect(context.__embedStateComputedStates?.get("0")).toEqual({ count: 6, page: 2 });
+
+      // 2回目のレンダリング
+      context.__embedStateInstanceCounter = 0;
+      context.__interactionCallbacks = [];
       const [state, actions] = runInContext(context, () => {
         return useEmbedState<State, { increment: (prev: State) => State }>(
           { count: 0, page: 1 },
@@ -242,7 +335,7 @@ describe("useEmbedState", () => {
   });
 
   describe("エラーケース", () => {
-    it("should not throw error for unknown action (returns initialValue)", () => {
+    it("should not throw error for unknown action (returns initialValue)", async () => {
       const interaction: APIMessageComponentInteraction = {
         type: InteractionType.MessageComponent,
         data: {
@@ -251,44 +344,59 @@ describe("useEmbedState", () => {
         },
       } as APIMessageComponentInteraction;
 
-      const context: EmbedStateContext = {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "unknown", // 存在しないアクション
-          prevState: "0",
-        },
-        __embedStateInteraction: interaction,
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
+        __interaction: interaction,
       };
 
-      const [count] = runInContext(context, () => {
+      // 初回レンダリング
+      const [count1] = runInContext(context, () => {
+        return useEmbedState(0, {
+          increment: (prev) => prev + 1,
+        });
+      });
+
+      expect(count1).toBe(0); // initialValue
+
+      // useInteraction のコールバックを実行（unknown actionなので何も起こらない）
+      for (const callback of context.__interactionCallbacks || []) {
+        await callback(interaction);
+      }
+
+      // 状態は更新されない
+      expect(context.__embedStateComputedStates?.get("0")).toBeUndefined();
+
+      // 2回目のレンダリング
+      context.__embedStateInstanceCounter = 0;
+      context.__interactionCallbacks = [];
+      const [count2] = runInContext(context, () => {
         return useEmbedState(0, {
           increment: (prev) => prev + 1,
         });
       });
 
       // アクションが存在しない場合は初期値を使用
-      expect(count).toBe(0);
+      expect(count2).toBe(0);
     });
 
-    it("should throw error when interaction is missing", () => {
-      const context: EmbedStateContext = {
+    it("should not throw error when interaction is missing", () => {
+      const context: TestContext = {
         __embedStateInstanceCounter: 0,
-        __embedStateReducers: new Map(),
-        __embedStateTriggered: {
-          action: "increment",
-          prevState: "0",
-        },
-        // __embedStateInteraction が設定されていない
+        __interactionCallbacks: [],
+        __requestRerender: () => {},
+        // __interaction が設定されていない
       };
 
+      // エラーをスローしない（useInteractionのコールバック内でのみinteractionを使用）
       expect(() => {
         runInContext(context, () => {
           return useEmbedState(0, {
             increment: (prev) => prev + 1,
           });
         });
-      }).toThrow("useEmbedState: interaction is required when triggered");
+      }).not.toThrow();
     });
   });
 });
