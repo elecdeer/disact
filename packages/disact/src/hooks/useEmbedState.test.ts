@@ -44,8 +44,13 @@ describe("useEmbedState", () => {
         });
       });
 
-      expect(actions.increment()).toBe("DSCT|increment#0|0");
-      expect(actions.decrement()).toBe("DSCT|decrement#0|0");
+      const customId1 = actions.increment();
+      const customId2 = actions.decrement();
+
+      expect(customId1.startsWith("DSCT")).toBeTruthy();
+      expect(customId2.startsWith("DSCT")).toBeTruthy();
+      expect(customId1).toMatchInlineSnapshot(`"DSCT|increment#0|0"`);
+      expect(customId2).toMatchInlineSnapshot(`"DSCT|decrement#0|0"`);
     });
 
     it("should generate different instanceId for multiple calls", () => {
@@ -68,8 +73,8 @@ describe("useEmbedState", () => {
         };
       });
 
-      expect(result.action1).toBe("DSCT|increment#0|0");
-      expect(result.action2).toBe("DSCT|next#1|1");
+      expect(result.action1).toMatchInlineSnapshot(`"DSCT|increment#0|0"`);
+      expect(result.action2).toMatchInlineSnapshot(`"DSCT|next#1|1"`);
     });
   });
 
