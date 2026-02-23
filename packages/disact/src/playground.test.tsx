@@ -10,6 +10,7 @@ import { Container } from "./components/core/Container/Container";
 import { TextDisplay } from "./components/core/TextDisplay/TextDisplay";
 import { testRender, waitFor } from "./testing";
 
+// eslint-disable-next-line vitest/no-disabled-tests
 describe.skip("test", () => {
   it("render", async () => {
     const name = "alice";

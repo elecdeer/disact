@@ -49,8 +49,8 @@ describe("useEmbedState", () => {
 
       expect(customId1.startsWith("DSCT")).toBeTruthy();
       expect(customId2.startsWith("DSCT")).toBeTruthy();
-      expect(customId1).toMatchInlineSnapshot("DSCT|increment#0|0");
-      expect(customId2).toMatchInlineSnapshot("DSCT|decrement#1|0");
+      expect(customId1).toMatchInlineSnapshot(`"DSCT|increment#0|0"`);
+      expect(customId2).toMatchInlineSnapshot(`"DSCT|decrement#0|0"`);
     });
 
     it("should generate different instanceId for multiple calls", () => {
@@ -73,8 +73,8 @@ describe("useEmbedState", () => {
         };
       });
 
-      expect(result.action1).toMatchInlineSnapshot("DSCT|increment#0|0");
-      expect(result.action2).toMatchInlineSnapshot("DSCT|next#1|1");
+      expect(result.action1).toMatchInlineSnapshot(`"DSCT|increment#0|0"`);
+      expect(result.action2).toMatchInlineSnapshot(`"DSCT|next#1|1"`);
     });
   });
 

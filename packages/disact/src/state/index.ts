@@ -4,9 +4,4 @@ export type { ParsedCustomId } from "./customId";
 export { createDefaultSerializer } from "./serializer";
 export type { Serializer } from "./serializer";
 
-export type {
-  EmbedStateContext,
-  EmbedStateReducer,
-  ReducerEntry,
-  TriggeredEmbedState,
-} from "./embedStateContext";
+export type { EmbedStateContext, EmbedStateReducer } from "./embedStateContext";

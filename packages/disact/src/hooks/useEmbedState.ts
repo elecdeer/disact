@@ -73,7 +73,7 @@ export const useEmbedState = <T, R extends Reducers<T>>(
 
   // 計算済みの状態があれば使用、なければ初期値
   const computedStates = context.__embedStateComputedStates;
-  const currentState: T = computedStates ? (computedStates.get(instanceId) as T) : initialValue;
+  const currentState: T = (computedStates?.get(instanceId) as T) ?? initialValue;
 
   // useInteraction でコールバックを登録
   useInteraction<APIMessageComponentInteraction>((interaction) => {
