@@ -2,6 +2,16 @@ import type { DisactElement, RenderResult } from "@disact/engine";
 import { renderToReadableStream } from "@disact/engine";
 import { toMessageComponentsPayload } from "../components/index";
 
+export { createMockSession } from "./mockSession";
+export type { MockSessionState } from "./mockSession";
+export {
+  createButtonInteraction,
+  createSelectInteraction,
+  resetSnowflakeCounter,
+} from "./interactionFactory";
+export { testApp } from "./testApp";
+export type { TestAppOptions, TestAppResult } from "./testApp";
+
 type PayloadElement = object | string;
 
 export interface TestRenderResult {
