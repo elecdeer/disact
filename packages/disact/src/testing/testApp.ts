@@ -43,26 +43,27 @@ export type TestAppOptions = {
 };
 
 /**
+ * 最新のレンダリング状態を保持するオブジェクト。
+ * getter で取得するため、常に最新の状態が返される。
+ */
+export type TestAppCurrent = {
+  /** 現在のペイロード */
+  readonly payload: PayloadElements | null;
+  /** コミット履歴 */
+  readonly history: PayloadElements[];
+  /** コミット回数 */
+  readonly commitCount: number;
+};
+
+/**
  * testApp の戻り値
  */
 export type TestAppResult = {
   /**
-   * 現在のペイロード。
-   * getter で取得するため、常に最新の状態が返される。
+   * 現在のレンダリング状態。
+   * `current.payload`, `current.history`, `current.commitCount` でアクセスする。
    */
-  readonly payload: PayloadElements | null;
-
-  /**
-   * コミット履歴。
-   * getter で取得するため、常に最新の状態が返される。
-   */
-  readonly history: PayloadElements[];
-
-  /**
-   * コミット回数。
-   * getter で取得するため、常に最新の状態が返される。
-   */
-  readonly commitCount: number;
+  current: TestAppCurrent;
 
   /**
    * 新しい要素で再レンダリングする。
@@ -119,18 +120,18 @@ export type TestAppResult = {
  *
  * @example
  * ```tsx
- * const { payload, clickButton, waitFor } = await testApp(<Counter />);
+ * const { current, clickButton } = await testApp(<Counter />);
  *
  * // 初期状態の確認
- * expect(payload?.[0]).toMatchObject({ type: 17 });
+ * expect(current.payload?.[0]).toMatchObject({ type: 17 });
  *
  * // ボタンクリック
- * const customId = payload?.[0]?.components?.[1]?.components?.[0]?.custom_id;
+ * const customId = (current.payload?.[0] as any)?.components?.[1]?.components?.[0]?.custom_id;
  * await clickButton(customId);
  *
- * // 更新後の状態を確認
- * await waitForInternal(() => {
- *   expect(payload?.[0]?.components?.[0]).toMatchObject({ content: "Count: 1" });
+ * // 更新後の状態を確認（current は getter なので常に最新）
+ * await waitFor(() => {
+ *   expect((current.payload?.[0] as any)?.components?.[0]).toMatchObject({ content: "Count: 1" });
  * });
  * ```
  */
@@ -194,7 +195,7 @@ export const testApp = async (
     setInteraction(undefined);
   };
 
-  return {
+  const current: TestAppCurrent = {
     get payload() {
       return state.currentPayload;
     },
@@ -204,6 +205,10 @@ export const testApp = async (
     get commitCount() {
       return state.commitCount;
     },
+  };
+
+  return {
+    current,
 
     rerender: async (newElement: DisactElement): Promise<void> => {
       currentElement = newElement;

@@ -14,13 +14,13 @@ import { waitFor } from "./index";
 
 describe("testApp", () => {
   test("初回レンダリングで payload が設定される", async () => {
-    const { payload } = await testApp(
+    const { current } = await testApp(
       <Container>
         <TextDisplay>Hello World</TextDisplay>
       </Container>,
     );
 
-    expect(payload).toEqual([
+    expect(current.payload).toEqual([
       {
         type: 17,
         components: [{ type: 10, content: "Hello World" }],
@@ -29,23 +29,23 @@ describe("testApp", () => {
   });
 
   test("commitCount が正しくカウントされる", async () => {
-    const { commitCount } = await testApp(
+    const { current } = await testApp(
       <Container>
         <TextDisplay>Test</TextDisplay>
       </Container>,
     );
 
-    expect(commitCount).toBe(1);
+    expect(current.commitCount).toBe(1);
   });
 
   test("history に初回コミットが記録される", async () => {
-    const { history } = await testApp(
+    const { current } = await testApp(
       <Container>
         <TextDisplay>Test</TextDisplay>
       </Container>,
     );
 
-    expect(history).toHaveLength(1);
+    expect(current.history).toHaveLength(1);
   });
 
   test("Suspense がある場合、fallback と解決後のペイロードが記録される", async () => {
@@ -64,10 +64,10 @@ describe("testApp", () => {
       </Container>
     );
 
-    const result = await testApp(<Component />);
+    const { current } = await testApp(<Component />);
 
     // 初期状態は fallback
-    expect(result.payload).toEqual([
+    expect(current.payload).toEqual([
       {
         type: 17,
         components: [{ type: 10, content: "Loading..." }],
@@ -79,10 +79,10 @@ describe("testApp", () => {
 
     // 更新を待機
     await waitFor(() => {
-      expect(result.history).toHaveLength(2);
+      expect(current.history).toHaveLength(2);
     });
 
-    expect(result.payload).toEqual([
+    expect(current.payload).toEqual([
       {
         type: 17,
         components: [{ type: 10, content: "Loaded!" }],
@@ -91,26 +91,26 @@ describe("testApp", () => {
   });
 
   test("rerender で新しい要素を描画できる", async () => {
-    const result = await testApp(
+    const { current, rerender } = await testApp(
       <Container>
         <TextDisplay>Initial</TextDisplay>
       </Container>,
     );
 
-    expect(result.payload?.[0]).toMatchObject({
+    expect(current.payload?.[0]).toMatchObject({
       components: [{ content: "Initial" }],
     });
 
-    await result.rerender(
+    await rerender(
       <Container>
         <TextDisplay>Updated</TextDisplay>
       </Container>,
     );
 
-    expect(result.payload?.[0]).toMatchObject({
+    expect(current.payload?.[0]).toMatchObject({
       components: [{ content: "Updated" }],
     });
-    expect(result.commitCount).toBe(2);
+    expect(current.commitCount).toBe(2);
   });
 
   test("clickButton で useInteraction callback がトリガーされる", async () => {
@@ -164,27 +164,27 @@ describe("testApp", () => {
       );
     };
 
-    const result = await testApp(<Counter />);
+    const { current, clickButton } = await testApp(<Counter />);
 
     // 初期状態（components[0] が TextDisplay）
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((result.payload?.[0] as any)?.components?.[0]).toMatchObject({
+    expect((current.payload?.[0] as any)?.components?.[0]).toMatchObject({
       content: "Count: 0",
     });
 
     // ボタンの customId を payload から取得
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const row = result.payload?.[0] as any;
+    const row = current.payload?.[0] as any;
     const buttonCustomId = row?.components?.[1]?.components?.[0]?.custom_id as string;
     expect(buttonCustomId).toMatch(/^DSCT\|/);
 
     // ボタンをクリック
-    await result.clickButton(buttonCustomId);
+    await clickButton(buttonCustomId);
 
     // 更新後の状態を確認
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const updatedRow = result.payload?.[0] as any;
+      const updatedRow = current.payload?.[0] as any;
       expect(updatedRow?.components?.[0]?.content).toBe("Count: 1");
     });
   });
@@ -197,7 +197,7 @@ describe("testApp", () => {
       },
     ];
 
-    const result = await testApp(
+    const { current } = await testApp(
       <Container>
         <TextDisplay>Updated</TextDisplay>
       </Container>,
@@ -205,7 +205,7 @@ describe("testApp", () => {
     );
 
     // 差分があるのでコミットされる
-    expect(result.payload?.[0]).toMatchObject({
+    expect(current.payload?.[0]).toMatchObject({
       components: [{ content: "Updated" }],
     });
   });
