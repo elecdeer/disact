@@ -143,8 +143,8 @@ const render = <Context>(
     return renderChildrenArray(element, context, render, trackPromise);
   }
 
-  if (element === null || element === undefined) {
-    logger.trace("Rendering null/undefined element");
+  if (element === null || element === undefined || typeof element === "boolean") {
+    logger.trace("Rendering null/undefined/boolean element");
     return null;
   }
 

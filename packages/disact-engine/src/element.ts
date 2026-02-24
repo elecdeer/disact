@@ -28,7 +28,7 @@ export type DisactElement =
  *
  * FCの返り値やchildrenとして使える型
  */
-export type DisactNode = DisactElement | string | number | null | undefined | DisactNode[];
+export type DisactNode = DisactElement | string | number | boolean | null | undefined | DisactNode[];
 
 type DisactElementBase = {
   _devSource?: DevSource;

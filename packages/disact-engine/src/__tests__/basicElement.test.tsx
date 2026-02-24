@@ -163,4 +163,76 @@ describe("Basic Element Processing", () => {
       ],
     });
   });
+
+  it("should filter out boolean children", async () => {
+    const element = <div>{true}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: null,
+    });
+  });
+
+  it("should filter out false boolean child (useful for conditional rendering)", async () => {
+    const condition = false;
+    const element = <div>{condition && <span>Conditional</span>}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: null,
+    });
+  });
+
+  it("should render child when condition is true", async () => {
+    const condition = true;
+    const element = <div>{condition && <span>Conditional</span>}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: [
+        {
+          type: "intrinsic",
+          name: "span",
+          props: {},
+          children: [{ type: "text", content: "Conditional" }],
+        },
+      ],
+    });
+  });
+
+  it("should filter out boolean values mixed with other children", async () => {
+    const element = <div>{[true, "Valid text", false, "Another text"]}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: [
+        { type: "text", content: "Valid text" },
+        { type: "text", content: "Another text" },
+      ],
+    });
+  });
 });
