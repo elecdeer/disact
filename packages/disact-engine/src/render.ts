@@ -153,6 +153,11 @@ const render = <Context>(
     return element === "" ? null : { type: "text", content: element };
   }
 
+  if (typeof element === "number") {
+    logger.trace("Rendering number element", { value: element });
+    return { type: "text", content: String(element) };
+  }
+
   if (element.type === "function") {
     logger.trace("Rendering function component");
     const children = element.fc(element.props);

@@ -98,6 +98,58 @@ describe("Basic Element Processing", () => {
     });
   });
 
+  it("should render a number child", async () => {
+    const element = <div>{42}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: [{ type: "text", content: "42" }],
+    });
+  });
+
+  it("should render mixed string and number children", async () => {
+    const element = (
+      <div>
+        Count: {100}
+      </div>
+    );
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: [
+        { type: "text", content: "Count: " },
+        { type: "text", content: "100" },
+      ],
+    });
+  });
+
+  it("should render zero as a child", async () => {
+    const element = <div>{0}</div>;
+
+    const stream = renderToReadableStream(element, {});
+    const chunks = await readStreamToCompletion(stream);
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]).toEqual({
+      type: "intrinsic",
+      name: "div",
+      props: {},
+      children: [{ type: "text", content: "0" }],
+    });
+  });
+
   it("should filter out null and undefined children", async () => {
     const element = <div>{["Valid text", null, undefined, "Another valid text", ""]}</div>;
 
