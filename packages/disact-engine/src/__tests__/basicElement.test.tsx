@@ -114,11 +114,7 @@ describe("Basic Element Processing", () => {
   });
 
   it("should render mixed string and number children", async () => {
-    const element = (
-      <div>
-        Count: {100}
-      </div>
-    );
+    const element = <div>Count: {100}</div>;
 
     const stream = renderToReadableStream(element, {});
     const chunks = await readStreamToCompletion(stream);
