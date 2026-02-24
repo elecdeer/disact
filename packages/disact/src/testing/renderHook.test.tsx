@@ -1,7 +1,10 @@
 /** @jsxImportSource .. */
 
 import { describe, expect, test, vi } from "vitest";
-import type { APIMessageComponentButtonInteraction } from "discord-api-types/v10";
+import type {
+  APIMessageComponentButtonInteraction,
+  APIMessageComponentSelectMenuInteraction,
+} from "discord-api-types/v10";
 import { useEmbedState } from "../hooks/useEmbedState";
 import { useInteraction } from "../hooks/useInteraction";
 import { useCurrentInteraction } from "../hooks/useInteraction";
@@ -62,7 +65,8 @@ describe("renderHook", () => {
   test("selectOption で useEmbedState の状態が更新される", async () => {
     const { result, selectOption } = await renderHook(() =>
       useEmbedState("none", {
-        select: (_prev: string, interaction) => interaction.data.values[0] ?? "none",
+        select: (_prev: string, interaction) =>
+          (interaction as APIMessageComponentSelectMenuInteraction).data.values[0] ?? "none",
       }),
     );
 
@@ -72,23 +76,8 @@ describe("renderHook", () => {
     expect(result.current[0]).toBe("option-a");
   });
 
-  // TODO: testApp ベースでは useInteraction コールバックが複数回呼ばれる既知の挙動があるため skip
-  test.skip("useInteraction コールバックが実行される（コールバック回数は保証されない）", async () => {
-    const spy = vi.fn();
-
-    const { interact } = await renderHook(() => {
-      useInteraction<APIMessageComponentButtonInteraction>((interaction) => {
-        spy(interaction.data.custom_id);
-      });
-      return null;
-    });
-
-    const interaction = createButtonInteraction("test-button");
-    await interact(interaction);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith("test-button");
-  });
+  // NOTE: testApp ベースでは useInteraction コールバックが複数回呼ばれる既知の挙動がある。
+  // コールバックが呼ばれること自体は clickButton テストで確認済み。
 
   test("clickButton で useInteraction コールバックが実行される", async () => {
     const spy = vi.fn();
