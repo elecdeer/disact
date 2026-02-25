@@ -1,17 +1,17 @@
 import type { APIMessageComponentButtonInteraction } from "discord-api-types/v10";
 import { describe, expect, it, vi } from "vitest";
 import { createButtonInteraction } from "../testing/interactionFactory";
-import { renderHook } from "../testing/renderHook";
+import { testAppHook } from "../testing/testAppHook";
 import { useCurrentInteraction, useInteraction } from "./useInteraction";
 
 describe("useInteraction", () => {
-  describe("renderHook を使ったインテグレーションテスト", () => {
+  describe("testAppHook を使ったインテグレーションテスト", () => {
     // NOTE: testApp ベースでは useInteraction コールバックが複数回呼ばれる既知の挙動がある。
     // コールバックが呼ばれること自体は clickButton テストで確認済み。
     it("clickButton で useInteraction コールバックが実行される", async () => {
       const spy = vi.fn();
 
-      const { clickButton } = await renderHook(() => {
+      const { clickButton } = await testAppHook(() => {
         useInteraction<APIMessageComponentButtonInteraction>((interaction) => {
           spy(interaction.data.custom_id);
         });
@@ -23,7 +23,7 @@ describe("useInteraction", () => {
     });
 
     it("useCurrentInteraction が現在のインタラクションを返す", async () => {
-      const { result, interact } = await renderHook(() =>
+      const { result, interact } = await testAppHook(() =>
         useCurrentInteraction<APIMessageComponentButtonInteraction>(),
       );
 
@@ -41,7 +41,7 @@ describe("useInteraction", () => {
     it("initialInteraction を指定すると初回から interaction が設定される", async () => {
       const initialInteraction = createButtonInteraction("initial-button");
 
-      const { result } = await renderHook(
+      const { result } = await testAppHook(
         () => useCurrentInteraction<APIMessageComponentButtonInteraction>(),
         { initialInteraction },
       );

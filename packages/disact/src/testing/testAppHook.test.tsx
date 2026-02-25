@@ -2,11 +2,11 @@
 
 import { describe, expect, test } from "vitest";
 import { useEmbedState } from "../hooks/useEmbedState";
-import { renderHook } from "./renderHook";
+import { testAppHook } from "./testAppHook";
 
-describe("renderHook", () => {
+describe("testAppHook", () => {
   test("フックの初期戻り値が取得できる", async () => {
-    const { result } = await renderHook(() => {
+    const { result } = await testAppHook(() => {
       const [count, actions] = useEmbedState(0, {
         increment: (prev: number) => prev + 1,
       });
@@ -18,7 +18,7 @@ describe("renderHook", () => {
   });
 
   test("result.current は getter で常に最新値を返す", async () => {
-    const { result, clickButton } = await renderHook(() => {
+    const { result, clickButton } = await testAppHook(() => {
       const [count, actions] = useEmbedState(0, {
         increment: (prev: number) => prev + 1,
       });
@@ -36,7 +36,7 @@ describe("renderHook", () => {
   test("rerender で再レンダリングできる", async () => {
     let renderCallCount = 0;
 
-    const { result, rerender } = await renderHook(() => {
+    const { result, rerender } = await testAppHook(() => {
       renderCallCount++;
       return renderCallCount;
     });

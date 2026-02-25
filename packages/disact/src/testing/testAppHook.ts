@@ -32,17 +32,17 @@ const waitForInternal = async (
 };
 
 /**
- * renderHook のオプション
+ * testAppHook のオプション
  */
-export type RenderHookOptions = {
+export type TestAppHookOptions = {
   /** 初期インタラクション（useCurrentInteraction を初回から呼びたい場合に指定） */
   initialInteraction?: APIInteraction;
 };
 
 /**
- * renderHook の戻り値
+ * testAppHook の戻り値
  */
-export type RenderHookResult<R> = {
+export type TestAppHookResult<R> = {
   /**
    * フックの現在の戻り値。
    * getter で取得するため、常に最新の状態が返される。
@@ -109,7 +109,7 @@ export type RenderHookResult<R> = {
  * @example
  * ```tsx
  * // useEmbedState のテスト
- * const { result, clickButton } = await renderHook(() =>
+ * const { result, clickButton } = await testAppHook(() =>
  *   useEmbedState(0, {
  *     increment: (prev: number) => prev + 1,
  *   })
@@ -126,7 +126,7 @@ export type RenderHookResult<R> = {
  * ```tsx
  * // useInteraction のテスト
  * const spy = vi.fn();
- * const { clickButton } = await renderHook(() => {
+ * const { clickButton } = await testAppHook(() => {
  *   useInteraction<APIMessageComponentButtonInteraction>((i) => {
  *     spy(i.data.custom_id);
  *   });
@@ -136,10 +136,10 @@ export type RenderHookResult<R> = {
  * expect(spy).toHaveBeenCalledWith("my-button");
  * ```
  */
-export const renderHook = async <R>(
+export const testAppHook = async <R>(
   hookFn: () => R,
-  options?: RenderHookOptions,
-): Promise<RenderHookResult<R>> => {
+  options?: TestAppHookOptions,
+): Promise<TestAppHookResult<R>> => {
   // フックの戻り値をキャプチャする変数
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let capturedResult: R = undefined as any;

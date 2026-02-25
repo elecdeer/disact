@@ -1,12 +1,12 @@
 import type { APIMessageComponentSelectMenuInteraction } from "discord-api-types/v10";
 import { describe, expect, it } from "vitest";
-import { renderHook } from "../testing/renderHook";
+import { testAppHook } from "../testing/testAppHook";
 import { useEmbedState } from "./useEmbedState";
 
 describe("useEmbedState", () => {
-  describe("renderHook を使ったインテグレーションテスト", () => {
+  describe("testAppHook を使ったインテグレーションテスト", () => {
     it("clickButton で useEmbedState の状態が更新される", async () => {
-      const { result, clickButton } = await renderHook(() =>
+      const { result, clickButton } = await testAppHook(() =>
         useEmbedState(0, {
           increment: (prev: number) => prev + 1,
           decrement: (prev: number) => prev - 1,
@@ -27,7 +27,7 @@ describe("useEmbedState", () => {
     });
 
     it("selectOption で useEmbedState の状態が更新される", async () => {
-      const { result, selectOption } = await renderHook(() =>
+      const { result, selectOption } = await testAppHook(() =>
         useEmbedState("none", {
           select: (_prev: string, interaction) =>
             (interaction as APIMessageComponentSelectMenuInteraction).data.values[0] ?? "none",
@@ -41,7 +41,7 @@ describe("useEmbedState", () => {
     });
 
     it("複数の useEmbedState を持つフックが独立して動作する", async () => {
-      const { result, clickButton } = await renderHook(() => {
+      const { result, clickButton } = await testAppHook(() => {
         const [countA, actionsA] = useEmbedState(0, {
           inc: (prev: number) => prev + 1,
         });
