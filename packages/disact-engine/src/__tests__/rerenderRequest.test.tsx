@@ -260,4 +260,69 @@ describe("requestRerender", () => {
       expect(renderCount).toBe(2);
     });
   });
+
+  describe("非同期rerenderのエッジケース", () => {
+    it("postRenderフック内でsetTimeoutを使って非同期的にrequestRerenderを呼び出すと再レンダリングされる", async () => {
+      let renderCount = 0;
+
+      const Component = (): DisactElement => {
+        renderCount++;
+        return <div>{`Render count: ${renderCount}`}</div>;
+      };
+
+      const stream = renderToReadableStream(
+        <Component />,
+        {},
+        {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+            if (renderCount === 1) {
+              // postRender が Promise を返すことで、setTimeout の完了まで待機する。
+              // setTimeout 内で requestRerender を呼び出すと、タスクが resume した
+              // 直後に rerenderRequested フラグがチェックされ再レンダリングが発生する。
+              return new Promise<void>((resolve) => {
+                setTimeout(() => {
+                  requestRerender();
+                  resolve();
+                }, 0);
+              });
+            }
+          },
+        },
+      );
+      await readAllChunks(stream);
+
+      expect(renderCount).toBe(2);
+    });
+
+    it("streamのclose後にrequestRerenderを呼び出してもエラーにならない", async () => {
+      let renderCount = 0;
+      let capturedRequestRerender: (() => void) | null = null;
+
+      const Component = (): DisactElement => {
+        renderCount++;
+        return <div>{`Render count: ${renderCount}`}</div>;
+      };
+
+      const stream = renderToReadableStream(
+        <Component />,
+        {},
+        {
+          postRender: ({ requestRerender }: RenderLifecycleHelpers) => {
+            capturedRequestRerender = requestRerender;
+          },
+        },
+      );
+      await readAllChunks(stream);
+
+      expect(renderCount).toBe(1);
+
+      // stream が close された後に requestRerender を呼び出す
+      expect(() => {
+        capturedRequestRerender?.();
+      }).not.toThrow();
+
+      // 追加のレンダリングは発生しない
+      expect(renderCount).toBe(1);
+    });
+  });
 });
