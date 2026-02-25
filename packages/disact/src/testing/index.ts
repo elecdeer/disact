@@ -11,8 +11,8 @@ export {
 } from "./interactionFactory";
 export { testApp } from "./testApp";
 export type { TestAppOptions, TestAppResult } from "./testApp";
-export { renderHook } from "./renderHook";
-export type { RenderHookOptions, RenderHookResult } from "./renderHook";
+export { testAppHook } from "./testAppHook";
+export type { TestAppHookOptions, TestAppHookResult } from "./testAppHook";
 export { getByLabel, queryByLabel, getAll } from "./queries";
 export type { TextMatch, QueryableComponentType } from "./queries";
 
