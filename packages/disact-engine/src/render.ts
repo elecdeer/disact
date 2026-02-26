@@ -41,17 +41,30 @@ export const renderToReadableStream = <Context>(
         // 無限ループ防止カウンター
         let rerenderCount = 0;
 
+        // setTimeout(0) によるバッチング用タイマーID
+        // 同一サイクル内での複数の requestRerender 呼び出しを1回にまとめる
+        let rerenderTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const requestRerender = () => {
+          logger.debug("Rerender requested");
+          if (rerenderTimer !== null) return; // すでにスケジュール済み
+          rerenderTimer = setTimeout(() => {
+            rerenderTimer = null;
+            if (!scheduler.isDisposed()) {
+              logger.debug("Rerender queued (from setTimeout)");
+              scheduler.queue();
+            }
+          }, 0);
+        };
+
+        const helpers: RenderLifecycleHelpers = { requestRerender };
+
         // コンテキストにrequestRerender関数を追加
         // 別オブジェクトにしてはいけない
         const contextWithRerender: Context & {
           __requestRerender: () => void;
         } = context as Context & { __requestRerender: () => void };
-
-        // helpers は scheduler 生成後に requestRerender を差し替えるため、
-        // 先にオブジェクトを作成しておく
-        const helpers: RenderLifecycleHelpers = {
-          requestRerender: () => {},
-        };
+        contextWithRerender.__requestRerender = requestRerender;
 
         const scheduler = createScheduler({
           task: async () => {
@@ -78,8 +91,6 @@ export const renderToReadableStream = <Context>(
             if (callbacks?.postRender) {
               await callbacks.postRender(helpers);
             }
-
-            // 再レンダリング要求はscheduler側でbatchingして処理されるため、ここでは不要
           },
           idleTimeout: 100,
           onIdle: async () => {
@@ -95,8 +106,17 @@ export const renderToReadableStream = <Context>(
               await callbacks.postRenderCycle(helpers);
             }
 
+            // postRenderCycle 内で requestRerender が呼ばれた場合、
+            // setTimeout(0) がスケジュールされるため 1 tick 待機する
+            await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
             if (scheduler.pendingCount() === 0) {
               logger.info("Render stream completed");
+              // dispose してから close することで、close 後の requestRerender を無害にする
+              if (rerenderTimer !== null) {
+                clearTimeout(rerenderTimer);
+                rerenderTimer = null;
+              }
               scheduler.dispose();
               controller.close();
             }
@@ -107,15 +127,6 @@ export const renderToReadableStream = <Context>(
             return "stop";
           },
         });
-
-        // scheduler 生成後に requestRerender を差し替える
-        // （scheduler.requestRerender を参照するため、生成前には定義できない）
-        const requestRerender = () => {
-          scheduler.requestRerender();
-          logger.debug("Rerender requested");
-        };
-        helpers.requestRerender = requestRerender;
-        contextWithRerender.__requestRerender = requestRerender;
 
         // 初回レンダリングをキュー
         scheduler.queue();
