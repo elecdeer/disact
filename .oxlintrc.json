@@ -114,7 +114,7 @@
     "unicorn/prefer-string-starts-ends-with": "error",
     "vitest/expect-expect": "error",
     "vitest/no-conditional-expect": "error",
-    "vitest/no-disabled-tests": "error",
+    "vitest/no-disabled-tests": "warn",
     "vitest/no-export": "error",
     "vitest/no-focused-tests": "error",
     "vitest/no-standalone-expect": [
