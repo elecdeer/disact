@@ -41,26 +41,20 @@ export const renderToReadableStream = <Context>(
         // 無限ループ防止カウンター
         let rerenderCount = 0;
 
-        // requestRerender関数を作成（schedulerへの参照をクロージャでキャプチャ）
-        let rerenderRequested = false;
-        const requestRerender = () => {
-          rerenderRequested = true;
-          logger.debug("Rerender requested");
-        };
-
-        const helpers: RenderLifecycleHelpers = { requestRerender };
-
         // コンテキストにrequestRerender関数を追加
         // 別オブジェクトにしてはいけない
         const contextWithRerender: Context & {
           __requestRerender: () => void;
         } = context as Context & { __requestRerender: () => void };
-        contextWithRerender.__requestRerender = requestRerender;
+
+        // helpers は scheduler 生成後に requestRerender を差し替えるため、
+        // 先にオブジェクトを作成しておく
+        const helpers: RenderLifecycleHelpers = {
+          requestRerender: () => {},
+        };
 
         const scheduler = createScheduler({
           task: async () => {
-            rerenderRequested = false;
-
             // 無限ループ防止チェック
             rerenderCount++;
             if (rerenderCount > MAX_RERENDER_WITHOUT_COMMIT) {
@@ -85,11 +79,7 @@ export const renderToReadableStream = <Context>(
               await callbacks.postRender(helpers);
             }
 
-            // 再レンダリング要求があれば再度キューに追加
-            if (rerenderRequested) {
-              logger.debug("Rerendering due to requestRerender called");
-              scheduler.queue();
-            }
+            // 再レンダリング要求はscheduler側でbatchingして処理されるため、ここでは不要
           },
           idleTimeout: 100,
           onIdle: async () => {
@@ -101,18 +91,13 @@ export const renderToReadableStream = <Context>(
           },
           onFinish: async () => {
             // postRenderCycleフック
-            rerenderRequested = false;
             if (callbacks?.postRenderCycle) {
               await callbacks.postRenderCycle(helpers);
-            }
-            if (rerenderRequested) {
-              // 再レンダリング要求があれば再度キューに追加
-              logger.debug("Rerendering due to requestRerender called in postRenderCycle");
-              scheduler.queue();
             }
 
             if (scheduler.pendingCount() === 0) {
               logger.info("Render stream completed");
+              scheduler.dispose();
               controller.close();
             }
           },
@@ -122,6 +107,15 @@ export const renderToReadableStream = <Context>(
             return "stop";
           },
         });
+
+        // scheduler 生成後に requestRerender を差し替える
+        // （scheduler.requestRerender を参照するため、生成前には定義できない）
+        const requestRerender = () => {
+          scheduler.requestRerender();
+          logger.debug("Rerender requested");
+        };
+        helpers.requestRerender = requestRerender;
+        contextWithRerender.__requestRerender = requestRerender;
 
         // 初回レンダリングをキュー
         scheduler.queue();

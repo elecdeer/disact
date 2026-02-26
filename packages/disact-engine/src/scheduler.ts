@@ -25,6 +25,13 @@ export type SchedulerOptions = {
 export type Scheduler = {
   /** Queue a task execution, optionally waiting for a promise to resolve first */
   queue: (waitFor?: Promise<unknown>) => void;
+  /**
+   * Request a rerender.
+   * When called during task execution, multiple calls are batched into a single queued task.
+   * When called outside task execution (e.g. during an idle timeout), queues immediately.
+   * No-op if the scheduler is disposed.
+   */
+  requestRerender: () => void;
   /** Dispose the scheduler, clearing all pending tasks */
   dispose: () => void;
   /** Check if the scheduler is disposed */
@@ -71,6 +78,8 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
   let taskQueue: Array<{ waitFor: Promise<unknown> | undefined }> = [];
   let isProcessing = false;
   let hasExecutedTask = false; // Track if at least one task has been executed
+  let isInsideTask = false; // True while a task function is executing
+  let rerenderPending = false; // Batched rerender request set during task execution
 
   // Symbol to identify idle timeout in Promise.race
   const IDLE_TIMEOUT = Symbol("idle-timeout");
@@ -131,6 +140,13 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
             idleTimeoutAbort = null;
           }
 
+          // Reset batching state before executing the task
+          isInsideTask = true;
+          rerenderPending = false;
+
+          let taskError: unknown = undefined;
+          let hasError = false;
+
           try {
             // Execute the task
             logger.trace("Executing task");
@@ -138,10 +154,17 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
             hasExecutedTask = true; // Mark that at least one task has been executed
             logger.trace("Task completed");
           } catch (error) {
-            logger.trace("Task error", { error });
+            hasError = true;
+            taskError = error;
+          } finally {
+            isInsideTask = false;
+          }
+
+          if (hasError) {
+            logger.trace("Task error", { error: taskError });
             // Handle error
             if (onError) {
-              const action = onError(error);
+              const action = onError(taskError);
               logger.trace("Error handler returned", { action });
               if (action === "stop") {
                 // Clear remaining tasks
@@ -161,6 +184,14 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
               break;
             }
           }
+
+          // Queue one more task if a batched rerender was requested during the task
+          if (rerenderPending) {
+            rerenderPending = false;
+            logger.trace("Queuing rerender task from batched request");
+            taskQueue.push({ waitFor: undefined });
+          }
+
           continue;
         }
 
@@ -291,6 +322,26 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
   };
 
   /**
+   * Request a rerender (batched during task execution, direct queue otherwise)
+   */
+  const requestRerender = (): void => {
+    if (state === "disposed") {
+      logger.trace("Cannot requestRerender - disposed");
+      return;
+    }
+
+    if (isInsideTask) {
+      // Batch: will queue a single task after the current task finishes
+      logger.trace("Batching rerender request (inside task)");
+      rerenderPending = true;
+    } else {
+      // Outside task: queue immediately (aborts any running idle timeout via queue())
+      logger.trace("Queuing rerender request (outside task)");
+      queue();
+    }
+  };
+
+  /**
    * Queue a task
    */
   const queue = (waitFor?: Promise<unknown>): void => {
@@ -358,6 +409,7 @@ export const createScheduler = (options: SchedulerOptions): Scheduler => {
 
   return {
     queue,
+    requestRerender,
     dispose,
     isDisposed,
     pendingCount,
