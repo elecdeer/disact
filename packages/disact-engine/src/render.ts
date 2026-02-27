@@ -41,19 +41,20 @@ export const renderToReadableStream = <Context>(
         // 無限ループ防止カウンター
         let rerenderCount = 0;
 
-        // setTimeout(0) によるバッチング用タイマーID
-        // 同一サイクル内での複数の requestRerender 呼び出しを1回にまとめる
-        let rerenderTimer: ReturnType<typeof setTimeout> | null = null;
+        // setTimeout(0) によるバッチング用フラグ
+        // 同一tick内での複数の requestRerender 呼び出しを1回にまとめる：
+        // 最初の呼び出しで即座に queue() し、setTimeout(0) が解決するまでの間は
+        // 追加の呼び出しをスキップする
+        let rerenderBatchPending = false;
 
         const requestRerender = () => {
           logger.debug("Rerender requested");
-          if (rerenderTimer !== null) return; // すでにスケジュール済み
-          rerenderTimer = setTimeout(() => {
-            rerenderTimer = null;
-            if (!scheduler.isDisposed()) {
-              logger.debug("Rerender queued (from setTimeout)");
-              scheduler.queue();
-            }
+          if (rerenderBatchPending) return; // このtick内ですでにキュー済み
+          if (scheduler.isDisposed()) return;
+          rerenderBatchPending = true;
+          scheduler.queue();
+          setTimeout(() => {
+            rerenderBatchPending = false;
           }, 0);
         };
 
@@ -68,6 +69,10 @@ export const renderToReadableStream = <Context>(
 
         const scheduler = createScheduler({
           task: async () => {
+            // タスク開始時にバッチング状態をリセット
+            // （前タスクで設定されたまま引き継がれるのを防ぐ）
+            rerenderBatchPending = false;
+
             // 無限ループ防止チェック
             rerenderCount++;
             if (rerenderCount > MAX_RERENDER_WITHOUT_COMMIT) {
@@ -107,16 +112,10 @@ export const renderToReadableStream = <Context>(
             }
 
             // postRenderCycle 内で requestRerender が呼ばれた場合、
-            // setTimeout(0) がスケジュールされるため 1 tick 待機する
-            await new Promise<void>((resolve) => setTimeout(resolve, 0));
-
+            // 即座に scheduler.queue() されるため pendingCount が増加している
             if (scheduler.pendingCount() === 0) {
               logger.info("Render stream completed");
               // dispose してから close することで、close 後の requestRerender を無害にする
-              if (rerenderTimer !== null) {
-                clearTimeout(rerenderTimer);
-                rerenderTimer = null;
-              }
               scheduler.dispose();
               controller.close();
             }
