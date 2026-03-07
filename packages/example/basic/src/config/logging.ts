@@ -1,4 +1,5 @@
 import { configure, getConsoleSink } from "@logtape/logtape";
+import { getOpenTelemetrySink } from "@logtape/otel";
 import { getPrettyFormatter } from "@logtape/pretty";
 
 /**
@@ -18,6 +19,7 @@ export const configureLogging = async (): Promise<void> => {
           },
         }),
       }),
+      otel: getOpenTelemetrySink(),
     },
     filters: {},
     loggers: [
@@ -25,19 +27,19 @@ export const configureLogging = async (): Promise<void> => {
       {
         category: ["disact"],
         lowestLevel: "debug", // 開発環境ではdebug以上を出力
-        sinks: ["console"],
+        sinks: ["console", "otel"],
       },
       // disact-engineのログ
       {
         category: ["disact-engine"],
         lowestLevel: "debug",
-        sinks: ["console"],
+        sinks: ["console", "otel"],
       },
       // exampleアプリケーションのログ
       {
         category: ["example"],
         lowestLevel: "info",
-        sinks: ["console"],
+        sinks: ["console", "otel"],
       },
     ],
   });
