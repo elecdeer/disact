@@ -65,25 +65,31 @@ export const createDisactApp = (): DisactApp => {
               // 全レンダリング完了後、callbackを実行
               const interaction = session.getInteraction();
               if (interaction && interactionCallbacks.length > 0) {
-                await tracer.startActiveSpan("disact.interaction.callbacks", async (callbacksSpan) => {
-                  try {
-                    logger.debug("Executing interaction callbacks", {
-                      count: interactionCallbacks.length,
-                    });
-                    callbacksSpan.setAttribute("disact.callbacks.count", interactionCallbacks.length);
+                await tracer.startActiveSpan(
+                  "disact.interaction.callbacks",
+                  async (callbacksSpan) => {
+                    try {
+                      logger.debug("Executing interaction callbacks", {
+                        count: interactionCallbacks.length,
+                      });
+                      callbacksSpan.setAttribute(
+                        "disact.callbacks.count",
+                        interactionCallbacks.length,
+                      );
 
-                    for (const callback of interactionCallbacks) {
-                      try {
-                        await callback(interaction);
-                      } catch (error) {
-                        logger.error("Interaction callback failed", { error });
-                        // エラーが発生しても続行
+                      for (const callback of interactionCallbacks) {
+                        try {
+                          await callback(interaction);
+                        } catch (error) {
+                          logger.error("Interaction callback failed", { error });
+                          // エラーが発生しても続行
+                        }
                       }
+                    } finally {
+                      callbacksSpan.end();
                     }
-                  } finally {
-                    callbacksSpan.end();
-                  }
-                });
+                  },
+                );
               }
             },
           };
@@ -143,7 +149,9 @@ export const createDisactApp = (): DisactApp => {
                     await session.commit(chunkPayload);
                   } catch (error) {
                     commitSpan.setStatus({ code: SpanStatusCode.ERROR });
-                    commitSpan.recordException(error instanceof Error ? error : new Error(String(error)));
+                    commitSpan.recordException(
+                      error instanceof Error ? error : new Error(String(error)),
+                    );
                     throw error;
                   } finally {
                     commitSpan.end();

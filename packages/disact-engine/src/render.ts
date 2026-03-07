@@ -92,7 +92,9 @@ export const renderToReadableStream = <Context>(
                   // 無限ループ防止チェック
                   rerenderCount++;
                   if (rerenderCount > MAX_RERENDER_WITHOUT_COMMIT) {
-                    throw new Error(`Maximum rerender count (${MAX_RERENDER_WITHOUT_COMMIT}) exceeded`);
+                    throw new Error(
+                      `Maximum rerender count (${MAX_RERENDER_WITHOUT_COMMIT}) exceeded`,
+                    );
                   }
 
                   // preRenderフック
@@ -117,7 +119,9 @@ export const renderToReadableStream = <Context>(
                   }
                 } catch (error) {
                   cycleSpan.setStatus({ code: SpanStatusCode.ERROR });
-                  cycleSpan.recordException(error instanceof Error ? error : new Error(String(error)));
+                  cycleSpan.recordException(
+                    error instanceof Error ? error : new Error(String(error)),
+                  );
                   throw error;
                 } finally {
                   cycleSpan.end();
@@ -150,7 +154,9 @@ export const renderToReadableStream = <Context>(
               onError: (error) => {
                 logger.error("Render task failed", { error });
                 streamSpan.setStatus({ code: SpanStatusCode.ERROR });
-                streamSpan.recordException(error instanceof Error ? error : new Error(String(error)));
+                streamSpan.recordException(
+                  error instanceof Error ? error : new Error(String(error)),
+                );
                 streamSpan.end();
                 controller.error(error);
                 return "stop";
