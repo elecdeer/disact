@@ -48,7 +48,7 @@ describe("useRerender", () => {
     expect(renderCallCount).toBe(2);
   });
 
-  it.skip("setTimeoutで非同期的にrerenderを呼び出すと再レンダリングがトリガーされるべき", async () => {
+  it("setTimeoutで非同期的にrerenderを呼び出すと再レンダリングがトリガーされるべき", async () => {
     // 現在の実装では、renderタスク完了後に setTimeout 経由で rerender を呼び出しても
     // rerenderRequested フラグはタスク実行中にしかチェックされないため
     // 再レンダリングはトリガーされない。

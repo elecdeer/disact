@@ -41,11 +41,21 @@ export const renderToReadableStream = <Context>(
         // 無限ループ防止カウンター
         let rerenderCount = 0;
 
-        // requestRerender関数を作成（schedulerへの参照をクロージャでキャプチャ）
-        let rerenderRequested = false;
+        // setTimeout(0) によるバッチング用フラグ
+        // 同一tick内での複数の requestRerender 呼び出しを1回にまとめる：
+        // 最初の呼び出しで即座に queue() し、setTimeout(0) が解決するまでの間は
+        // 追加の呼び出しをスキップする
+        let rerenderBatchPending = false;
+
         const requestRerender = () => {
-          rerenderRequested = true;
           logger.debug("Rerender requested");
+          if (rerenderBatchPending) return; // このtick内ですでにキュー済み
+          if (scheduler.isDisposed()) return;
+          rerenderBatchPending = true;
+          scheduler.queue();
+          setTimeout(() => {
+            rerenderBatchPending = false;
+          }, 0);
         };
 
         const helpers: RenderLifecycleHelpers = { requestRerender };
@@ -59,7 +69,9 @@ export const renderToReadableStream = <Context>(
 
         const scheduler = createScheduler({
           task: async () => {
-            rerenderRequested = false;
+            // タスク開始時にバッチング状態をリセット
+            // （前タスクで設定されたまま引き継がれるのを防ぐ）
+            rerenderBatchPending = false;
 
             // 無限ループ防止チェック
             rerenderCount++;
@@ -84,12 +96,6 @@ export const renderToReadableStream = <Context>(
             if (callbacks?.postRender) {
               await callbacks.postRender(helpers);
             }
-
-            // 再レンダリング要求があれば再度キューに追加
-            if (rerenderRequested) {
-              logger.debug("Rerendering due to requestRerender called");
-              scheduler.queue();
-            }
           },
           idleTimeout: 100,
           onIdle: async () => {
@@ -101,18 +107,16 @@ export const renderToReadableStream = <Context>(
           },
           onFinish: async () => {
             // postRenderCycleフック
-            rerenderRequested = false;
             if (callbacks?.postRenderCycle) {
               await callbacks.postRenderCycle(helpers);
             }
-            if (rerenderRequested) {
-              // 再レンダリング要求があれば再度キューに追加
-              logger.debug("Rerendering due to requestRerender called in postRenderCycle");
-              scheduler.queue();
-            }
 
+            // postRenderCycle 内で requestRerender が呼ばれた場合、
+            // 即座に scheduler.queue() されるため pendingCount が増加している
             if (scheduler.pendingCount() === 0) {
               logger.info("Render stream completed");
+              // dispose してから close することで、close 後の requestRerender を無害にする
+              scheduler.dispose();
               controller.close();
             }
           },
