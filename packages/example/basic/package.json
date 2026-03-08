@@ -9,9 +9,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "run-example": "vite-node ./src/index.tsx",
+    "run-example": "tsx ./src/index.tsx",
     "start": "node ./dist/index.js",
-    "dev": "vite-node ./src/index.tsx"
+    "dev": "tsx ./src/index.tsx"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
@@ -31,6 +31,6 @@
     "@logtape/otel": "catalog:",
     "@logtape/pretty": "catalog:",
     "@monorepo/tsconfig": "workspace:*",
-    "vite-node": "catalog:"
+    "tsx": "catalog:"
   }
 }
