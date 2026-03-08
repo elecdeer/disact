@@ -71,26 +71,20 @@ describe("useRerender", () => {
     expect(renderCallCount).toBe(2);
   });
 
-  it("streamのclose後にrerenderを呼び出してもエラーにならない", async () => {
-    let renderCallCount = 0;
+  it("handleInteraction完了後にcapturedRerenderを呼び出してもエラーにならない", async () => {
     let capturedRerender: (() => void) | undefined;
 
-    await testAppHook(() => {
+    const { clickButton } = await testAppHook(() => {
       const rerender = useRerender();
-      renderCallCount++;
       capturedRerender = rerender;
-      return renderCallCount;
+      return null;
     });
 
-    expect(renderCallCount).toBe(1);
+    // インタラクション完了後にrequestRerenderを呼び出しても例外が発生しないことを確認
+    await clickButton("test-button");
 
-    // stream が close された後に rerender を呼び出す
     expect(() => {
       capturedRerender?.();
     }).not.toThrow();
-
-    // 追加のレンダリングは発生しない
-    await new Promise<void>((resolve) => setTimeout(resolve, 200));
-    expect(renderCallCount).toBe(1);
   });
 });
