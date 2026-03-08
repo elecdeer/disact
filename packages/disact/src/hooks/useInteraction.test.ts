@@ -3,11 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { createButtonInteraction } from "../testing/interactionFactory";
 import { testAppHook } from "../testing/testAppHook";
 import { useCurrentInteraction, useInteraction } from "./useInteraction";
+import { useRerender } from "./useRerender";
 
 describe("useInteraction", () => {
   describe("testAppHook を使ったインテグレーションテスト", () => {
-    // NOTE: testApp ベースでは useInteraction コールバックが複数回呼ばれる既知の挙動がある。
-    // コールバックが呼ばれること自体は clickButton テストで確認済み。
     it("clickButton で useInteraction コールバックが実行される", async () => {
       const spy = vi.fn();
 
@@ -19,7 +18,45 @@ describe("useInteraction", () => {
       });
 
       await clickButton("my-button");
+      expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith("my-button");
+    });
+
+    it("コールバック内で再レンダリングが発生しても1回のみ実行される", async () => {
+      const spy = vi.fn();
+
+      const { clickButton } = await testAppHook(() => {
+        const rerender = useRerender();
+        useInteraction<APIMessageComponentButtonInteraction>((interaction) => {
+          spy(interaction.data.custom_id);
+          // コールバック内でrerenderを呼んでもコールバックは再実行されない
+          rerender();
+        });
+        return null;
+      });
+
+      await clickButton("my-button");
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith("my-button");
+    });
+
+    it("複数回のインタラクションで各インタラクションに対して1回ずつ実行される", async () => {
+      const spy = vi.fn();
+
+      const { clickButton } = await testAppHook(() => {
+        useInteraction<APIMessageComponentButtonInteraction>((interaction) => {
+          spy(interaction.data.custom_id);
+        });
+        return null;
+      });
+
+      await clickButton("button-1");
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenLastCalledWith("button-1");
+
+      await clickButton("button-2");
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenLastCalledWith("button-2");
     });
 
     it("useCurrentInteraction が現在のインタラクションを返す", async () => {
@@ -34,7 +71,6 @@ describe("useInteraction", () => {
       await interact(interaction);
 
       // インタラクション中のレンダリングでは interaction が設定されている
-      // (同一 connect 内の全レンダリングで同じ context.__interaction が使われる)
       expect(result.current?.data.custom_id).toBe("test-button");
     });
 

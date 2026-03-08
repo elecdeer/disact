@@ -11,6 +11,8 @@ const logger = getEngineLogger("render");
 export type RenderLifecycleHelpers = {
   /** 再レンダリングを要求する関数 */
   requestRerender: () => void;
+  /** ストリームを明示的に閉じる関数。スケジューラーを破棄してコントローラーをクローズする */
+  close: () => void;
 };
 
 /**
@@ -21,16 +23,32 @@ export type RenderLifecycleCallbacks = {
   preRender?: (helpers: RenderLifecycleHelpers) => void | Promise<void>;
   /** 各レンダリング直後に呼ばれる */
   postRender?: (helpers: RenderLifecycleHelpers) => void | Promise<void>;
+  /** レンダリングが安定状態に達したとき（idleTimeout後、chunk enqueue時）に呼ばれる */
+  onStable?: (helpers: RenderLifecycleHelpers) => void | Promise<void>;
   /** 全レンダリングサイクル完了後（controller.close()直前）に呼ばれる */
   postRenderCycle?: (helpers: RenderLifecycleHelpers) => void | Promise<void>;
 };
 
 const MAX_RERENDER_WITHOUT_COMMIT = 100;
 
+/**
+ * renderToReadableStream のオプション
+ */
+export type RenderStreamOptions = {
+  /**
+   * true の場合、タスクキューが空になってもストリームを自動クローズしない。
+   * 呼び出し側が helpers.close() を使って明示的にクローズする必要がある。
+   * 複数インタラクションを処理するlong-runningパターンで使用する。
+   * デフォルト: false（タスク完了後に自動クローズ）
+   */
+  keepAlive?: boolean;
+};
+
 export const renderToReadableStream = <Context>(
   element: DisactElement,
   context: Context,
   callbacks?: RenderLifecycleCallbacks,
+  options?: RenderStreamOptions,
 ): ReadableStream<RenderResult> => {
   return new ReadableStream<RenderResult>({
     async start(controller) {
@@ -58,7 +76,23 @@ export const renderToReadableStream = <Context>(
           }, 0);
         };
 
-        const helpers: RenderLifecycleHelpers = { requestRerender };
+        /**
+         * ストリームを明示的に閉じる。
+         * スケジューラーを破棄してコントローラーをクローズする。
+         * handleInteraction などを使い終わった後に呼び出す。
+         */
+        const closeStream = () => {
+          if (!scheduler.isDisposed()) {
+            scheduler.dispose();
+          }
+          try {
+            controller.close();
+          } catch {
+            // すでにクローズ済みの場合は無視
+          }
+        };
+
+        const helpers: RenderLifecycleHelpers = { requestRerender, close: closeStream };
 
         // コンテキストにrequestRerender関数を追加
         // 別オブジェクトにしてはいけない
@@ -104,6 +138,11 @@ export const renderToReadableStream = <Context>(
             controller.enqueue(lastResult);
             // カウンターをリセット
             rerenderCount = 0;
+
+            // onStableフック
+            if (callbacks?.onStable) {
+              await callbacks.onStable(helpers);
+            }
           },
           onFinish: async () => {
             // postRenderCycleフック
@@ -111,9 +150,9 @@ export const renderToReadableStream = <Context>(
               await callbacks.postRenderCycle(helpers);
             }
 
-            // postRenderCycle 内で requestRerender が呼ばれた場合、
-            // 即座に scheduler.queue() されるため pendingCount が増加している
-            if (scheduler.pendingCount() === 0) {
+            // keepAlive が false（デフォルト）の場合はタスク完了後に自動クローズ
+            // keepAlive が true の場合は呼び出し側が helpers.close() で明示的にクローズする
+            if (!options?.keepAlive && scheduler.pendingCount() === 0) {
               logger.info("Render stream completed");
               // dispose してから close することで、close 後の requestRerender を無害にする
               scheduler.dispose();

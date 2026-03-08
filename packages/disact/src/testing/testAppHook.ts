@@ -9,29 +9,6 @@ import { createButtonInteraction, createSelectInteraction } from "./interactionF
 import { createMockSession } from "./mockSession";
 
 /**
- * 条件が満たされるまでポーリングで待機する内部ユーティリティ
- */
-const waitForInternal = async (
-  callback: () => void | Promise<void>,
-  options: { timeout?: number; interval?: number } = {},
-): Promise<void> => {
-  const { timeout = 1000, interval = 50 } = options;
-  const startTime = Date.now();
-
-  while (true) {
-    try {
-      await callback();
-      return;
-    } catch (error) {
-      if (Date.now() - startTime >= timeout) {
-        throw error;
-      }
-      await new Promise<void>((resolve) => setTimeout(resolve, interval));
-    }
-  }
-};
-
-/**
  * testAppHook のオプション
  */
 export type TestAppHookOptions = {
@@ -52,8 +29,9 @@ export type TestAppHookResult<R> = {
   };
 
   /**
-   * 同じフックで再レンダリングする。
-   * レンダリングが完了するまで待機する。
+   * 再レンダリングを強制する。
+   * stable状態到達後にresolveする。
+   * useInteraction コールバックは実行されない。
    */
   rerender: () => Promise<void>;
 
@@ -94,13 +72,9 @@ export type TestAppHookResult<R> = {
 /**
  * フックをテストするためのユーティリティ。react-testing-library の renderHook に相当。
  *
- * testApp と同じ仕組み（createDisactApp + createMockSession）をベースに、
+ * createDisactApp + createMockSession をベースに、
  * コンポーネントのレンダリング結果ではなくフックの戻り値に特化したテスト API を提供する。
  * フックはラッパーコンポーネント内で呼び出され、その戻り値が `result.current` に格納される。
- *
- * 注意: testApp ベースのため、インタラクション発生時に useInteraction コールバックが
- * 複数回呼ばれる場合がある（既知の挙動）。また、useEmbedState の状態は各インタラクションで
- * 使用される customId に埋め込まれた prevState を通じて引き継がれる。
  *
  * @param hookFn - テスト対象のフックを呼び出す関数
  * @param options - オプション
@@ -133,6 +107,7 @@ export type TestAppHookResult<R> = {
  * });
  *
  * await clickButton("my-button");
+ * expect(spy).toHaveBeenCalledTimes(1);
  * expect(spy).toHaveBeenCalledWith("my-button");
  * ```
  */
@@ -143,11 +118,8 @@ export const testAppHook = async <R>(
   // フックの戻り値をキャプチャする変数
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let capturedResult: R = undefined as any;
-  let renderCount = 0;
 
-  const { session, state, setInteraction } = createMockSession({
-    interaction: options?.initialInteraction,
-  });
+  const { session, state: _state } = createMockSession();
 
   const app = createDisactApp();
 
@@ -158,7 +130,6 @@ export const testAppHook = async <R>(
    */
   const HookWrapper = (): null => {
     capturedResult = hookFn();
-    renderCount++;
     return null;
   };
 
@@ -169,48 +140,21 @@ export const testAppHook = async <R>(
     props: {},
   };
 
-  // 初回レンダリングを開始（testApp と同じパターン）
-  await app.connect(session, element);
+  // 初回レンダリングを開始し、stableになるまで待機
+  const instance = await app.connect<APIInteraction>(session, element);
 
-  // 初回コミットが完了するまで待機（testApp と同じ）。
-  // initialInteraction が指定された場合は差分がなくコミットされない可能性があるため、
-  // タイムアウト後に続行する（差分なし = 正常）。
-  await waitForInternal(
-    () => {
-      if (state.commitCount === 0) {
-        throw new Error("Waiting for initial render");
-      }
-    },
-    { timeout: options?.initialInteraction !== undefined ? 300 : 1000 },
-  ).catch((error) => {
-    if (options?.initialInteraction === undefined) {
-      throw error;
-    }
-  });
+  // initialInteraction が指定された場合は初回インタラクションを処理
+  if (options?.initialInteraction) {
+    await instance.handleInteraction(options.initialInteraction);
+  }
 
   /**
-   * インタラクションをセットして再レンダリングし、コールバック実行を待機する。
-   * testApp の runInteraction と同じパターン。
+   * インタラクションをシミュレートする。
+   * handleInteraction() がstableになるまで待機するため、
+   * コールバック実行完了後にresolveされる。
    */
   const runInteraction = async <T extends APIInteraction>(interaction: T): Promise<void> => {
-    setInteraction(interaction);
-    const commitCountBefore = state.commitCount;
-
-    await app.connect(session, element);
-
-    // コミットが発生するまで、またはタイムアウトまで待機。
-    // ラッパーコンポーネントは null を返すため差分が生じず、
-    // コミットが発生しない場合はタイムアウト後に続行する。
-    await waitForInternal(
-      () => {
-        if (state.commitCount === commitCountBefore) {
-          throw new Error("Waiting for interaction to complete");
-        }
-      },
-      { timeout: 500 },
-    ).catch(() => {});
-
-    setInteraction(undefined);
+    await instance.handleInteraction(interaction);
   };
 
   return {
@@ -220,19 +164,7 @@ export const testAppHook = async <R>(
       },
     },
 
-    /**
-     * 再レンダリング。
-     * コミット差分がなくても renderCount の増加で完了を検知する。
-     */
-    rerender: async (): Promise<void> => {
-      const renderCountBefore = renderCount;
-      await app.connect(session, element);
-      await waitForInternal(() => {
-        if (renderCount <= renderCountBefore) {
-          throw new Error("Waiting for rerender");
-        }
-      });
-    },
+    rerender: () => instance.rerender(),
 
     interact: runInteraction,
 

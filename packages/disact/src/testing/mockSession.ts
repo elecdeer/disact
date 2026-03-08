@@ -1,17 +1,14 @@
-import type { APIInteraction } from "discord-api-types/v10";
 import type { PayloadElements } from "../components";
 import type { Session } from "../app/session";
 
 /**
  * Mock Session の内部状態
  */
-export type MockSessionState<T = APIInteraction> = {
+export type MockSessionState = {
   /** 現在コミットされているペイロード */
   currentPayload: PayloadElements | null;
   /** コミット履歴 */
   history: PayloadElements[];
-  /** 現在のインタラクション */
-  interaction: T | undefined;
   /** コミット回数 */
   commitCount: number;
 };
@@ -20,32 +17,30 @@ export type MockSessionState<T = APIInteraction> = {
  * テスト用 Mock Session を作成する
  *
  * @param initialState - 初期状態（省略時はデフォルト値）
- * @returns session オブジェクト、内部状態への参照、interaction 更新関数
+ * @returns session オブジェクト、内部状態への参照
  *
  * @example
  * ```ts
- * const { session, state, setInteraction } = createMockSession();
+ * const { session, state } = createMockSession();
  *
- * await app.connect(session, <Component />);
+ * const instance = await app.connect(session, <Component />);
  * expect(state.commitCount).toBe(1);
  * expect(state.currentPayload).toEqual([...]);
  * ```
  */
-export const createMockSession = <T = APIInteraction>(
-  initialState?: Partial<MockSessionState<T>>,
+export const createMockSession = (
+  initialState?: Partial<MockSessionState>,
 ): {
-  session: Session<T>;
-  state: MockSessionState<T>;
-  setInteraction: (interaction: T | undefined) => void;
+  session: Session;
+  state: MockSessionState;
 } => {
-  const state: MockSessionState<T> = {
+  const state: MockSessionState = {
     currentPayload: initialState?.currentPayload ?? null,
     history: initialState?.history ?? [],
-    interaction: initialState?.interaction,
     commitCount: initialState?.commitCount ?? 0,
   };
 
-  const session: Session<T> = {
+  const session: Session = {
     commit: async (payload: PayloadElements): Promise<void> => {
       state.currentPayload = payload;
       state.history.push(payload);
@@ -54,14 +49,7 @@ export const createMockSession = <T = APIInteraction>(
     getCurrent: async (): Promise<PayloadElements | null> => {
       return state.currentPayload;
     },
-    getInteraction: (): T | undefined => {
-      return state.interaction;
-    },
   };
 
-  const setInteraction = (interaction: T | undefined): void => {
-    state.interaction = interaction;
-  };
-
-  return { session, state, setInteraction };
+  return { session, state };
 };
