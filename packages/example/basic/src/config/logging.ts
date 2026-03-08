@@ -1,6 +1,21 @@
-import { configure, getConsoleSink } from "@logtape/logtape";
+import { type LogRecord, type Sink, configure, getConsoleSink } from "@logtape/logtape";
 import { getOpenTelemetrySink } from "@logtape/otel";
 import { getPrettyFormatter } from "@logtape/pretty";
+
+/**
+ * OTel sink のラッパー。
+ * OTel 属性値はプリミティブのみ有効なため、オブジェクト・配列を JSON 文字列に変換する。
+ */
+const withStringifiedProperties =
+  (sink: Sink): Sink =>
+  (record: LogRecord) => {
+    const stringified: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(record.properties)) {
+      stringified[key] =
+        value !== null && typeof value === "object" ? JSON.stringify(value) : value;
+    }
+    sink({ ...record, properties: stringified });
+  };
 
 /**
  * logtapeのログ設定を初期化
@@ -19,7 +34,7 @@ export const configureLogging = async (): Promise<void> => {
           },
         }),
       }),
-      otel: getOpenTelemetrySink(),
+      otel: withStringifiedProperties(getOpenTelemetrySink()),
     },
     filters: {},
     loggers: [
