@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { getLogger } from "@logtape/logtape";
-import { trace } from "@opentelemetry/api";
+import { type Span, trace } from "@opentelemetry/api";
 import { Hono } from "hono";
 import { configureLogging } from "./config/logging.js";
 import { configureTelemetry } from "./config/telemetry.js";
@@ -26,7 +26,7 @@ app.get("/", (c) => {
 
 // Discord Interactionエンドポイント
 app.post("/interactions", verifyDiscordRequest(), async (c) => {
-  return tracer.startActiveSpan("http.interaction", async (span) => {
+  return tracer.startActiveSpan("http.interaction", async (span: Span) => {
     try {
       const response = await handleInteraction(c);
       return c.json(response);

@@ -3,7 +3,7 @@ import {
   renderToReadableStream,
   type RenderLifecycleCallbacks,
 } from "@disact/engine";
-import { SpanStatusCode, context as otelContext, trace } from "@opentelemetry/api";
+import { SpanStatusCode, context as otelContext } from "@opentelemetry/api";
 import type { APIInteraction } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import type { InteractionCallback, InteractionCallbacksContext } from "../hooks/useInteraction";
