@@ -22,6 +22,7 @@ import {
   InteractionType as DiscordInteractionType,
   InteractionResponseType,
 } from "discord-api-types/v10";
+import { context as otelContext } from "@opentelemetry/api";
 import type { Context } from "hono";
 import { getLogger } from "@logtape/logtape";
 
@@ -53,8 +54,10 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
 
   // APPLICATION_COMMAND (Type 2) への応答
   if (interaction.type === DiscordInteractionType.ApplicationCommand) {
+    // OTelコンテキストをキャプチャして非同期処理に伝播
+    const capturedCtx = otelContext.active();
     // 非同期でメッセージを送信
-    void handleApplicationCommand(interaction);
+    void otelContext.with(capturedCtx, () => handleApplicationCommand(interaction));
 
     logger.debug("Returning deferred response");
     // まずDeferredレスポンスを即座に返す（3秒制限を守るため）
@@ -65,8 +68,10 @@ export const handleInteraction = async (c: Context): Promise<APIInteractionRespo
 
   // MESSAGE_COMPONENT (Type 3) への応答
   if (interaction.type === DiscordInteractionType.MessageComponent) {
+    // OTelコンテキストをキャプチャして非同期処理に伝播
+    const capturedCtx = otelContext.active();
     // 非同期でメッセージを更新
-    void handleMessageComponent(interaction);
+    void otelContext.with(capturedCtx, () => handleMessageComponent(interaction));
 
     logger.debug("Returning deferred update response");
     // まずDeferredレスポンスを即座に返す（3秒制限を守るため）
