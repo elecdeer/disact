@@ -4,11 +4,13 @@ import {
   type RenderLifecycleCallbacks,
   type RenderStreamOptions,
 } from "@disact/engine";
+import { SpanStatusCode, context as otelContext } from "@opentelemetry/api";
 import type { APIInteraction } from "discord-api-types/v10";
 import { toMessageComponentsPayload } from "../components";
 import type { InteractionCallback, InteractionCallbacksContext } from "../hooks/useInteraction";
 import type { EmbedStateContext } from "../state/embedStateContext";
 import { getDisactLogger } from "../utils/logger";
+import { getDisactTracer } from "../utils/tracer";
 import { isDifferentPayloadElement } from "./diff";
 import type { Session } from "./session";
 
@@ -61,186 +63,239 @@ export const createDisactApp = (): DisactApp => {
     session: Session,
     rootElement: DisactElement,
   ): Promise<DisactAppInstance<T>> => {
-    logger.debug("Starting app connection", { hasSession: !!session });
+    const tracer = getDisactTracer();
 
-    // Interactionコールバック配列を用意
-    const interactionCallbacks: InteractionCallback<T>[] = [];
+    return await tracer.startActiveSpan(
+      "disact.app.connect",
+      async (connectSpan) => {
+        try {
+          logger.debug("Starting app connection", { hasSession: !!session });
 
-    // コールバック実行済みフラグ（各 handleInteraction 呼び出しに対して1回のみ実行）
-    let callbacksExecuted = false;
+          // Interactionコールバック配列を用意
+          const interactionCallbacks: InteractionCallback<T>[] = [];
 
-    // 現在処理中のインタラクション
-    let currentInteraction: T | undefined = undefined;
+          // コールバック実行済みフラグ（各 handleInteraction 呼び出しに対して1回のみ実行）
+          let callbacksExecuted = false;
 
-    // Contextに配列を含める（EmbedState用のフィールドも追加）
-    const context: EmbedStateContext & InteractionCallbacksContext<T> = {
-      __interactionCallbacks: interactionCallbacks,
-      __embedStateInstanceCounter: 0,
-    };
+          // 現在処理中のインタラクション
+          let currentInteraction: T | undefined = undefined;
 
-    // requestRerender関数の参照（preRenderで取得）
-    let requestRerenderFn: (() => void) | undefined;
+          // Contextに配列を含める（EmbedState用のフィールドも追加）
+          const context: EmbedStateContext & InteractionCallbacksContext<T> = {
+            __interactionCallbacks: interactionCallbacks,
+            __embedStateInstanceCounter: 0,
+          };
 
-    // close関数の参照（preRenderで取得）
-    let closeFn: (() => void) | undefined;
+          // requestRerender関数の参照（preRenderで取得）
+          let requestRerenderFn: (() => void) | undefined;
 
-    // 安定状態到達時にresolveするPromise管理
-    let resolveStable: (() => void) | undefined;
-    let stablePromise = new Promise<void>((resolve) => {
-      resolveStable = resolve;
-    });
+          // close関数の参照（preRenderで取得）
+          let closeFn: (() => void) | undefined;
 
-    /**
-     * 次のstable到達のためにPromiseを更新する。
-     * 現在のresolve関数を取り出してからPromiseを差し替えることで、
-     * awaitしている側が古いPromiseを待ち続けられるようにする。
-     */
-    const resolveAndRenewStable = () => {
-      const resolve = resolveStable;
-      stablePromise = new Promise<void>((r) => {
-        resolveStable = r;
-      });
-      resolve?.();
-    };
-
-    // ライフサイクルフックを定義
-    const lifecycleCallbacks: RenderLifecycleCallbacks = {
-      preRender: async (helpers) => {
-        // requestRerender関数とclose関数を取得（初回preRenderで設定される）
-        requestRerenderFn = helpers.requestRerender;
-        closeFn = helpers.close;
-
-        // 各レンダリング前にcallback配列をクリア（最終レンダリングのcallbackのみを保持するため）
-        interactionCallbacks.length = 0;
-        // instance カウンターをリセット（再レンダリング時に同じ instanceId を生成するため）
-        context.__embedStateInstanceCounter = 0;
-
-        // 現在のinteractionをコンテキストに設定
-        if (currentInteraction !== undefined) {
-          context.__interaction = currentInteraction;
-        } else {
-          delete (context as InteractionCallbacksContext<T>).__interaction;
-        }
-      },
-      onStable: async () => {
-        // インタラクションコールバックを実行（各handleInteraction呼び出しに対して1回のみ）
-        if (
-          !callbacksExecuted &&
-          currentInteraction !== undefined &&
-          interactionCallbacks.length > 0
-        ) {
-          callbacksExecuted = true;
-          logger.debug("Executing interaction callbacks", {
-            count: interactionCallbacks.length,
+          // 安定状態到達時にresolveするPromise管理
+          let resolveStable: (() => void) | undefined;
+          let stablePromise = new Promise<void>((resolve) => {
+            resolveStable = resolve;
           });
 
-          for (const callback of interactionCallbacks) {
-            try {
-              await callback(currentInteraction);
-            } catch (error) {
-              logger.error("Interaction callback failed", { error });
-              // エラーが発生しても続行
+          /**
+           * 次のstable到達のためにPromiseを更新する。
+           * 現在のresolve関数を取り出してからPromiseを差し替えることで、
+           * awaitしている側が古いPromiseを待ち続けられるようにする。
+           */
+          const resolveAndRenewStable = () => {
+            const resolve = resolveStable;
+            stablePromise = new Promise<void>((r) => {
+              resolveStable = r;
+            });
+            resolve?.();
+          };
+
+          // ライフサイクルフックを定義
+          const lifecycleCallbacks: RenderLifecycleCallbacks = {
+            preRender: async (helpers) => {
+              // requestRerender関数とclose関数を取得（初回preRenderで設定される）
+              requestRerenderFn = helpers.requestRerender;
+              closeFn = helpers.close;
+
+              // 各レンダリング前にcallback配列をクリア（最終レンダリングのcallbackのみを保持するため）
+              interactionCallbacks.length = 0;
+              // instance カウンターをリセット（再レンダリング時に同じ instanceId を生成するため）
+              context.__embedStateInstanceCounter = 0;
+
+              // 現在のinteractionをコンテキストに設定
+              if (currentInteraction !== undefined) {
+                context.__interaction = currentInteraction;
+              } else {
+                delete (context as InteractionCallbacksContext<T>).__interaction;
+              }
+            },
+            onStable: async () => {
+              // インタラクションコールバックを実行（各handleInteraction呼び出しに対して1回のみ）
+              if (
+                !callbacksExecuted &&
+                currentInteraction !== undefined &&
+                interactionCallbacks.length > 0
+              ) {
+                callbacksExecuted = true;
+                await tracer.startActiveSpan(
+                  "disact.interaction.callbacks",
+                  async (callbacksSpan) => {
+                    try {
+                      logger.debug("Executing interaction callbacks", {
+                        count: interactionCallbacks.length,
+                      });
+                      callbacksSpan.setAttribute(
+                        "disact.callbacks.count",
+                        interactionCallbacks.length,
+                      );
+
+                      for (const callback of interactionCallbacks) {
+                        try {
+                          await callback(currentInteraction as T);
+                        } catch (error) {
+                          logger.error("Interaction callback failed", { error });
+                          // エラーが発生しても続行
+                        }
+                      }
+                    } finally {
+                      callbacksSpan.end();
+                    }
+                  },
+                );
+              }
+
+              // stable到達を通知（次のhandleInteraction用にPromiseを更新）
+              resolveAndRenewStable();
+            },
+            postRenderCycle: async () => {
+              // streamが終了する場合もstableのPromiseをresolve
+              resolveAndRenewStable();
+            },
+          };
+
+          const streamOptions: RenderStreamOptions = { keepAlive: true };
+          const stream = renderToReadableStream(rootElement, context, lifecycleCallbacks, streamOptions);
+
+          // fire-and-forget IIFEの前にOTelコンテキストをキャプチャ
+          const capturedCtx = otelContext.active();
+
+          void otelContext.with(capturedCtx, async () => {
+            let chunkCount = 0;
+
+            for await (const chunk of stream) {
+              chunkCount++;
+              logger.debug("Processing render chunk", {
+                chunkCount,
+                chunk,
+              });
+
+              const current = await session.getCurrent();
+              logger.debug("Current session state", {
+                hasCurrent: current !== null,
+                current,
+              });
+
+              const chunkPayload = toMessageComponentsPayload(chunk);
+              logger.debug("Converted to payload", {
+                chunkCount,
+                payload: chunkPayload,
+              });
+
+              // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
+              if (current !== null && !isDifferentPayloadElement(current, chunkPayload)) {
+                logger.debug("Skipping chunk (no diff detected)", {
+                  chunkCount,
+                  current,
+                  payload: chunkPayload,
+                });
+                continue;
+              }
+
+              await tracer.startActiveSpan(
+                "disact.session.commit",
+                {
+                  attributes: {
+                    "disact.commit.chunk_count": chunkCount,
+                    "disact.commit.is_initial": current === null,
+                  },
+                },
+                async (commitSpan) => {
+                  try {
+                    logger.info("Committing chunk to session", {
+                      chunkCount,
+                      isInitial: current === null,
+                      payload: chunkPayload,
+                    });
+                    await session.commit(chunkPayload);
+                  } catch (error) {
+                    commitSpan.setStatus({ code: SpanStatusCode.ERROR });
+                    commitSpan.recordException(
+                      error instanceof Error ? error : new Error(String(error)),
+                    );
+                    throw error;
+                  } finally {
+                    commitSpan.end();
+                  }
+                },
+              );
             }
-          }
-        }
-
-        // stable到達を通知（次のhandleInteraction用にPromiseを更新）
-        resolveAndRenewStable();
-      },
-      postRenderCycle: async () => {
-        // streamが終了する場合もstableのPromiseをresolve
-        resolveAndRenewStable();
-      },
-    };
-
-    const streamOptions: RenderStreamOptions = { keepAlive: true };
-    const stream = renderToReadableStream(rootElement, context, lifecycleCallbacks, streamOptions);
-
-    void (async () => {
-      let chunkCount = 0;
-
-      for await (const chunk of stream) {
-        chunkCount++;
-        logger.debug("Processing render chunk", {
-          chunkCount,
-          chunk,
-        });
-
-        const current = await session.getCurrent();
-        logger.debug("Current session state", {
-          hasCurrent: current !== null,
-          current,
-        });
-
-        const chunkPayload = toMessageComponentsPayload(chunk);
-        logger.debug("Converted to payload", {
-          chunkCount,
-          payload: chunkPayload,
-        });
-
-        // 差分がない場合はスキップ（currentがnullの場合は初回なので必ずcommit）
-        if (current !== null && !isDifferentPayloadElement(current, chunkPayload)) {
-          logger.debug("Skipping chunk (no diff detected)", {
-            chunkCount,
-            current,
-            payload: chunkPayload,
+            logger.info("App connection completed", { totalChunks: chunkCount });
+            connectSpan.end();
           });
-          continue;
+
+          // 初回stableまで待機
+          await stablePromise;
+
+          /**
+           * インタラクションを処理する。
+           * コールバックは各呼び出しに対して1回のみ実行される。
+           */
+          const handleInteraction = async (interaction: T): Promise<void> => {
+            if (!requestRerenderFn) {
+              throw new Error("App not properly initialized");
+            }
+
+            // コールバック実行済みフラグとinteractionをリセット
+            callbacksExecuted = false;
+            currentInteraction = interaction;
+
+            // 再レンダリングをトリガー
+            requestRerenderFn();
+
+            // stable到達まで待機
+            await stablePromise;
+          };
+
+          /**
+           * インタラクションなしで再レンダリングを強制する。
+           * useInteraction コールバックは実行されない（currentInteraction が undefined のまま）。
+           */
+          const rerender = async (): Promise<void> => {
+            if (!requestRerenderFn) {
+              throw new Error("App not properly initialized");
+            }
+            requestRerenderFn();
+            await stablePromise;
+          };
+
+          /**
+           * ストリームを明示的に閉じる。
+           * スケジューラーを破棄してレンダリングストリームをクローズする。
+           */
+          const close = (): void => {
+            closeFn?.();
+          };
+
+          return { handleInteraction, rerender, close };
+        } catch (error) {
+          connectSpan.setStatus({ code: SpanStatusCode.ERROR });
+          connectSpan.recordException(error instanceof Error ? error : new Error(String(error)));
+          connectSpan.end();
+          throw error;
         }
-        logger.info("Committing chunk to session", {
-          chunkCount,
-          isInitial: current === null,
-          payload: chunkPayload,
-        });
-        await session.commit(chunkPayload);
-      }
-      logger.info("App connection completed", { totalChunks: chunkCount });
-    })();
-
-    // 初回stableまで待機
-    await stablePromise;
-
-    /**
-     * インタラクションを処理する。
-     * コールバックは各呼び出しに対して1回のみ実行される。
-     */
-    const handleInteraction = async (interaction: T): Promise<void> => {
-      if (!requestRerenderFn) {
-        throw new Error("App not properly initialized");
-      }
-
-      // コールバック実行済みフラグとinteractionをリセット
-      callbacksExecuted = false;
-      currentInteraction = interaction;
-
-      // 再レンダリングをトリガー
-      requestRerenderFn();
-
-      // stable到達まで待機
-      await stablePromise;
-    };
-
-    /**
-     * インタラクションなしで再レンダリングを強制する。
-     * useInteraction コールバックは実行されない（currentInteraction が undefined のまま）。
-     */
-    const rerender = async (): Promise<void> => {
-      if (!requestRerenderFn) {
-        throw new Error("App not properly initialized");
-      }
-      requestRerenderFn();
-      await stablePromise;
-    };
-
-    /**
-     * ストリームを明示的に閉じる。
-     * スケジューラーを破棄してレンダリングストリームをクローズする。
-     */
-    const close = (): void => {
-      closeFn?.();
-    };
-
-    return { handleInteraction, rerender, close };
+      },
+    );
   };
 
   return { connect };

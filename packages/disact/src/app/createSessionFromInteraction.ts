@@ -9,6 +9,7 @@ import {
 } from "../api/discord-api";
 import type { PayloadElements } from "../components/index.ts";
 import { getDisactLogger } from "../utils/logger";
+import { getDisactTracer } from "../utils/tracer";
 import { messageFlags } from "../utils/messageFlags";
 import type { Session } from "./session";
 
@@ -64,6 +65,17 @@ export const createSessionFromApplicationCommandInteraction = (
   const alwaysFetch = options?.alwaysFetch ?? false;
   const deferred = options?.deferred ?? false;
 
+  const tracer = getDisactTracer();
+  const createSpan = tracer.startSpan("disact.session.create", {
+    attributes: {
+      "disact.interaction.id": interaction.id,
+      "disact.command.name": interaction.data.name,
+      "disact.session.ephemeral": ephemeral,
+      "disact.session.deferred": deferred,
+      "disact.session.type": "application_command",
+    },
+  });
+
   logger.debug("Creating session from interaction", {
     interactionId: interaction.id,
     commandName: interaction.data.name,
@@ -76,6 +88,8 @@ export const createSessionFromApplicationCommandInteraction = (
   // 最初から updateOriginalWebhookMessage を使用する
   let hasCommitted = deferred;
   let cachedPayload: PayloadElements | null = null;
+
+  createSpan.end();
 
   return {
     commit: async (payload: PayloadElements): Promise<void> => {
@@ -173,6 +187,17 @@ export const createSessionFromMessageComponentInteraction = (
   const alwaysFetch = options?.alwaysFetch ?? false;
   const deferred = options?.deferred ?? false;
 
+  const tracer = getDisactTracer();
+  const createSpan = tracer.startSpan("disact.session.create", {
+    attributes: {
+      "disact.interaction.id": interaction.id,
+      "disact.custom_id": interaction.data.custom_id,
+      "disact.session.ephemeral": ephemeral,
+      "disact.session.deferred": deferred,
+      "disact.session.type": "message_component",
+    },
+  });
+
   logger.debug("Creating session from message component interaction", {
     interactionId: interaction.id,
     customId: interaction.data.custom_id,
@@ -185,6 +210,8 @@ export const createSessionFromMessageComponentInteraction = (
   // 最初から updateOriginalWebhookMessage を使用する
   let hasCommitted = deferred;
   let cachedPayload: PayloadElements | null = null;
+
+  createSpan.end();
 
   return {
     commit: async (payload: PayloadElements): Promise<void> => {
