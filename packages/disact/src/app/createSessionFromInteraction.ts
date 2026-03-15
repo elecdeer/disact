@@ -60,7 +60,7 @@ export type CreateSessionFromInteractionOptions = {
 export const createSessionFromApplicationCommandInteraction = (
   interaction: ApplicationCommandInteraction,
   options?: CreateSessionFromInteractionOptions,
-): Session<ApplicationCommandInteraction> => {
+): Session => {
   const ephemeral = options?.ephemeral ?? false;
   const alwaysFetch = options?.alwaysFetch ?? false;
   const deferred = options?.deferred ?? false;
@@ -155,10 +155,6 @@ export const createSessionFromApplicationCommandInteraction = (
 
       return null;
     },
-
-    getInteraction: (): ApplicationCommandInteraction => {
-      return interaction;
-    },
   };
 };
 
@@ -186,7 +182,7 @@ export const createSessionFromApplicationCommandInteraction = (
 export const createSessionFromMessageComponentInteraction = (
   interaction: MessageComponentInteraction,
   options?: CreateSessionFromInteractionOptions,
-): Session<MessageComponentInteraction> => {
+): Session => {
   const ephemeral = options?.ephemeral ?? false;
   const alwaysFetch = options?.alwaysFetch ?? false;
   const deferred = options?.deferred ?? false;
@@ -281,10 +277,6 @@ export const createSessionFromMessageComponentInteraction = (
       }
 
       return null;
-    },
-
-    getInteraction: (): MessageComponentInteraction => {
-      return interaction;
     },
   };
 };

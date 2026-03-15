@@ -13,18 +13,16 @@ import type { Session } from "./session";
 import { useInteraction } from "../hooks/useInteraction";
 import type { APIInteraction } from "discord-api-types/v10";
 
-type TestContext<T = unknown> = {
-  mockSession: Session<T>;
+type TestContext = {
+  mockSession: Session;
   commitSpy: ReturnType<typeof vi.fn<Session["commit"]>>;
   currentPayload: { value: PayloadElements | null };
-  mockInteraction: { value: T | undefined };
 };
 
 // oxlint-disable-next-line vitest/no-disabled-tests, jest/expect-expect 誤検知
-const test = base.extend<TestContext<APIInteraction>>({
+const test = base.extend<TestContext>({
   // oxlint-disable-next-line no-empty-pattern
   currentPayload: async ({}, use) => {
-    // 初期状態は null (未コミット)
     const payload: {
       value: PayloadElements | null;
     } = {
@@ -32,24 +30,16 @@ const test = base.extend<TestContext<APIInteraction>>({
     };
     await use(payload);
   },
-  // oxlint-disable-next-line no-empty-pattern
-  mockInteraction: async ({}, use) => {
-    const interaction: { value: APIInteraction | undefined } = {
-      value: undefined,
-    };
-    await use(interaction);
-  },
   commitSpy: async ({ currentPayload }, use) => {
     const spy = vi.fn(async (payload: PayloadElements) => {
       currentPayload.value = payload;
     });
     await use(spy);
   },
-  mockSession: async ({ commitSpy, currentPayload, mockInteraction }, use) => {
+  mockSession: async ({ commitSpy, currentPayload }, use) => {
     const session: Session = {
       commit: commitSpy,
       getCurrent: vi.fn(async () => currentPayload.value),
-      getInteraction: vi.fn(() => mockInteraction.value),
     };
     await use(session);
   },
@@ -329,13 +319,9 @@ describe("createDisactApp", () => {
 });
 
 describe("useInteraction Integration", () => {
-  test("useInteraction callback が最終レンダリング後に実行される", async ({
-    mockSession,
-    mockInteraction,
-  }) => {
+  test("useInteraction callback が handleInteraction後に実行される", async ({ mockSession }) => {
     const callbackExecuted = vi.fn();
-    const interaction = { id: "123", type: 2 };
-    mockInteraction.value = interaction as APIInteraction;
+    const interaction = { id: "123", type: 2 } as unknown as APIInteraction;
 
     const Component = () => {
       useInteraction((interaction) => {
@@ -349,24 +335,21 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
+    const instance = await app.connect(mockSession, <Component />);
 
-    // callback が実行されるまで待機
-    await waitFor(() => {
-      expect(callbackExecuted).toHaveBeenCalledTimes(1);
-    });
+    // 初回レンダリング後はcallbackは実行されていない
+    expect(callbackExecuted).not.toHaveBeenCalled();
 
-    // 正しい interaction オブジェクトが渡されたことを確認
+    // handleInteraction でインタラクションを処理
+    await instance.handleInteraction(interaction);
+
+    expect(callbackExecuted).toHaveBeenCalledTimes(1);
     expect(callbackExecuted).toHaveBeenCalledWith(interaction);
   });
 
-  test("複数の useInteraction callback が登録順に実行される", async ({
-    mockSession,
-    mockInteraction,
-  }) => {
+  test("複数の useInteraction callback が登録順に実行される", async ({ mockSession }) => {
     const executionOrder: number[] = [];
-    const interaction = { id: "456", type: 2 };
-    mockInteraction.value = interaction as APIInteraction;
+    const interaction = { id: "456", type: 2 } as unknown as APIInteraction;
 
     const Component = () => {
       useInteraction(() => {
@@ -386,25 +369,20 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
-
-    await waitFor(() => {
-      expect(executionOrder).toHaveLength(3);
-    });
+    const instance = await app.connect(mockSession, <Component />);
+    await instance.handleInteraction(interaction);
 
     expect(executionOrder).toEqual([1, 2, 3]);
   });
 
   test("Suspense がある場合、最終レンダリングの callback のみ実行される", async ({
     mockSession,
-    mockInteraction,
   }) => {
     const { promise, resolve } = Promise.withResolvers<string>();
     const fallbackCallbackExecuted = vi.fn();
     const finalCallbackExecuted = vi.fn();
     const interactionCallbackExecuted = vi.fn();
-    const interaction = { id: "789", type: 2 };
-    mockInteraction.value = interaction as APIInteraction;
+    const interaction = { id: "789", type: 2 } as unknown as APIInteraction;
 
     const AsyncData = () => {
       const data = use(promise);
@@ -419,7 +397,6 @@ describe("useInteraction Integration", () => {
 
     const Component = () => {
       useInteraction((interaction) => {
-        // このcallbackは最終レンダリング時のみ実行される
         interactionCallbackExecuted(interaction);
       });
 
@@ -433,40 +410,21 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
+    const instance = await app.connect(mockSession, <Component />);
 
-    // fallback がレンダリングされる
-    await waitFor(() => {
-      expect(fallbackCallbackExecuted).toHaveBeenCalled();
-    });
-
-    // fallback段階ではinteractionCallbackは実行されていない
-    expect(interactionCallbackExecuted).not.toHaveBeenCalled();
-
-    // Promise を解決
+    // handleInteraction でインタラクションを処理（Suspenseあり）
+    // Promiseを解決してから handleInteraction を呼ぶ
     resolve("Loaded data");
+    await instance.handleInteraction(interaction);
 
-    // 最終レンダリングが完了する
-    await waitFor(() => {
-      expect(finalCallbackExecuted).toHaveBeenCalled();
-    });
-
-    // 最終レンダリング後にinteractionCallbackが実行される
-    await waitFor(() => {
-      expect(interactionCallbackExecuted).toHaveBeenCalledTimes(1);
-    });
-
-    // fallback と final の両方がレンダリングされたことを確認
-    expect(fallbackCallbackExecuted).toHaveBeenCalledTimes(1);
-    expect(finalCallbackExecuted).toHaveBeenCalledTimes(1);
-    // interactionCallbackは最終レンダリング時のみ実行される（1回のみ）
+    // 最終レンダリング後にinteractionCallbackが実行される（1回のみ）
+    expect(interactionCallbackExecuted).toHaveBeenCalledTimes(1);
     expect(interactionCallbackExecuted).toHaveBeenCalledWith(interaction);
   });
 
-  test("非同期 callback が正しく実行される", async ({ mockSession, mockInteraction }) => {
+  test("非同期 callback が正しく実行される", async ({ mockSession }) => {
     const asyncCallbackExecuted = vi.fn();
-    const interaction = { id: "async-123", type: 2 };
-    mockInteraction.value = interaction as APIInteraction;
+    const interaction = { id: "async-123", type: 2 } as unknown as APIInteraction;
 
     const Component = () => {
       useInteraction(async (interaction) => {
@@ -481,26 +439,20 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
+    const instance = await app.connect(mockSession, <Component />);
+    await instance.handleInteraction(interaction);
 
-    await waitFor(() => {
-      expect(asyncCallbackExecuted).toHaveBeenCalledTimes(1);
-    });
-
+    expect(asyncCallbackExecuted).toHaveBeenCalledTimes(1);
     expect(asyncCallbackExecuted).toHaveBeenCalledWith(interaction);
   });
 
-  test("callback でエラーが発生しても他の callback は実行される", async ({
-    mockSession,
-    mockInteraction,
-  }) => {
+  test("callback でエラーが発生しても他の callback は実行される", async ({ mockSession }) => {
     const callback1 = vi.fn();
     const callback2 = vi.fn(() => {
       throw new Error("Test error");
     });
     const callback3 = vi.fn();
-    const interaction = { id: "error-test", type: 2 };
-    mockInteraction.value = interaction as APIInteraction;
+    const interaction = { id: "error-test", type: 2 } as unknown as APIInteraction;
 
     const Component = () => {
       useInteraction(callback1);
@@ -514,15 +466,9 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    await app.connect(mockSession, <Component />);
+    const instance = await app.connect(mockSession, <Component />);
+    await instance.handleInteraction(interaction);
 
-    await waitFor(() => {
-      expect(callback1).toHaveBeenCalled();
-      expect(callback2).toHaveBeenCalled();
-      expect(callback3).toHaveBeenCalled();
-    });
-
-    // すべての callback が実行されたことを確認
     expect(callback1).toHaveBeenCalledTimes(1);
     expect(callback2).toHaveBeenCalledTimes(1);
     expect(callback3).toHaveBeenCalledTimes(1);
@@ -541,7 +487,7 @@ describe("useInteraction Integration", () => {
     };
 
     const app = createDisactApp();
-    // mockInteraction.value を設定しない（undefined のまま）
+    // handleInteraction を呼ばない
     await app.connect(mockSession, <Component />);
 
     // 少し待機
@@ -549,5 +495,33 @@ describe("useInteraction Integration", () => {
 
     // callback が実行されていないことを確認
     expect(callbackExecuted).not.toHaveBeenCalled();
+  });
+
+  test("handleInteraction を複数回呼ぶと各インタラクションで1回のみ callback が実行される", async ({
+    mockSession,
+  }) => {
+    const callbackExecuted = vi.fn();
+    const interaction1 = { id: "first", type: 2 } as unknown as APIInteraction;
+    const interaction2 = { id: "second", type: 2 } as unknown as APIInteraction;
+
+    const Component = () => {
+      useInteraction(callbackExecuted);
+      return (
+        <Container>
+          <TextDisplay>Test</TextDisplay>
+        </Container>
+      );
+    };
+
+    const app = createDisactApp();
+    const instance = await app.connect(mockSession, <Component />);
+
+    await instance.handleInteraction(interaction1);
+    expect(callbackExecuted).toHaveBeenCalledTimes(1);
+    expect(callbackExecuted).toHaveBeenLastCalledWith(interaction1);
+
+    await instance.handleInteraction(interaction2);
+    expect(callbackExecuted).toHaveBeenCalledTimes(2);
+    expect(callbackExecuted).toHaveBeenLastCalledWith(interaction2);
   });
 });
