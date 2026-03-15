@@ -319,9 +319,7 @@ describe("createDisactApp", () => {
 });
 
 describe("useInteraction Integration", () => {
-  test("useInteraction callback が handleInteraction後に実行される", async ({
-    mockSession,
-  }) => {
+  test("useInteraction callback が handleInteraction後に実行される", async ({ mockSession }) => {
     const callbackExecuted = vi.fn();
     const interaction = { id: "123", type: 2 } as unknown as APIInteraction;
 
@@ -349,9 +347,7 @@ describe("useInteraction Integration", () => {
     expect(callbackExecuted).toHaveBeenCalledWith(interaction);
   });
 
-  test("複数の useInteraction callback が登録順に実行される", async ({
-    mockSession,
-  }) => {
+  test("複数の useInteraction callback が登録順に実行される", async ({ mockSession }) => {
     const executionOrder: number[] = [];
     const interaction = { id: "456", type: 2 } as unknown as APIInteraction;
 
@@ -450,9 +446,7 @@ describe("useInteraction Integration", () => {
     expect(asyncCallbackExecuted).toHaveBeenCalledWith(interaction);
   });
 
-  test("callback でエラーが発生しても他の callback は実行される", async ({
-    mockSession,
-  }) => {
+  test("callback でエラーが発生しても他の callback は実行される", async ({ mockSession }) => {
     const callback1 = vi.fn();
     const callback2 = vi.fn(() => {
       throw new Error("Test error");
